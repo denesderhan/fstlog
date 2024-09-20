@@ -1,0 +1,12 @@
+fstlog/include/fstlog/detail/fstlog_allocator.hpp
+.vs
+x64
+x32
+*\x64
+*\x32
+*.bak
+temp
+build
+out
+.hint
+custom.ruleset

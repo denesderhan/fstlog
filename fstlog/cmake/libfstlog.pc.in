@@ -1,0 +1,7 @@
+
+Name: fstlog
+Description: Fast, asynchronous, low footprint, C++ logging library.
+URL: https://github.com/denesderhan/fstlog
+Version: @FSTLOG_VERSION@
+CFlags: -I@PKG_INCLUDEDIR@ @PKG_DEFINES@
+Libs: -L@PKG_LIBDIR@ -l@PKG_LIBNAME@ -pthread
