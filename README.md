@@ -19,7 +19,7 @@ Testing and feedback is greatly appreciated!
 - No 3rd party dependencies.
 
 ## Benchmarks
-[logging library benchmarks](http://denesderhan.github.io/loglib_benchmarks/2409/)
+* https://denesderhan.github.io/logbench_results/
 
 ## Build, install
 
@@ -55,7 +55,7 @@ cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug -DFSTLOG_DEBUG=ON -DFSTLOG_TESTS=ON -
 ~~~
 
 ## Examples
-Examples can be found in fstlog/examples folder.
+Examples can be found in the examples folder.
 
 ### Hello World
 ```c++
