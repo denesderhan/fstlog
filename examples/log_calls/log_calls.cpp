@@ -19,7 +19,7 @@
 #include <fstlog/output/output_console.hpp>
 
 template<class C>
-class useless_container {
+class example_container {
 public:
 	using value_type = C;
 	using container = std::vector<C>;
@@ -61,16 +61,13 @@ int main()
 		LOG_INFO(my_logger, "Logging fundamental types, signed char: {}, unsigned char: {}, char: {}.",
 			(signed char)-128, (unsigned char)255, 'A');
 #ifdef __cpp_char8_t
-		LOG_INFO(my_logger, "Logging fundamental types, char8_t: {}, char8 string: {}.", char8_t(0x40), u8"¡¢£¤¥¦§");
+		LOG_INFO(my_logger, "Logging fundamental types, char8_t: {}, char8 string: {}.", char8_t(0x40), u8"Ω$€£¥");
 #endif
 		LOG_INFO(my_logger, "Logging fundamental types, char16_t: {}, char32_t: {}.", char16_t('A'), char32_t('B'));
-		LOG_INFO(my_logger, "Logging strings: {} {}, {}.", "Hello", u"World§", U"Hello§");
+		LOG_INFO(my_logger, "Logging strings: {} {}, {}.", "Hello", u"World Ω", U"Hello Ω");
 
 		using namespace std::string_literals;
-		auto s1{ U"Logging strings: {} {}."s };
-		auto s2{ u"Hello§"s };
-		auto s3{ std::basic_string_view{U"World§"} };
-		LOG_INFO(my_logger, s1, s2, s3);
+		LOG_INFO(my_logger, U"Logging string literals: {} {}."s, u"Hello Ω"s, std::basic_string_view{U"World Ω"});
 
 		// logging works with arbitrary message types
 		LOG_INFO(my_logger, 42);
@@ -80,28 +77,25 @@ int main()
 		LOG_INFO(my_logger, "Logging tuple: {}.", std::tuple<bool, int>{true, 1});
 
 		// Logging containers
-		std::vector<void*> var1{ &s1, &s2 };
-		std::vector<std::pair<int, bool>> var2{ {0, false}, {1, true} };
-		LOG_INFO(my_logger, "Logging containers: vector: {}, vector of pairs: {}", var1, var2);
 		std::tuple<std::vector<int>, std::pair<bool, float>, int> var3{ {1, 2}, {true, 1.5f}, 2 };
 		LOG_INFO(my_logger, "Logging containers: std::tuple<std::vector<int>, std::pair<bool, float>: {}", var3);
 
-		// All containers are loggable that have a value_type a size() method
-		// an iterator and contain loggable types
-		useless_container<std::vector<int>> var4{ {{1, 2}, {3, 4}} };
+		// All containers are loggable that have: a value_type, a size() method, an iterator
+		// and contain loggable types
+		example_container<std::vector<int>> var4{ {{1, 2}, {3, 4}} };
 		LOG_INFO(my_logger, "Logging custom containers: {}", var4);
-		useless_container<useless_container<std::vector<int>>> var5{ {var4, var4} };
+		example_container<example_container<std::vector<int>>> var5{ {var4, var4} };
 		LOG_INFO(my_logger, "Logging custom containers: {}", var5);
 
 		// Formatting messages
 		// the syntax of std::format is used, (available formatting options are dependent on formatter type)
 		// align message parameters with filler chars
-		LOG_INFO(my_logger, "Logging aligned: {:.>10}, {:¤^10}", 3, "TEXT");
+		LOG_INFO(my_logger, "Logging aligned: {:.>10}, {:•^10}", 3, "TEXT");
 		// number formatting
 		LOG_INFO(my_logger, "Number formatting: hex: {:#X}, binary: {:+#b}, precision: {:.2}, scientific: {:.3e}", -10, (signed char)10, 1.23456f, 100000.5f);
 	
 		// control characters are replaced with '_' in the formatted log message
-		LOG_INFO(my_logger, "\tLog\a\b\r injection attack!: {} ", "\nThis should be in the same line!");
+		LOG_INFO(my_logger, "\tPreventing log\a\b\r injection attack!: {} ", "\nThis should be in the same line!");
 	}
 	catch (const std::exception& ex) {
 		std::cout << ex.what() << '\n';
