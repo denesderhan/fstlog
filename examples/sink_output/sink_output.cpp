@@ -19,142 +19,144 @@
 int main()
 {
 	try {
-		//create core
-		fstlog::core my_core("my_core");
-		std::cout << "fstlog version: " << my_core.version() << "\n\n";
-		//create logger
-		fstlog::logger my_logger(my_core, "my_logger");
+		// ----------------------------------
+		//   OUTPUT CONSOLE (UNSORTED SINK)
+		// ---------------------------------
+		// Create an output to stdout
+		fstlog::output out_console = fstlog::output_console();
+		// Create a sink with unsorted behavior
+		// sink_unsort logs messages without sorting.
+		// This is suitable for single threaded simple use cases.
+		fstlog::sink sink_console = fstlog::sink_unsort(
+			fstlog::formatter_txt("sink_unsort + output_console: {time} {level} {logger} {message}"),
+			out_console);
+		
+		// --------------------------------
+		//    OUTPUT STDERR (SORTED SINK)
+		// --------------------------------
+		// Create an output to stderr
+		fstlog::output out_error = fstlog::output_stderr();
+		// Create a sink with sorted behavior
+		fstlog::sink sink_error = fstlog::sink_sort(
+			fstlog::formatter_txt("sink_sort + output_stderr: {time} {level} {logger} {message}"),
+			out_error);
+		// Because the system operates asynchronously, some messages may appear out of order. 
+		// While reading log buffers, new messages can still be added to these buffers.
+		// If a message is added to a buffer that has already been partially read, 
+		// it might be displayed later in the sequence than another message 
+		// that was added to a different buffer that hasn’t been read yet.
 
-		//-------------------
-		// OUTPUT CONSOLE
-		//-------------------
-		// output_console (output to stdout)
-		fstlog::output out_con = fstlog::output_console();
-		
-		//-------------------
-		// UNSORTED SINK
-		//-------------------
-		// sink_unsort, messages will not be sorted by the timestamp
-		// (the logs will be sorted naturally, if logging happens only 
-		// in a single thread and by one and only one logger)
-		fstlog::sink sink_unsort = fstlog::sink_unsort(
-			fstlog::formatter_txt("from sink_unsort: {time} {level} {logger} {message}"),
-			out_con);
-
-		//-------------------
-		// OUTPUT STDERR
-		//-------------------
-		// output_stderr (output to stderr)
-		fstlog::output out_err = fstlog::output_stderr();
-		
-		//-------------------
-		// SORTED SINK
-		//-------------------
-		// sink_sort, log messages will be sorted,
-		// some messages can be out of order due to the asynchronous nature of the system.
-		// In the time frame of reading the log buffers, messages can be added to these buffers.
-		// If one is added to a buffer that was already read, it can be ordered after the other, 
-		// that is added to an other buffer that was not yet read, regardless of the correct ordering. 
-		fstlog::sink sink_sort = fstlog::sink_sort(
-			fstlog::formatter_txt("from sink_sort: {time} {level} {logger} {message}"),
-			out_err);
-		
-		//----------------
-		// OUTPUT FILE
-		//----------------
-		// output_file (output to a file)
-		// truncation can be specified by a bool value (default is false)
+		// ------------------------------
+		//   OUTPUT FILE (UNSORTED SINK)
+		// ------------------------------
+		// Create an output to a file (with truncation)
 		fstlog::output out_file = fstlog::output_file("file.log", true);
-		// create sink
+		// Create a sink
 		fstlog::sink sink_file = fstlog::sink_unsort(
-			fstlog::formatter_txt("from sink_file: {time} {level} {logger} {message}"),
+			fstlog::formatter_txt("sink_unsort + output_file: {time} {level} {logger} {message}"),
 			out_file);
-		
-		//----------------
-		// OUTPUT STREAM
-		//----------------
-		// output_stream (output to C++ stream)
-		// the stream can not be read/written as long it is used for logging
+		// The truncation flag is set to false by default (append to existing file).
+
+
+		// -------------------------------
+		//  OUTPUT STREAM (UNSORTED SINK)
+		// -------------------------------
+		// Create a shared stringstream
 		auto stream_1 = std::make_shared<std::stringstream>();
+		// Create an output from the stream
 		fstlog::output out_stream = fstlog::output_stream(stream_1);
-		// create sink
+		// Create a sink
 		fstlog::sink sink_stream = fstlog::sink_unsort(
-			fstlog::formatter_txt("from sink_stream: {time} {level} {logger} {message}"),
+			fstlog::formatter_txt("sink_unsort + output_stream: {time} {level} {logger} {message}"),
 			out_stream);
-		
-		//------------------
-		// OUTPUT STREAM MT
-		//------------------
-		// output_stream_mt (output to C++ stream)
-		// the stream can be read/written concurrently if the mutex is locked
+		// Important: The stream must not be accessed while 
+		// logging is in progress to avoid race conditions.
+
+		// ----------------------------------
+		//  OUTPUT STREAM MT (UNSORTED SINK)
+		// ----------------------------------
+		// Create a shared stringstream and mutex
 		auto stream_2 = std::make_shared<std::stringstream>();
 		auto stream_mutex = std::make_shared<std::mutex>();
+		// Create an output with thread safety
 		fstlog::output out_stream_mt = fstlog::output_stream_mt(stream_2, stream_mutex);
-		// create sink
+		// create a sink
 		fstlog::sink sink_stream_mt = fstlog::sink_unsort(
-			fstlog::formatter_txt("from sink_stream_mt: {time} {level} {logger} {message}"),
+			fstlog::formatter_txt("sink_unsort + output_stream_mt: {time} {level} {logger} {message}"),
 			out_stream_mt);
-		
-		//---------------------
-		// OUTPUT C STREAM
-		//---------------------
+		// output_stream_mt allows concurrent access via a mutex.
+		// Always lock the mutex when accessing the stream externally.
+
+		// ---------------------------------
+		//  OUTPUT C STREAM (UNSORTED SINK)
+		// ---------------------------------
 		// output_cstream (output to a C stream)
 		// the stream can not be read/written while it is used for logging
-		// The FILE* must remain valid for the lifetime of the fstlog::output object,
+		// The FILE* must remain valid for the lifetime of the fstlog::output object
 		// and its managed by the user
-		FILE* c_strm{ nullptr };
+		
+		// Open a C file stream
+		FILE* c_stream{ nullptr };
 #ifdef _WIN32
-		fopen_s(&c_strm, "c_file.log", "wb");
+		fopen_s(&c_stream, "c_file.log", "wb");
 #else
-		c_strm = fopen("c_file.log", "wb");
+		c_stream = fopen("c_file.log", "wb");
 #endif
-		if (!c_strm) throw std::runtime_error("Opening file: c_file.log failed!");
+		if (!c_stream) throw std::runtime_error("Opening file: c_file.log failed!");
+		
+		// Create an output from the C stream
+		fstlog::output out_cstream = fstlog::output_cstream(c_stream);
+		// create a sink
+		fstlog::sink sink_cstream = fstlog::sink_unsort(
+			fstlog::formatter_txt("sink_unsort + output_cstream: {time} {level} {logger} {message}"),
+			out_cstream);
+		// Important: The FILE* pointer must remain valid for the lifetime of the output_cstream object.
+		// Do not close it before destroying all copies of the out_cstream object.
+		// Lifetime of c_stream must be managed by the user.
 
-		fstlog::output out_cstrm = fstlog::output_cstream(c_strm);
-		// create sink
-		fstlog::sink sink_cstrm = fstlog::sink_unsort(
-			fstlog::formatter_txt("from sink_cstrm: {time} {level} {logger} {message}"),
-			out_cstrm);
-		// add sink to core
-		my_core.add_sink(sink_cstrm);
-		// log
-		LOG_INFO(my_logger, "Hello {}!", "c_stream");
-		//flushing sink to file
-		my_core.flush();
-		// fstlog::output is a reference counted smart pointer like object
-		// to close the underlying output all references must be destroyed.
-		// the sink holds an fstlog::output object and the core holds a
-		// an fstlog::sink object
-		my_core.release_sink(sink_cstrm);
-		sink_cstrm = fstlog::sink{};
-		out_cstrm = fstlog::output{};
-		// closing stream, no one can use it any longer
-		fclose(c_strm);
 
+		// Create a core and logger
+		fstlog::core my_core("my_core");
+		std::cout << "fstlog version: " << my_core.version() << "\n\n";
+		fstlog::logger my_logger(my_core, "my_logger");
 		// add sinks to core
-		my_core.add_sink(sink_unsort);
-		my_core.add_sink(sink_sort);
+		my_core.add_sink(sink_console);
+		my_core.add_sink(sink_error);
 		my_core.add_sink(sink_file);
 		my_core.add_sink(sink_stream);
 		my_core.add_sink(sink_stream_mt);
-		//log with logger
+		my_core.add_sink(sink_cstream);
+		
+		// log with logger
 		LOG_INFO(my_logger, "Hello {}!", "World");
-		// stop() flushes sinks, stops background thread
-		my_core.stop();
-
-		// in general stream_1 can not be read/written while it is used for logging (concurrency)
-		// in this case it would be safe, the core's background thread has exited (stop())
-		my_core.release_sink(sink_stream);
-		sink_stream = fstlog::sink{};
-		out_stream = fstlog::output{};
-		std::cout << "\ncontents of stream_1:\n" << stream_1->str() << "\n";
-
+		
+		// call flush() to force processing of all logs
+		// flush() is called automatically when a core is stopped or destroyed
+		my_core.flush();
+		// Access stream_2 (must lock the mutex)
 		{
 			std::lock_guard<std::mutex> grd(*stream_mutex);
-			std::cout << "contents of stream_2:\n" << stream_2->str() << "\n";
+			std::cout << stream_2->str();
 		}
+		// Release the sink to safely access stream_1
+		my_core.release_sink(sink_stream);
+		std::cout << stream_1->str();
+		
+		// -------------------------
+		//  OUTPUT C STREAM CLEANUP
+		// -------------------------
+		// Flush logs
+		my_core.flush();
+		// Release sink
+		my_core.release_sink(sink_cstream);
+		// Destroy all copies of sink_cstream
+		sink_cstream = fstlog::sink{};
+		// Destroy all copies of out_cstream
+		out_cstream = fstlog::output{};
+		// Close the C stream manually
+		fclose(c_stream);
 	}
 	catch (const std::exception& ex) {
-		std::cout << ex.what() << '\n';
+		std::cout << ex.what();
 	}
 }
