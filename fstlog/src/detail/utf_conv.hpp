@@ -2,481 +2,384 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
-#include <limits>
 #include <cstring>
+#include <limits>
 #pragma intrinsic(memcpy)
 
 #include <detail/buffer_operation_result.hpp>
 #include <fstlog/detail/rm_cvref_t.hpp>
+#include <fstlog/detail/fstlog_assert.hpp>
 #include <detail/utf8_helper.hpp>
 
 namespace fstlog {
-    namespace detail {
-        namespace {
-            inline constexpr std::uint32_t utf_surrogate_high_min = std::uint32_t{ 0xD800 }; //55 296
-            inline constexpr std::uint32_t utf_surrogate_high_max = std::uint32_t{ 0xDBFF }; //56 319
-            inline constexpr std::uint32_t utf_surrogate_low_min = std::uint32_t{ 0xDC00 }; //56 320
-            inline constexpr std::uint32_t utf_surrogate_low_max = std::uint32_t{ 0xDFFF }; //57 343
-            inline constexpr std::uint32_t max_valid_utf32 = std::uint32_t{ 0x0010FFFF }; //1 114 111
-            inline constexpr std::uint32_t utf_byte_mask = std::uint32_t{ 0x3F }; //0b0011 1111
-            inline constexpr std::uint32_t utf_byte_mark = std::uint32_t{ 0x80 }; //0b1000 0000
-        }
-        
-        template<typename I, typename O>
-        inline buffer_operation_result<O> utf32_to_utf8(
+	namespace detail {
+		
+		template <typename T>
+		inline bool valid_code_point(T code_point) noexcept {
+			static_assert(std::is_integral_v<T>, "Invalid type!");
+			// valid UTF-32 code points: 0 - 56'319, 57'344 - 1'114'111
+			if constexpr ((std::numeric_limits<T>::min)() < 0){
+				if (code_point < 0) return false;
+			}
+			if (code_point <= 56'319) return true;
+			if constexpr ((std::numeric_limits<T>::max)() > 1'114'111) {
+				if (code_point > 1'114'111) return false;
+			}
+			if (code_point >= 57'344) return true;
+			return false;
+		}
+
+		template <typename T>
+		inline bool valid_utf16_char(T utf16_char) noexcept {
+			static_assert(std::is_integral_v<T>, "Invalid type!");
+			// valid utf16_char: 0 - 65'535
+			if constexpr ((std::numeric_limits<T>::min)() < 0) {
+				if (utf16_char < 0) return false;
+			}
+			if constexpr ((std::numeric_limits<T>::max)() > 65'535) {
+				if (utf16_char > 65'535) return false;
+			}
+			return true;
+		}
+
+		template <typename T>
+		inline bool valid_utf8_char(T utf8_char) noexcept {
+			static_assert(std::is_integral_v<T>, "Invalid type!");
+			// valid utf8_char: 0 - 255
+			if constexpr ((std::numeric_limits<T>::min)() < 0) {
+				if (utf8_char < 0) return false;
+			}
+			if constexpr ((std::numeric_limits<T>::max)() > 255) {
+				if (utf8_char > 255) return false;
+			}
+			return true;
+		}
+
+		template <typename O>
+		inline O* encode_utf8(std::uint32_t code_point, O* dest, O* dest_end) noexcept {
+			FSTLOG_ASSERT(dest != nullptr);
+			if (dest >= dest_end) return nullptr; // no space in buffer
+			static_assert(
+				std::is_integral_v<O>
+				&& (std::numeric_limits<O>::max)() >= 255,
+				"Invalid type!");
+			FSTLOG_ASSERT(valid_code_point(code_point) && "Invalid code point.");
+
+			unsigned int first_byte = 0;
+			int continuation_bytes = 0;
+			// 1 byte
+			if (code_point < 0x80) {								
+				*dest = static_cast<O>(code_point);
+				return dest + 1;
+			}
+			// 2 byte
+			else if (code_point < 0x800) {
+				first_byte = 0b1100'0000;
+				continuation_bytes = 1;	
+			}
+			// 3 byte
+			else if (code_point < 0x10000) {
+				first_byte = 0b1110'0000;
+				continuation_bytes = 2;	
+			}
+			// 4 byte
+			else {
+				first_byte = 0b1111'0000;
+				continuation_bytes = 3;							
+			}
+			if (dest + continuation_bytes >= dest_end) return nullptr;	// no space in buffer
+			
+			int bit_shift_num = continuation_bytes * 6;
+			// write first byte
+			*dest++ = static_cast<O>((code_point >> bit_shift_num) | first_byte);
+			while (continuation_bytes-- > 0) {
+				bit_shift_num -= 6;
+				*dest++ = static_cast<O>(((code_point >> bit_shift_num) & 0b0011'1111) | 0b1000'0000);
+			}
+			return dest;
+		}
+
+		template <typename I>
+		inline unsigned char const* decode_utf8(
+			std::uint32_t& code_point,
+			unsigned char const* pos,
+			unsigned char const* end) noexcept
+		{
+			FSTLOG_ASSERT(pos != nullptr && pos + sizeof(I) <= end);
+			static_assert(std::is_integral_v<I>, "Invalid type!");
+			rm_cvref_t<I> utf8_char{ 0 };
+			memcpy(&utf8_char, pos, sizeof(I));
+			if (!valid_utf8_char(utf8_char)) return nullptr;
+			pos += sizeof(I);
+			const std::uint32_t first_byte = static_cast<std::uint32_t>(utf8_char);
+			
+			// 1 byte 0xxx xxxx									 (0 - 127 ASCII)
+			// 2 byte 110x xxxx  10xx xxxx						 (128 - 2047)
+			// 3 byte 1110 xxxx  10xx xxxx  10xx xxxx			 (2048 - 65535)
+			// 4 byte 1111 0xxx  10xx xxxx  10xx xxxx  10xx xxxx (65536 - 1114111)
+
+			// 1 byte
+			if ((first_byte & 0b1000'0000) == 0) {
+				code_point = first_byte;
+				return pos;
+			}
+
+			// multi byte
+			int continuation_bytes = 0;
+			std::uint32_t code_p = 0;
+			// 2 byte
+			if ((first_byte & 0b1110'0000) == 0b1100'0000) {
+				continuation_bytes = 1;
+				// init code_point with the first bytes data
+				code_p = first_byte & 0b0001'1111;
+			}
+			// 3 byte
+			else if ((first_byte & 0b1111'0000) == 0b1110'0000) {
+				continuation_bytes = 2;
+				// init code_point with the first bytes data
+				code_p = first_byte & 0b0000'1111;
+			}
+			// 4 byte
+			else if ((first_byte & 0b1111'1000) == 0b1111'0000) {
+				continuation_bytes = 3;
+				// init code_point with the first bytes data
+				code_p = first_byte & 0b0000'0111;
+			}
+			else {
+				// invalid data in first byte
+				return nullptr;	
+			}
+			// missing data
+			if (pos + continuation_bytes * sizeof(I) > end) return nullptr;
+
+			// add continuation byte's 6 bit data
+			while (continuation_bytes-- > 0) {
+				memcpy(&utf8_char, pos, sizeof(I));
+				pos += sizeof(I);
+				if (!valid_utf8_char(utf8_char)) return nullptr;
+				std::uint32_t byte = static_cast<std::uint32_t>(utf8_char);
+				// integrity check
+				if ((byte & 0b1100'0000) != 0b1000'0000) return nullptr;
+				code_p <<= 6;
+				code_p += byte & 0b0011'1111;
+			}
+
+			if (valid_code_point(code_p)) {
+				code_point = code_p;
+				return pos;
+			}
+			else {
+				return nullptr;
+			}
+		}
+
+		template <typename O>
+		inline O* encode_utf16(std::uint32_t code_point, O* dest, O* dest_end) noexcept {
+			FSTLOG_ASSERT(dest != nullptr);
+			static_assert(
+				std::is_integral_v<O>
+				&& (std::numeric_limits<O>::max)() >= 65'535, 
+				"Invalid type!");
+			FSTLOG_ASSERT(valid_code_point(code_point) && "Invalid code point.");
+
+			// fast one 16 bit value
+			if (code_point <= 65'535) {
+				if (dest >= dest_end) return nullptr; // no space in buffer
+				*dest++ = static_cast<O>(code_point);
+			}
+			// encoding with surrogates
+			else {
+				if (dest + 2 > dest_end) return nullptr; // no space in buffer
+				code_point -= 0x10000;
+				std::uint32_t surrogate_high = (code_point >> 10) + 0xD800;
+				std::uint32_t surrogate_low = (code_point & 0x3FF) + 0xDC00;
+				*dest = static_cast<O>(surrogate_high);
+				*(dest + 1) = static_cast<O>(surrogate_low);
+				dest += 2;
+			}
+			return dest;
+		}
+
+		template <typename I>
+		inline unsigned char const* decode_utf16(
+			std::uint32_t& code_point,
+			unsigned char const* pos,
+			unsigned char const* end) noexcept
+		{
+			FSTLOG_ASSERT(pos != nullptr && pos + sizeof(I) <= end);
+			rm_cvref_t<I> utf16_char{ 0 };
+			memcpy(&utf16_char, pos, sizeof(I));
+			if (!valid_utf16_char(utf16_char)) return nullptr;
+			std::uint32_t code_p = 0;
+			if (utf16_char < 0xD800 || utf16_char > 0xDFFF) {
+				code_p = static_cast<std::uint32_t>(utf16_char);
+				pos += sizeof(I);
+			}
+			else {
+				// missing surrogate
+				if (pos + 2 * sizeof(I) > end) return nullptr;
+				const std::uint32_t surrogate_high = static_cast<std::uint32_t>(utf16_char);
+				memcpy(&utf16_char, pos + sizeof(I), sizeof(I));
+				const std::uint32_t surrogate_low = static_cast<std::uint32_t>(utf16_char);
+				// if surrogtes are valid
+				if (surrogate_high <= 0xDBFF && surrogate_low >= 0xDC00 && surrogate_low <= 0xDFFF) {
+					code_p = ((surrogate_low & 0x3FF) | ((surrogate_high & 0x3FF) << 10)) + 0x10000;
+					pos += 2 * sizeof(I);
+				}
+				else {
+					return nullptr;
+				}
+			}
+			code_point = code_p;
+			return pos;
+		}
+
+		template <typename I, typename O>
+		inline buffer_operation_result<O> utf32_to_utf8(
 			unsigned char const*& in,
 			unsigned char const* input_end,
-            O* dest,
-            O* dest_end,
-            std::size_t& char_num) noexcept
+			O* dest,
+			O* dest_end,
+			std::size_t& char_num) noexcept
 		{
-			if (in == nullptr) {
-				return buffer_operation_result<O>{ dest, error_code::none };
-			}
-			static_assert(
-				std::is_integral_v<I>
-				&& (std::numeric_limits<I>::max)() >= max_valid_utf32,
-                "Invalid type!");
-            static_assert(
-				std::is_integral_v<O> 
-				&& (std::numeric_limits<O>::max)() >= (std::numeric_limits<std::uint8_t>::max)(),
-                "Invalid type!");
-            std::size_t num{ 0 };
-            while (in + sizeof(I) <= input_end && num != char_num) {
-				rm_cvref_t<I> input_num{ 0 };
-                memcpy(
-                    &input_num,
-                    in,
-                    sizeof(I));
-                std::uint32_t ch = input_num;
-                //ascii (1 byte utf8) (0 - 127)
-                if (ch < std::uint32_t{ 0x80 }) {
-                    if (dest >= dest_end) {
-                        char_num = num;
-                        return buffer_operation_result<O>{
-                            dest, error_code::no_space_in_buffer};
-                    }
-                    *dest++ = static_cast<O>(ch);
-                    num++;
-					in += sizeof(I);
-                    continue;
-                }
-                //2 byte    (128 - 2047)
-                if (ch < std::uint32_t{ 0x800 }) {
-                    if (dest + 2 > dest_end) {
-                        char_num = num;
-                        return buffer_operation_result<O>{
-                            dest, 
-							error_code::no_space_in_buffer};
-                    }
-                    *dest = static_cast<O>(
-                        ((ch >> 6) & std::uint32_t{ 0x1F }) 
-                        | std::uint32_t{ 0xC0 });
-                    *(dest + 1) = static_cast<O>(
-                        (ch & utf_byte_mask) | utf_byte_mark);
-                    dest += 2;
-                    num++;
-					in += sizeof(I);
-                    continue;
-                }
-                //3 byte (2048 - 65535) 
-                if (ch < std::uint32_t{ 0x10000 }) {
-                    if (dest + 3 > dest_end) {
-                        char_num = num;
-                        return buffer_operation_result<O>{
-                            dest, error_code::no_space_in_buffer };
-                    }
-                    if (ch < utf_surrogate_high_min || ch > utf_surrogate_low_max) {
-                        *dest = static_cast<O>(
-                            ((ch >> 12) & std::uint32_t{ 0x0F }) | std::uint32_t{ 0xE0 });
-                        *(dest + 1) = static_cast<O>(
-                            ((ch >> 6) & utf_byte_mask) | utf_byte_mark);
-                        *(dest + 2) = static_cast<O>(
-                            (ch & utf_byte_mask) | utf_byte_mark);
-                        dest += 3;
-                        num++;
-						in += sizeof(I);
-                        continue;
-                    }
-                }
-                //4 byte (65536 - 1114111 ) (do not "fix" else if to if)
-                else if (ch <= max_valid_utf32) {
-                    if (dest + 4 > dest_end) {
-                        char_num = num;
-                        return buffer_operation_result<O>{
-                            dest, error_code::no_space_in_buffer };
-                    }
-                    *dest = static_cast<O>(
-                        ((ch >> 18) & std::uint32_t{ 0x07 }) | std::uint32_t{ 0xF0 });
-                    *(dest + 1) = static_cast<O>(
-                        ((ch >> 12) & utf_byte_mask) | utf_byte_mark);
-                    *(dest + 2) = static_cast<O>(
-                        ((ch >> 6) & utf_byte_mask) | utf_byte_mark);
-                    *(dest + 3) = static_cast<O>(
-                        (ch & utf_byte_mask) | utf_byte_mark);
-                    dest += 4;
-                    num++;
-					in += sizeof(I);
-                    continue;
-                }
-				//abort
-				{
-					char_num = num;
+			FSTLOG_ASSERT(in != nullptr);
+			std::size_t char_count{ 0 };
+			while (in + sizeof(I) <= input_end && char_count != char_num) {
+				rm_cvref_t<I> code_point{ 0 };
+				memcpy(&code_point, in, sizeof(I));
+				// encoding failed invalid code_point
+				if (!valid_code_point(code_point)) {
+					char_num = char_count;
 					return buffer_operation_result<O>{
 						dest, error_code::input_contract_violation };
 				}
-            }
-            char_num = num;
-            return buffer_operation_result<O>{ dest, error_code::none };
-        }
 
-        template<typename I, typename O>
-        inline buffer_operation_result<O> utf16_to_utf8(
-			unsigned char const*& in,
-			unsigned char const* input_end,
-            O* dest,
-            O* dest_end,
-            std::size_t& char_num) noexcept
-		{
-			if (in == nullptr) {
-				return buffer_operation_result<O>{ dest, error_code::none };
+				O* next_dest = encode_utf8(static_cast<std::uint32_t>(code_point), dest, dest_end);
+				// encoding failed (no space)
+				if (next_dest == nullptr) {
+					char_num = char_count;
+					return buffer_operation_result<O>{ dest, error_code::no_space_in_buffer };
+				}
+
+				in += sizeof(I);
+				dest = next_dest;
+				char_count++;
 			}
-			static_assert(
-				std::is_integral_v<I>
-				&& (std::numeric_limits<I>::max)() >= (std::numeric_limits<std::uint16_t>::max)(),
-                "Invalid type!");
-            static_assert(
-				std::is_integral_v<O>
-				&& (std::numeric_limits<O>::max)() >= (std::numeric_limits<std::uint8_t>::max)(),
-                "Invalid type!");
-            std::size_t num{ 0 };
-            while (in + sizeof(I) <= input_end && num != char_num ) {
-				rm_cvref_t<I> input_num{0};
-                memcpy(
-                    &input_num, 
-                    in, 
-                    sizeof(I));
-                std::uint32_t current_char = input_num;
-                //ascii (1 byte utf8) (0 - 127)
-                if (current_char < 0x80) {
-                    if (dest >= dest_end) {
-                        char_num = num;
-                        return buffer_operation_result<O>{
-                            dest, error_code::no_space_in_buffer };
-                    }
-                    *dest++ = static_cast<O>(current_char);
-                    in += sizeof(I);
-                    num++;
-                    continue;
-                }
-                //2 byte (128 - 2047)
-                if (current_char < 0x800) {
-                    if (dest + 2 > dest_end) {
-                        char_num = num;
-                        return buffer_operation_result<O>{
-                            dest, error_code::no_space_in_buffer };
-                    }
-                    *dest = static_cast<O>(
-                        ((current_char >> 6) & std::uint32_t{ 0x1F }) | std::uint32_t{ 0xC0 });
-                    *(dest + 1) = static_cast<O>(
-                        (current_char & utf_byte_mask) | utf_byte_mark);
-                    dest += 2;
-					in += sizeof(I);
-                    num++; 
-                    continue;
-                }
-                //3 byte (2048 - 65535 non surrogate) 
-                if (current_char < utf_surrogate_high_min
-                    || current_char > utf_surrogate_low_max) 
-                {
-                    if (dest + 3 > dest_end) {
-                        char_num = num; 
-                        return buffer_operation_result<O>{
-                            dest, error_code::no_space_in_buffer };
-                    }
-                    *dest = static_cast<O>(
-                        ((current_char >> 12) & std::uint32_t{ 0x0F }) | 
-                        std::uint32_t{ 0xE0 });
-                    *(dest + 1) = static_cast<O>(
-                        ((current_char >> 6) & utf_byte_mask) | utf_byte_mark);
-                    *(dest + 2) = static_cast<O>(
-                        (current_char & utf_byte_mask) | utf_byte_mark);
-                    dest += 3;
-					in += sizeof(I);
-                    num++;
-                    continue;
-                }
-                //4 byte (65536 - 1114111 surrogate p.)
-                if (current_char <= utf_surrogate_high_max
-                    && in + 2 * sizeof(I) <= input_end) 
-                {
-                    const std::uint32_t surr_high = current_char;
-					rm_cvref_t<I> next_char{ 0 };
-                    memcpy(
-                        &next_char, 
-                        in + sizeof(I),
-                        sizeof(I)
-                    );
-                    const std::uint32_t surr_low = next_char;
-                    if (surr_low >= utf_surrogate_low_min && 
-                        surr_low <= utf_surrogate_low_max) 
-                    {
-                        if (dest + 4 > dest_end) {
-                            char_num = num;
-                            return buffer_operation_result<O>{ 
-                                dest, error_code::no_space_in_buffer };
-                        }
-                        const std::uint32_t ch = ((surr_low & std::uint32_t{ 0x3FF }) |
-                            ((surr_high & std::uint32_t{ 0x3FF }) << 10)) +
-                            std::uint32_t{ 0x10000 };
+			char_num = char_count;
+			return buffer_operation_result<O>{ dest, error_code::none };
+		}
 
-                        *dest = static_cast<O>(
-                            ((ch >> 18) & std::uint32_t{ 0x07 }) | std::uint32_t{ 0xF0 });
-                        *(dest + 1) = static_cast<O>(
-                            ((ch >> 12) & utf_byte_mask) | utf_byte_mark);
-                        *(dest + 2) = static_cast<O>(
-                            ((ch >> 6) & utf_byte_mask) | utf_byte_mark);
-                        *(dest + 3) = static_cast<O>(
-                                (ch & utf_byte_mask) | utf_byte_mark);
-                        dest += 4;
-                        in += 2 * sizeof(I);
-                        num++;
-                        continue;
-                    }
-                }
-                //abort
-                {
-					char_num = num;
+		template <typename I, typename O>
+		inline buffer_operation_result<O> utf16_to_utf8(
+			unsigned char const* &in,
+			unsigned char const* input_end,
+			O* dest,
+			O* dest_end,
+			std::size_t& char_num) noexcept
+		{
+			FSTLOG_ASSERT(in != nullptr);
+			static_assert(std::is_integral_v<I>, "Invalid type!");
+			std::size_t char_count{ 0 };
+			while (in + sizeof(I) <= input_end && char_count != char_num) {
+				std::uint32_t code_p{ 0 };
+				unsigned char const* next_in = decode_utf16<I>(code_p, in, input_end);
+				// decoding failed, bad or missing data
+				if (next_in == nullptr) {
+					char_num = char_count;
 					return buffer_operation_result<O>{
 						dest, error_code::input_contract_violation };
-                }
-            }
-            char_num = num;
-            return buffer_operation_result<O>{ dest, error_code::none };
-        }
+				}
+				O* next_dest = encode_utf8(code_p, dest, dest_end);
+				// encoding failed, no space
+				if (next_dest == nullptr) {
+					char_num = char_count;
+					return buffer_operation_result<O>{ 
+						dest, error_code::no_space_in_buffer };
+				}
+				in = next_in;
+				dest = next_dest;
+				char_count++;
+			}
+			char_num = char_count;
+			return buffer_operation_result<O>{ dest, error_code::none };
+		}
 
-        template<typename I, typename O>
-        inline buffer_operation_result<O> utf8_to_utf32(
+		template<typename I, typename O>
+		inline buffer_operation_result<O> utf8_to_utf32(
 			unsigned char const*& input,
 			unsigned char const* input_end,
-            O* dest,
-            O* dest_end,
-            std::size_t& char_num) noexcept
+			O* dest,
+			O* dest_end,
+			std::size_t& char_num) noexcept
 		{
-			static_assert(sizeof(I) == 1, "Only 1 byte chars!");
-			if (input == nullptr) {
-				return buffer_operation_result<O>{ dest, error_code::none };
-			}
+			FSTLOG_ASSERT(input != nullptr);
 			static_assert(
 				std::is_integral_v<O>
-                && (std::numeric_limits<O>::max)() >= max_valid_utf32,
-                "Invalid type!");
-           std::size_t num{ 0 };
-            while (input < input_end && num != char_num) {
-                if (dest >= dest_end) {
-                    char_num = num;
-                    return buffer_operation_result<O>{ 
-                        dest, error_code::no_space_in_buffer };
-                }
-                //ascii (1 byte utf8) 0xxx xxxx
-				if (*input < 0x80) {
-                    *dest++ = static_cast<O>(*input++);
-                    num++;
-                    continue;
-                }
-                //invalid utf8 10xx xxxx
-                if (*input < 0xC0) {
-                    //fall through to abort
-                }
-                //2 byte 110x xxxx  10xx xxxx (128 - 2047)
-                else if (*input < 0xE0
-                    && *input > 0xC1
-                    && input + 2 <= input_end
-                    && (static_cast<std::uint32_t>(*(input + 1)) >> 6) == 2)
-                {
-                    std::uint32_t ch1 = *input;
-                    std::uint32_t ch0 = *(input + 1);
-                    std::uint32_t ch = 
-                        ((ch1 & std::uint32_t{ 0x1F }) << 6)
-                        | (ch0 & utf_byte_mask);
-                    *dest++ = static_cast<O>(ch);
-                    input += 2;
-                    num++;
-                    continue;
-                }
-                //3 byte 1110 xxxx  10xx xxxx  10xx xxxx (2048 - 65535)
-                else if (*input < 0xF0
-                    && input + 3 <= input_end
-                    && (static_cast<std::uint32_t>(*(input + 1)) >> 6) == 2
-                    && (static_cast<std::uint32_t>(*(input + 2)) >> 6) == 2)
-                {
-                    std::uint32_t ch2 = *input;
-                    std::uint32_t ch1 = *(input + 1);
-                    std::uint32_t ch0 = *(input + 2);
-                    std::uint32_t ch = 
-						((ch2 & std::uint32_t{ 0x0F }) << 12)
-                        | ((ch1 & utf_byte_mask) << 6)
-                        | (ch0 & utf_byte_mask);
-                    if ((ch > 0x7FF && ch < utf_surrogate_high_min) 
-                        || ch > utf_surrogate_low_max) 
-                    {
-                        *dest++ = static_cast<O>(ch);
-                        input += 3;
-                        num++;
-                        continue;
-                    }
-                }
-                //4 byte 1111 0xxx  10xx xxxx  10xx xxxx  10xx xxxx (65536 - 1114111)
-                else if (*input < 0xF8
-                    && input + 4 <= input_end
-                    && (static_cast<std::uint32_t>(*(input + 1)) >> 6) == 2
-                    && (static_cast<std::uint32_t>(*(input + 2)) >> 6) == 2
-                    && (static_cast<std::uint32_t>(*(input + 3)) >> 6) == 2)
-				{
-
-                    std::uint32_t ch3 = *input;
-                    std::uint32_t ch2 = *(input + 1);
-                    std::uint32_t ch1 = *(input + 2);
-                    std::uint32_t ch0 = *(input + 3);
-                    std::uint32_t ch = 
-						((ch3 & std::uint32_t{ 0x07 }) << 18)
-                        | ((ch2 & utf_byte_mask) << 12)
-                        | ((ch1 & utf_byte_mask) << 6)
-                        | (ch0 & utf_byte_mask);
-                    if (ch > 0xFFFF && ch <= max_valid_utf32) {
-                        *dest++ = static_cast<O>(ch);
-                        input += 4;
-                        num++;
-                        continue;
-                    }
-                }
-				//abort
-				{
-					char_num = num;
+				&& (std::numeric_limits<O>::max)() >= 1'114'111,
+				"Invalid type!");
+			std::size_t char_count{ 0 };
+			while (input + sizeof(I) <= input_end && char_count != char_num) {
+				if (dest >= dest_end) {
+					char_num = char_count;
+					return buffer_operation_result<O>{
+						dest, error_code::no_space_in_buffer };
+				}
+				std::uint32_t code_point{0};
+				unsigned char const* next_input = decode_utf8<I>(code_point, input, input_end);
+				// bad or missing input data
+				if (next_input == nullptr) {
+					char_num = char_count;
 					return buffer_operation_result<O>{
 						dest, error_code::input_contract_violation };
 				}
-            }
-            char_num = num;
-            return buffer_operation_result<O>{ dest, error_code::none };
-        }
 
-        template<typename I, typename O>
-        inline buffer_operation_result<O> utf8_to_utf16(
+				*dest++ = static_cast<O>(code_point);
+				input = next_input;
+				char_count++;
+			}
+			char_num = char_count;
+			return buffer_operation_result<O>{ dest, error_code::none };
+		}
+
+		template<typename I, typename O>
+		inline buffer_operation_result<O> utf8_to_utf16(
 			unsigned char const*& input,
 			unsigned char const* input_end,
-            O* dest,
-            O* dest_end,
-            std::size_t& char_num) noexcept
+			O* dest,
+			O* dest_end,
+			std::size_t& char_num) noexcept
 		{
-			static_assert(sizeof(I) == 1, "Only 1 byte chars!");
-			if (input == nullptr)
-				return buffer_operation_result<O>{ dest, error_code::none };
+			FSTLOG_ASSERT(input != nullptr);
 			static_assert(
 				std::is_integral_v<O>
-                && (std::numeric_limits<O>::max)() >= (std::numeric_limits<std::uint16_t>::max)(),
-                "Invalid type!"); 
-            std::size_t num{ 0 };
-            while (input < input_end && num != char_num ) {
-                if (dest >= dest_end) {
-                    char_num = num;
-                    return buffer_operation_result<O>{ 
-                        dest, error_code::no_space_in_buffer };
-                }
-                //ascii (1 byte utf8) 0xxx xxxx (0 - 127)
-                if (*input < 0x80) {
-                    *dest++ = static_cast<O>(*input++);
-                    num++;
-                    continue;
-                }
-                //invalid utf8
-                if (*input < 0xC0) {
-                    //fall through to abort
-                }
-                //2 byte 110x xxxx  10xx xxxx (128 - 2047)
-                else if (*input < 0xE0
-                    && *input > 0xC1
-                    && input + 2 <= input_end
-                    && (static_cast<std::uint32_t>(*(input + 1)) >> 6) == 2)
-                {
-                    std::uint32_t ch1 = *input;
-                    std::uint32_t ch0 = *(input + 1);
-                    std::uint32_t ch = 
-                        ((ch1 & std::uint32_t{ 0x1F }) << 6)
-                        | (ch0 & utf_byte_mask);
-                    *dest++ = static_cast<O>(ch);
-                    input += 2;
-                    num++;
-                    continue;
-                }
-                //3 byte 1110 xxxx  10xx xxxx  10xx xxxx (2048 - 65535)
-                else if (*input < 0xF0
-                    && input + 3 <= input_end
-                    && (*(input + 1) >> 6) == 2
-                    && (*(input + 2) >> 6) == 2)
-                {
-                    std::uint32_t ch2 = *input;
-                    std::uint32_t ch1 = *(input + 1);
-                    std::uint32_t ch0 = *(input + 2);
-                    std::uint32_t ch = 
-						((ch2 & std::uint32_t{ 0x0F }) << 12)
-                        | ((ch1 & utf_byte_mask) << 6)
-                        | (ch0 & utf_byte_mask);
-                    if ((ch > 0x7FF && ch < utf_surrogate_high_min) 
-                        || ch > utf_surrogate_low_max) 
-                    {
-                        *dest++ = static_cast<O>(ch);
-                        input += 3;
-                        num++;
-                        continue;
-                    }
-                }
-                //4 byte 1111 0xxx  10xx xxxx  10xx xxxx  10xx xxxx (65536 - 1114111)
-                else if (*input < 0xF8
-                    && input + 4 <= input_end
-                    && (static_cast<std::uint32_t>(*(input + 1)) >> 6) == 2
-                    && (static_cast<std::uint32_t>(*(input + 2)) >> 6) == 2
-                    && (static_cast<std::uint32_t>(*(input + 3)) >> 6) == 2)
-                {
-                    std::uint32_t ch3 = *input;
-                    std::uint32_t ch2 = *(input + 1);
-                    std::uint32_t ch1 = *(input + 2);
-                    std::uint32_t ch0 = *(input + 3);
-                    std::uint32_t ch = 
-                        ((ch3 & std::uint32_t{ 0x07 }) << 18)
-                        | ((ch2 & utf_byte_mask) << 12)
-                        | ((ch1 & utf_byte_mask) << 6)
-                        | (ch0 & utf_byte_mask);
-                    if (ch > 0xFFFF && ch <= max_valid_utf32) {
-                        if (dest + 2 > dest_end) {
-                            char_num = num;
-                            return buffer_operation_result<O>{ 
-                                dest, error_code::no_space_in_buffer };
-                        }
-                        //subtract prev. covered utf range 
-                        ch -= std::uint32_t{ 0x0010000 };
-                        std::uint32_t surr_high = 
-                            ((ch >> 10) & std::uint32_t{ 0x3FF }) | std::uint32_t{ 0xD800 };
-                        std::uint32_t surr_low = 
-                            (ch & std::uint32_t{ 0x3FF }) | std::uint32_t{ 0xDC00 };
-                        *dest = static_cast<O>(surr_high);
-                        *(dest + 1) = static_cast<O>(surr_low);
-                        dest += 2;
-                        input += 4;
-                        num++;
-                        continue;
-                    }
-                }
-				//abort
-				{
-					char_num = num;
+				&& (std::numeric_limits<O>::max)() >= 65'535,
+				"Invalid type!");
+			std::size_t char_count{ 0 };
+			while (input + sizeof(I) <= input_end && char_count != char_num) {
+				std::uint32_t code_point{ 0 };
+				unsigned char const* next_input = decode_utf8<I>(code_point, input, input_end);
+				// bad or missing input data
+				if (next_input == nullptr) {
+					char_num = char_count;
 					return buffer_operation_result<O>{
 						dest, error_code::input_contract_violation };
 				}
-            }
-            char_num = num;
-            return buffer_operation_result<O>{ dest, error_code::none };
-        }
+				
+				O* next_dest = encode_utf16(code_point, dest, dest_end);
+				// no space in buffer
+				if (next_dest == nullptr) {
+					char_num = char_count;
+					return buffer_operation_result<O>{
+						dest, error_code::no_space_in_buffer };
+				}
+
+				input = next_input;
+				dest = next_dest;
+				char_count++;
+			}
+			char_num = char_count;
+			return buffer_operation_result<O>{ dest, error_code::none };
+		}
 
         template<int utf_bits, typename I, typename O,
             std::enable_if_t< utf_bits == 16>* = nullptr>

@@ -10,10 +10,11 @@
 
 #include <detail/utf_conv.hpp>
 
-using utf8_char = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(u8"")>>>;
+using utf8_char_std = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(u8"")>>>;
+using utf8_char_lib = std::conditional<std::is_signed_v<utf8_char_std>, std::make_unsigned<utf8_char_std>::type, utf8_char_std>::type;
 
 TEST_CASE("utf_conv") {
-	constexpr std::basic_string_view<utf8_char> u8_text{
+	constexpr std::basic_string_view<utf8_char_std> u8_text{
 		u8"123 UTF-8 encoded sample ∮ E⋅da = Q,  n → ∞, ∑ f(i)"
 		u8"= ∏ g(i)ði ıntəˈnæʃənəl fəˈnɛtık əsoʊsiˈeıʃn ‘single’ and"
 		u8"“double” quotes• †, ‡, ‰, •, 3–4, —, −5 / +5, ™, … χαῖρε, ὦ χαῖρε, "
@@ -38,13 +39,13 @@ TEST_CASE("utf_conv") {
 	static_assert(text_char_num == 323, "!");
 	
 	SECTION("utf32_to_utf8") {
-		std::array<unsigned char, 1024> out_buff{ 0 };
+		std::array<utf8_char_lib, 1024> out_buff{ 0 };
 		std::size_t char_num = GENERATE(0, 150, 323, (std::numeric_limits<std::size_t>::max)());
 		CAPTURE(char_num);
 		{
 			const auto wanted_charnum{ char_num };
 			const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(u32_text.data()) };
-			const auto result = fstlog::detail::utf32_to_utf8<char32_t, unsigned char>(
+			const auto result = fstlog::detail::utf32_to_utf8<char32_t, utf8_char_lib>(
 				in_begin, in_begin + (u32_text.size() * sizeof(char32_t)),
 				out_buff.data(), out_buff.data() + out_buff.size(),
 				char_num);
@@ -61,26 +62,26 @@ TEST_CASE("utf_conv") {
 				trimmed_num);
 			CHECK(wanted_trim == trimmed_num);
 
-			const std::basic_string_view<utf8_char> trimmed_control{
+			const std::basic_string_view<utf8_char_std> trimmed_control{
 				u8_text.data(),
 				static_cast<std::size_t>(trimmed_end - u8_text.data())
 			};
 
 			CHECK(trimmed_control ==
-				std::basic_string_view<utf8_char>{
-				reinterpret_cast<utf8_char*>(out_buff.data()),
+				std::basic_string_view<utf8_char_std>{
+					reinterpret_cast<utf8_char_std*>(out_buff.data()),
 					static_cast<std::size_t>(result.ptr - out_buff.data())});
 		}
 	};
 
 	SECTION("utf16_to_utf8") {
-		std::array<unsigned char, 1024> out_buff{ 0 };
+		std::array<utf8_char_lib, 1024> out_buff{ 0 };
 		std::size_t char_num = GENERATE(0, 150, 323, (std::numeric_limits<std::size_t>::max)());
 		CAPTURE(char_num);
 		{
 			const auto wanted_charnum{ char_num };
 			const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(u16_text.data()) };
-			const auto result = fstlog::detail::utf16_to_utf8<char16_t, unsigned char>(
+			const auto result = fstlog::detail::utf16_to_utf8<char16_t, utf8_char_lib>(
 				in_begin, in_begin + (u16_text.size() * sizeof(char16_t)),
 				out_buff.data(), out_buff.data() + out_buff.size(),
 				char_num);
@@ -97,14 +98,13 @@ TEST_CASE("utf_conv") {
 					trimmed_num);
 			CHECK(wanted_trim == trimmed_num);
 
-			const std::basic_string_view<utf8_char> trimmed_control{
+			const std::basic_string_view<utf8_char_std> trimmed_control{
 				u8_text.data(),
-				static_cast<std::size_t>(trimmed_end - u8_text.data())
-			};
+				static_cast<std::size_t>(trimmed_end - u8_text.data())};
 
 			CHECK(trimmed_control ==
-				std::basic_string_view<utf8_char>{
-					reinterpret_cast<utf8_char*>(out_buff.data()),
+				std::basic_string_view<utf8_char_std>{
+					reinterpret_cast<utf8_char_std*>(out_buff.data()),
 					static_cast<std::size_t>(result.ptr - out_buff.data())});
 		}
 	};
@@ -113,7 +113,7 @@ TEST_CASE("utf_conv") {
 		std::array<char16_t, 512> out_buff{ 0 };
 		std::size_t char_num{ (std::numeric_limits<std::size_t>::max)() };
 		const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(u8_text.data()) };
-		auto result = fstlog::detail::utf8_to_utf16<utf8_char, char16_t>(
+		auto result = fstlog::detail::utf8_to_utf16<utf8_char_lib, char16_t>(
 			in_begin, in_begin + u8_text.size(),
 			out_buff.data(), out_buff.data() + out_buff.size(),
 			char_num);
@@ -128,7 +128,7 @@ TEST_CASE("utf_conv") {
 		std::array<char32_t, 512> out_buff{ 0 };
 		std::size_t char_num{ (std::numeric_limits<std::size_t>::max)() };
 		const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(u8_text.data()) };
-		auto result = fstlog::detail::utf8_to_utf32<utf8_char, char32_t>(
+		auto result = fstlog::detail::utf8_to_utf32<utf8_char_lib, char32_t>(
 			in_begin, in_begin + u8_text.size(),
 			out_buff.data(), out_buff.data() + out_buff.size(),
 			char_num);
@@ -146,7 +146,7 @@ TEST_CASE("utf_conv") {
 		const unsigned char* const in_begin{ reinterpret_cast<const unsigned char*>(u8_text.data()) };
 		const unsigned char* const in_end = in_begin + conv_length;
 		const unsigned char* in_pos = in_begin;
-		auto result = fstlog::detail::utf8_to_utf32<utf8_char, char32_t>(
+		auto result = fstlog::detail::utf8_to_utf32<utf8_char_lib, char32_t>(
 			in_pos, in_end,
 			out_buff.data(), out_buff.data() + out_buff.size(),
 			char_num);
@@ -158,7 +158,7 @@ TEST_CASE("utf_conv") {
 		out_buff.fill(0);
 		char_num = 1024;
 		conv_length = 101;
-		result = fstlog::detail::utf8_to_utf32<utf8_char, char32_t>(
+		result = fstlog::detail::utf8_to_utf32<utf8_char_lib, char32_t>(
 			in_pos, in_pos + conv_length,
 			out_buff.data(), out_buff.data() + out_buff.size(),
 			char_num);
