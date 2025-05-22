@@ -215,6 +215,7 @@ set(src_formatter_impl_detail
     "src/formatter/impl/detail/encoder_aggregate_separator_txt_mixin.hpp"
     "src/formatter/impl/detail/encoder_charconv_fast_mixin.hpp"
     "src/formatter/impl/detail/encoder_charconv_mixin.hpp"
+    "src/formatter/impl/detail/encoder_helper.hpp"
     "src/formatter/impl/detail/encoder_stdformat_mixin.hpp"
     "src/formatter/impl/detail/format_setting_txt.hpp"
     "src/formatter/impl/detail/format_setting_txt_fast.hpp"

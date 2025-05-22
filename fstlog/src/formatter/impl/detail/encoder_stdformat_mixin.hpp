@@ -5,7 +5,6 @@
 #include <cstring>
 #include <format>
 #include <limits>
-#include <ranges>
 #include <string_view>
 #include <type_traits>
 #pragma intrinsic(memcpy)
@@ -25,7 +24,6 @@
 #include <fstlog/detail/types.hpp>
 #include <fstlog/detail/noexceptions.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
-#include <fstlog/detail/ut_cast.hpp>
 #include <formatter/impl/detail/time_to_str_converter.hpp>
 
 #ifdef FSTLOG_NOEXCEPTIONS

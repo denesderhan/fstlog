@@ -10,18 +10,19 @@
 #pragma intrinsic(memcpy)
 
 #include <detail/byte_span.hpp>
-#include <detail/utf_conv.hpp>
 #include <detail/error_code.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
+#include <detail/utf_conv.hpp>
+#include <formatter/impl/detail/encoder_helper.hpp>
+#include <formatter/impl/detail/format_setting_txt_fast.hpp>
+#include <formatter/impl/detail/time_to_str_converter.hpp>
 #include <fstlog/detail/convert_to_basic_string_view.hpp>
+#include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/is_char_type.hpp>
 #include <fstlog/detail/is_string_like.hpp>
 #include <fstlog/detail/log_type_metadata.hpp>
-#include <fstlog/detail/types.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
-#include <fstlog/detail/ut_cast.hpp>
-#include <formatter/impl/detail/format_setting_txt_fast.hpp>
-#include <formatter/impl/detail/time_to_str_converter.hpp>
+#include <fstlog/detail/types.hpp>
 
 namespace fstlog {
     template<typename L>
@@ -57,85 +58,62 @@ namespace fstlog {
 
         ~encoder_charconv_fast_mixin() = default;
 
-        //integral
+        // integral
         template<typename T, std::enable_if_t<
             std::is_integral_v<T> &&
             !std::is_same_v<rm_cvref_t<T>, bool> &&
             !is_char_type_v<T>
         >* = nullptr>
         void encode(T data, format_type format) noexcept {
-            std::to_chars_result result;
-            constexpr bool is_unsigned{ std::is_unsigned_v<T> };
-            const auto str_begin = this->output_ptr();
-            const auto buffer_end = this->output_end();
-            const auto buff_end = safe_reinterpret_cast<char*>(buffer_end);
-            auto pos{ str_begin };
+			// ensure minimum space for sign + prefix
+			if (!this->output_has_space(3)) {
+				this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+				return;
+			}
+			const auto str_begin = this->output_ptr();
+			// We will increase buffer_pos as we write the formatted data
+			auto buffer_pos{ str_begin };
+			
+			// write sign
+			if (data < 0) *buffer_pos++ = '-';
+			
+			// write the prefix and set the base for the integer formatting 
+			bool write_prefix = true;
+			// do not write prefix if data is octal 0 (write 0 not 00)
+			if (format.type == 'o' && data == 0) write_prefix = false;
+			const int base = detail::handle_prefix(format.type, write_prefix, buffer_pos);
+			
+			// convert data to unsigned absolute value
+			const std::make_unsigned_t<T> abs_data = detail::abs_unsigned(data);
+			// use std::to_chars() to format the number
+			char* const digits_start = safe_reinterpret_cast<char*>(buffer_pos);
+			auto buffer_end = this->output_end();
+			auto result = std::to_chars(
+				digits_start,
+				safe_reinterpret_cast<char*>(buffer_end),
+				abs_data,
+				base);
+			if (result.ec != std::errc{}) {
+				this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+				return;
+			}
+			auto str_end = safe_reinterpret_cast<unsigned char*>(result.ptr);
 
-            //[10(/0), 2(B,b), 10(d), 10(?), 16(X,x), 10(?), 10(?), 8(o)]
-            alignas(constants::cache_ls_nosharing) const std::array<int, 8> base_table{
-                10, 2, 10, 10, 16, 10, 10, 8 };
-            const int base = base_table[(format.type >> 1) & 0b111];
+			// convert digits to upper case (if format type is X, binary B can't have chars )
+			if (format.type == 'X') {
+				detail::to_upper_case(digits_start, result.ptr);
+			}
 
-            if (base == 10)
-            {
-                auto str_beg = safe_reinterpret_cast<char*>(pos);
-                result = std::to_chars(str_beg, buff_end, data, base);
-            }
-            else {
-                if (buffer_end - str_begin >= 3) {
-                    const std::array<unsigned char, 4> prefix_tbl{ 'b', '0', 'x', '!' };
-                    const auto type_char{ prefix_tbl[static_cast<unsigned int>(base) >> 3] };
-                    if constexpr (is_unsigned) {
-                        if (type_char != '0') {
-                            *pos++ = '0';
-                            *pos++ = type_char;
-                        }
-                        else if (data != 0) *pos++ = '0';
-                        auto str_beg = safe_reinterpret_cast<char*>(pos);
-                        result = std::to_chars(str_beg, buff_end, data, base);
-                    }
-                    else {
-                        if (data >= 0) {
-                            //compiler warning forces code duplication:
-                            //conditional expression is constant, consider using 'if constexpr' statement instead
-                            if (type_char != '0') {
-                                *pos++ = '0';
-                                *pos++ = type_char;
-                            }
-                            else if (data != 0) *pos++ = '0';
-                            auto str_beg = safe_reinterpret_cast<char*>(pos);
-                            result = std::to_chars(str_beg, buff_end, data, base);
-                        }
-                        else {
-                            *pos = '-';
-                            *(pos + 1) = '0';
-                            pos = type_char != '0' ? pos + 2 : pos + 1;
-                            auto str_beg = safe_reinterpret_cast<char*>(pos);
-                            result = std::to_chars(str_beg, buff_end, data, base);
-                            *pos = type_char;
-                        }
-                    }
-                }
-                else {
-                    this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
-                    return;
-                }
-            }
-            if (result.ec == std::errc{}) {
-                this->set_output_ptr_unchecked(safe_reinterpret_cast<unsigned char*>(result.ptr));
-            }
-            else {
-                this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
-                return;
-            }
+			// update buffer pointer to the first free byte
+			this->set_output_ptr_unchecked(str_end);
         }
         
-        //float
+        // float
         template<typename T, std::enable_if_t<
             std::is_floating_point_v<T>>* = nullptr>
         void encode( T data, format_type format ) noexcept {
             auto str_beg = safe_reinterpret_cast<char*>(this->output_ptr());
-            auto buff_end = safe_reinterpret_cast<char*>(this->output_end());
+            auto buffer_end = safe_reinterpret_cast<char*>(this->output_end());
 
             alignas(constants::cache_ls_nosharing)
                 const std::array<std::chars_format, 8> ch_form_table{
@@ -152,23 +130,22 @@ namespace fstlog {
               
             std::to_chars_result result;
             if (format.precision == 0xffff) {
-                result = std::to_chars(str_beg, buff_end, data, fmt);
+                result = std::to_chars(str_beg, buffer_end, data, fmt);
             }
             else {
-                result = std::to_chars(str_beg, buff_end, data, fmt, format.precision);
+                result = std::to_chars(str_beg, buffer_end, data, fmt, format.precision);
             }
 
-            if (result.ec == std::errc{}) {
-                this->set_output_ptr_unchecked(
-                    safe_reinterpret_cast<unsigned char*>(result.ptr));
-            }
-            else {
+            if (result.ec != std::errc{}) {
                 this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
                 return;
             }
+			
+            // update buffer pointer to the first free byte
+            this->set_output_ptr_unchecked(safe_reinterpret_cast<unsigned char*>(result.ptr));
         }
 
-        //char char8
+        // char char8
         template<typename T, std::enable_if_t<
             is_char_type_v<T>
             && sizeof(T) == 1
@@ -184,7 +161,7 @@ namespace fstlog {
             }
         }
 
-        //utf16 utf32 character
+        // utf16 utf32 character
         template<typename T, std::enable_if_t<
             is_char_type_v<T>
             && sizeof(T) != 1
@@ -193,7 +170,7 @@ namespace fstlog {
             encode(byte_span<T>{ &data, 1 }, format);
         }
 
-        //string in buffer
+        // string in buffer
         template<typename T, std::enable_if_t<
             is_char_type_v<T>
             || std::is_same_v<std::remove_const_t<T>, unsigned char>
@@ -231,12 +208,13 @@ namespace fstlog {
             }
         }
 
+        // string_view
         template<typename T>
         void encode(std::basic_string_view<T> strv, format_type format) noexcept {
             encode(byte_span<const T>{ strv.data(), strv.size() }, format);
         }
 
-        //pointer
+        // pointer
         template<typename T, std::enable_if_t<
             std::is_pointer_v<std::remove_reference_t<T>>
             >* = nullptr>
@@ -245,7 +223,7 @@ namespace fstlog {
             encode(safe_reinterpret_cast<std::uintptr_t>(data), format);
         }
 
-        //bool
+        // bool
         template<typename T, std::enable_if_t<
             std::is_same_v<rm_cvref_t<T>, bool>
             >* = nullptr>
@@ -263,7 +241,7 @@ namespace fstlog {
             }
         }
 
-        //str_hash_fnv
+        // str_hash_fnv
         template<typename T, std::enable_if_t<
             std::is_same_v<rm_cvref_t<T>, str_hash_fnv>
             >* = nullptr>
@@ -282,7 +260,7 @@ namespace fstlog {
             }
         }
 
-        //nanosec_epoch
+        // nanosec_epoch
         template<typename T, std::enable_if_t<
             std::is_same_v<rm_cvref_t<T>, stamp_type>
             >* = nullptr>
@@ -290,8 +268,7 @@ namespace fstlog {
             const auto result = timestamp_to_chars(
                 data,
 				this->output_ptr(),
-				this->output_end()
-            );
+				this->output_end());
             if (result.ec == error_code::none) {
                 this->set_output_ptr_unchecked(result.ptr);
             }
