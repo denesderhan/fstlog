@@ -17,7 +17,6 @@ using enc_type = fstlog::encoder_charconv_mixin<
 					fstlog::allocator_mixin>>>;
 
 TEST_CASE("encoder_charconv_mixin") {
-
 	SECTION("no_space_in_buffer") {
 		enc_type encoder;
 		std::array<unsigned char, 10> buffer{ '!' };
@@ -106,16 +105,23 @@ TEST_CASE("encoder_charconv_mixin") {
 		CHECK(!encoder.has_error());
 		CHECK(res == control);
 	};
-
 	SECTION("integer") {
 		auto extent = GENERATE(table<int, char,  char, bool, std::string_view>({
+			std::tuple<int, char,  char, bool, std::string_view>{(std::numeric_limits<std::int32_t>::min)(), '\0', '+', false, "-2147483648"},
+			std::tuple<int, char,  char, bool, std::string_view>{0, '\0', '+', false, "+0"},
+			std::tuple<int, char,  char, bool, std::string_view>{0, '\0', '-', false, "0"},
 			std::tuple<int, char,  char, bool, std::string_view>{1234, '\0', '+', false, "+1234"},
-			std::tuple<int, char,  char, bool, std::string_view>{15, 'x', ' ', false, " f"},
+			std::tuple<int, char,  char, bool, std::string_view>{-15, 'x', ' ', false, "-f"},
+			std::tuple<int, char,  char, bool, std::string_view>{15, 'x', ' ', true, " 0xf"},
 			std::tuple<int, char,  char, bool, std::string_view>{15, 'X', '-', true, "0XF"},
+			std::tuple<int, char,  char, bool, std::string_view>{15, 'X', '-', false, "F"},
+			std::tuple<int, char,  char, bool, std::string_view>{-15, 'b', '+', true, "-0b1111"},
 			std::tuple<int, char,  char, bool, std::string_view>{-15, 'b', '+', false, "-1111"},
 			std::tuple<int, char,  char, bool, std::string_view>{-15, 'B', ' ', true, "-0B1111"},
+			std::tuple<int, char,  char, bool, std::string_view>{15, 'B', ' ', false, " 1111"},
 			std::tuple<int, char,  char, bool, std::string_view>{64, 'o', '-', false, "100"},
-			std::tuple<int, char,  char, bool, std::string_view>{64, 'o', '+', true, "+0100"}
+			std::tuple<int, char,  char, bool, std::string_view>{64, 'o', '+', true, "+0100"},
+			std::tuple<int, char,  char, bool, std::string_view>{0, 'o', '+', true, "+0"}
 			}));
 
 		auto to_encode = std::get<0>(extent);
@@ -145,6 +151,7 @@ TEST_CASE("encoder_charconv_mixin") {
 		using tup_typ = std::tuple<float, char, char, bool, int, std::string_view>;
 		auto extent = GENERATE(table<float, char, char, bool, int, std::string_view>({
 			tup_typ{0.12434234233422f, '\0', '+', false, 4, "+0.1243"},
+			tup_typ{1.12378f, 'e', ' ', false, 3, " 1.124e+00"},
 			tup_typ{-1.12378f, 'e', '+', false, 3, "-1.124e+00"},
 			tup_typ{1.11f, 'g', '-', false, 2, "1.1"},
 			tup_typ{1.11f, 'f', '-', false, 2, "1.11"},

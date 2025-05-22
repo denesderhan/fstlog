@@ -1,5 +1,9 @@
 //Copyright © Dénes Derhán 2022.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
+#include <cstddef> // __cpp_lib_format is defined here in windows
+#if not defined(__cpp_lib_format) && (defined(__cplusplus) && __cplusplus >= 202000L)
+#include <format> // __cpp_lib_format is defined here in gcc if __cplusplus >= 202000L
+#endif
 #include <fstlog/detail/noexceptions.hpp>
 #if defined(__cpp_lib_format) && !defined(FSTLOG_NOEXCEPTIONS)
 #include <catch2/catch_all.hpp>
@@ -112,11 +116,18 @@ TEST_CASE("encoder_stdformat_mixin") {
 
 	SECTION("integer") {
 		auto extent = GENERATE(table<int, std::string_view, std::string_view>({
+			std::tuple<int, std::string_view, std::string_view>{(std::numeric_limits<std::int32_t>::min)(), "{:+}", "-2147483648"},
+			std::tuple<int, std::string_view, std::string_view>{0, "{:+}", "+0"},
+			std::tuple<int, std::string_view, std::string_view>{0, "{:-}", "0"},
 			std::tuple<int, std::string_view, std::string_view>{1234, "{:+}", "+1234"},
-			std::tuple<int, std::string_view, std::string_view>{15, "{: x}", " f"},
+			std::tuple<int, std::string_view, std::string_view>{-15, "{: x}", "-f"},
+			std::tuple<int, std::string_view, std::string_view>{15, "{: #x}", " 0xf"},
 			std::tuple<int, std::string_view, std::string_view>{15, "{:-#X}", "0XF"},
+			std::tuple<int, std::string_view, std::string_view>{15, "{:-X}", "F"},
+			std::tuple<int, std::string_view, std::string_view>{-15, "{:+#b}", "-0b1111"},
 			std::tuple<int, std::string_view, std::string_view>{-15, "{:+b}", "-1111"},
 			std::tuple<int, std::string_view, std::string_view>{-15, "{: #B}", "-0B1111"},
+			std::tuple<int, std::string_view, std::string_view>{15, "{: B}", " 1111"},
 			std::tuple<int, std::string_view, std::string_view>{64, "{:-o}", "100"},
 			std::tuple<int, std::string_view, std::string_view>{64, "{:+#o}", "+0100"}
 			}));
@@ -145,6 +156,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 		auto extent = GENERATE(table<float, std::string_view, std::string_view>({
 			tup_typ{0.12434234233422f, "{:+.4}", "+0.1243"},
 			tup_typ{-1.12378f, "{:+.3e}", "-1.124e+00"},
+			tup_typ{1.12378f, "{: .3e}", " 1.124e+00"},
 			tup_typ{1.11f, "{:.2g}", "1.1"},
 			tup_typ{1.11f, "{:.2f}", "1.11"},
 			tup_typ{0.11f, "{:.2f}", "0.11"},

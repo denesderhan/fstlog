@@ -1,6 +1,9 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
-
+#include <cstddef> // __cpp_lib_format is defined here in windows
+#if not defined(__cpp_lib_format) && (defined(__cplusplus) && __cplusplus >= 202000L)
+#include <format> // __cpp_lib_format is defined here in gcc if __cplusplus >= 202000L
+#endif
 #include <iostream>
 #include <string_view>
 
@@ -54,7 +57,7 @@ int main()
 			std::cout << "[formatter_txt]\n";
 			log_with_formatter(my_logger, fstlog::formatter_txt(pattern));
 			std::cout << '\n';
-// if std::format available 
+// if std::format is available 
 #if defined(__cpp_lib_format)
 			// formatter_txt_stdformat
 			std::cout << "[formatter_stdformat]\n";

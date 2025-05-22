@@ -2,8 +2,10 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <fstlog/formatter/formatter_stdformat.hpp>
 
-#include <cstddef>
-
+#include <cstddef> // __cpp_lib_format is defined here in windows
+#if not defined(__cpp_lib_format) && (defined(__cplusplus) && __cplusplus >= 202000L)
+#include <format> // __cpp_lib_format is defined here in gcc if __cplusplus >= 202000L
+#endif
 #include <config_formatter_txt.hpp>
 #include <detail/byte_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
