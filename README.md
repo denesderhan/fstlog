@@ -1,10 +1,6 @@
 # fstlog
 Fast, asynchronous, low footprint, C++ logging library.
 
-### Alpha release 
-The library is in alpha release.
-Testing and feedback is greatly appreciated!
-
 ## Features
 - C++ 20/17
 - Low latency of log call in application code.
@@ -21,41 +17,47 @@ Testing and feedback is greatly appreciated!
 ## Benchmarks
 * https://denesderhan.github.io/logbench_results/
 
+### Alpha release 
+The library is in alpha release.
+Testing and feedback is greatly appreciated!
+
 ## Build, install
 
-### Linux
-~~~
-git clone http://github.com/denesderhan/fstlog
-cd fstlog && mkdir build && cd build
-cmake ..
-sudo make install
-~~~
-
 ### Windows (Visual Studio)
-Download, extract the project.
-Open a Visual Studio Developer command prompt
-~~~
-cd [your_path_to]/fstlog
+- Download and extract the project.
+- Open a Visual Studio x64 Native Tools Command Prompt
+
+```cmd
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.13.7
+** Copyright (c) 2022 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+
+cd your_path_to/fstlog
 mkdir build
 cd build
 cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja install
-~~~
+```
+fstlog.lib will be in build\bin\Static\fstlog\lib
+includes in build\bin\Static\fstlog\include
+example binaries in build\bin\Static
 
-Compiled files will be in fstlog\build\bin\Static
-
-### Build examples
-Build shared library with C++17
-~~~
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_CXX_STANDARD=17
-~~~
-Build debug library with tests
-~~~
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug -DFSTLOG_DEBUG=ON -DFSTLOG_TESTS=ON -DBUILD_SHARED_LIBS=OFF -DFSTLOG_EXAMPLES=OFF -DCMAKE_CXX_STANDARD=20
-~~~
-
-## Examples
-Examples can be found in the examples folder.
+### Linux
+```shell
+sudo apt install build-essential git cmake ninja-build pkgconf
+git clone http://github.com/denesderhan/fstlog
+cd fstlog && mkdir build && cd build
+cmake .. -G Ninja
+sudo ninja install
+```
+To check successfull installation:
+```shell
+cmake --find-package -DNAME=fstlog -DCOMPILER_ID=GNU -DLANGUAGE=C -DMODE=EXIST
+pkg-config --modversion libfstlog
+```
+Example binaries will be in build/bin/Static
 
 ### Hello World
 ```c++
@@ -95,13 +97,15 @@ int main()
 ```
 
 ## System design, components
-The logging system is initialized by creating an fstlog::core object. 
-Loggers are assigned to cores at construction. They send the log messages to the core, 
-using a buffer. The core's background thread processes the messages through sinks.
-A sink is constructed with a formatter, an output and a filter, then added to a core.
+The central part of the system is the fstlog::core object. 
+Loggers are assigned to cores at construction, they send the log messages to the core 
+through a buffer. The core's background thread processes the messages using sinks.
+A sink is constructed with a formatter, an output and a filter, then assigned to the core.
+The core is not a singleton, there can be multiple core instances at the same time.
 
 ## Loggable types
-Primitive types, string types, loggable container types of loggable types.
+Primitive types, string types, loggable container types of loggable types 
+(nested containers, custom containers).
 See example: log_calls.cpp
 
 ## Formatting syntax
@@ -113,7 +117,11 @@ Log messages use the std::format syntax, with the following exceptions:
 
 See examples: log_calls.cpp; formatter_config.cpp
 
-## Core
+## Object lifetime and resource management
+The core, sink, formatter, output instances are reference counting smart pointer like objects.
+The constructor/factory function allocates and constructs the underlying implementation object. Lifetime and resource management is taken care of by the library. 
+
+## fstlog::core
 ```c++
 #include <fstlog/core.hpp>
 ```
@@ -121,14 +129,14 @@ The fstlog::core class is the central part of the system, it collects, formats
 and transmits the log messages to the destinations.
 There can be multiple cores in a program but they are separated from each other.
 Every core starts a background thread at construction, this thread asynchronously 
-processes the log messages. The processing is done by using sinks, 
+processes the log messages. The processing is done by the use of sinks, 
 a core can have multiple sinks, but a sink can be assigned only to one core at a time.
 
 ## Loggers
 The logger's function is to send messages to the core. Every logger has a link to an internal buffer, 
 for transmitting log messages asynchronously to the core.
 The logger serializes the log messages into this buffer, doing as much work as possible 
-during compile time. Depending on the log policy, it will notify/wake up the core's background thread
+during compile time. Depending on the log policy, it will notify/wake up the core's background thread 
 if there is work to do.
 
 - Every logger has a log level to filter messages early, the log level can be set 
@@ -173,39 +181,6 @@ intended for best performance. Every instance has its own buffer.
 This logger is a variant of fstlog::logger_st, with compile time values 
 for the level, channel, logger and thread names.
 
-### Logging policies
-fstlog can use different logging policies for every log call. 
-The policy is a class template passed as a template parameter to the log<>() call.
-The policies are:
-
-#### fstlog::log_policy_guaranteed
-```c++
-#include <fstlog/logger/log_policy_guaranteed.hpp>
-```
-Processing of the message is guaranteed.
-The client code will block until there is space in the buffer to serialize the message.
-This policy is used by the LOG(...), LOG_INFO(...) ... macros.
-
-#### fstlog::log_policy_nonguaranteed
-```c++
-#include <fstlog/logger/log_policy_nonguaranteed.hpp>
-```
-Processing of the message is not guaranteed, the client code will continue 
-without blocking if the buffer is full, but will wake up the core and/or request a flush if needed.
-This policy is used by the LOG_NG(...), LOG_NG_INFO(...) ... macros.
-
-#### fstlog::log_policy_lowlatency
-```c++
-#include <fstlog/logger/log_policy_lowlatency.hpp>
-```
-Processing of the message is not guaranteed, the client code will continue 
-without blocking if the buffer is full and will not wake up or notify the core.
-The core has to be set to poll the buffer frequently.
-The core's polling interval can be set at any time by calling 
-core::poll_interval(std::chrono::milliseconds interval).
-This policy is used by the LOG_LL(...), LOG_LL_INFO(...) ... macros.
-
-See example: multi_threaded.cpp
 
 ## Formatters
 The formatters convert the messages to the desired format.
@@ -221,17 +196,18 @@ See example: formatter_config.cpp
 
 ### Custom formatting
 - the default formatting pattern is:
+
 ```c++
 std::string_view default_format_string{ 
 	"{timestamp:.6%Y-%m-%d %H:%M:%S %z} {severity} {file}:{line} {message}" }
 ```
 - Example of initializing a formatter with a pattern using all fields:
+
 ```c++
 auto my_formatter = fstlog::formatter_txt("{timestamp:.3U%Y-%m-%d %H:%M:%S +0000} {severity} {policy} {channel} {thread} {logger} {file}:{line} {function} {message}");
 ```
 
 Formatters are created with factory functions, which return type erased fstlog::formatter instances.
-The fstlog::formatter class is a reference counting smart pointer like class.
 
 ### formatter_txt
 ```c++
@@ -263,7 +239,6 @@ Null formatter for testing/benchmarking.
 ## Outputs
 The outputs are the destinations of the formatted log messages.
 Outputs are created with factory functions, which return type erased fstlog::output instances.
-The fstlog::output class is a reference counting smart pointer like class.
 
 ### output_console
 ```c++
@@ -300,13 +275,15 @@ The stream can not be used while a core uses it, stream lifetime is not managed.
 See example: sink_output.cpp
 
 ## Filter
+```c++
+#include <fstlog/filter/filter.hpp>
+```
 Filters are used by the sinks to filter log messages, filtering is done by
 log level and log channel.
 See example: filter.cpp
 
 ## Sinks
 Sinks are created with factory functions, which return type erased fstlog::sink instances.
-The fstlog::sink class is a reference counting smart pointer like class.
 
 The sink's flush interval and in case of a sorted_sink the buffer size, can be set at construction time.
 Sinks are flushed at the set intervals or when the buffers are full.
@@ -332,15 +309,48 @@ Drops all messages.
 
 See example: sink_output.cpp
 
+### Logging policies
+fstlog can use different logging policies for every log call. 
+The policy is a class template passed as a template parameter to the log<>() call.
+The policies are:
+
+#### fstlog::log_policy_guaranteed
+```c++
+#include <fstlog/logger/log_policy_guaranteed.hpp>
+```
+Processing of the message is guaranteed.
+The client code will block until there is space in the buffer to serialize the message.
+This policy is used by the LOG(...), LOG_INFO(...) ... macros.
+
+#### fstlog::log_policy_nonguaranteed
+```c++
+#include <fstlog/logger/log_policy_nonguaranteed.hpp>
+```
+Processing of the message is not guaranteed, the client code will continue 
+without blocking if the buffer is full, but will wake up the core and/or request a flush if needed.
+This policy is used by the LOG_NG(...), LOG_NG_INFO(...) ... macros.
+
+#### fstlog::log_policy_lowlatency
+```c++
+#include <fstlog/logger/log_policy_lowlatency.hpp>
+```
+Processing of the message is not guaranteed, the client code will continue 
+without blocking if the buffer is full and will not wake up or notify the core.
+The core has to be set to poll the buffer frequently.
+The core's polling interval can be set at any time by calling 
+core::poll_interval(std::chrono::milliseconds interval).
+This policy is used by the LOG_LL(...), LOG_LL_INFO(...) ... macros.
+
+See example: multi_threaded.cpp
+
 ### Configuration Macros
 Macros usable in client code, (define before including headers).
 
 ```c++
 #define FSTLOG_COMPILETIME_LOGLEVEL Info
 ```
-- Setting this macro will remove the lower level log calls in compile time.
-Usable with the LOG_INFO(), LOG_ERROR(), ... type of macros.
-The values for the macro can be: All, Trace, Debug, Info, Warn, Error, Fatal, None
+- Setting this macro will remove the lower level log calls (Trace, Debug in the example)
+in compile time. The values for the macro can be: All, Trace, Debug, Info, Warn, Error, Fatal, None
 
 ```c++
 #define FSTLOG_FLUSH_EVERY
@@ -357,78 +367,76 @@ This blocking flush can also be made, calling the core::flush() method.
 
 
 ### CMake options
-~~~
--DFSTLOG_TESTS=ON
-~~~
-- Generate tests, (Catch2 v3 is required), works only with a static build (-DBUILD_SHARED_LIBS=O).
+```
+-DFSTLOG_EXAMPLES=ON
+```
+- Build example binaries.
 
-~~~
+```
 -DBUILD_SHARED_LIBS=ON
-~~~
-- Generate fstlog as a shared library.
+```
+- Build fstlog as a shared library.
 
-~~~
+```
+-DFSTLOG_TESTS=ON
+```
+- Generate tests, (Catch2 v3 is required), works only with a static build ( -DBUILD_SHARED_LIBS=OFF ).
+
+```
 -DFSTLOG_DEBUG=ON
-~~~
-- Used only on windows and affects only Debug builds. In windows you can not link Release and Debug builds,
-therefore the Debug build of fstlog on windows is an optimized build by default.
-This option switches to the true Debug build to debug fstlog itself.
+```
+- Used only on windows and affects only Debug builds. In windows release and debug binaries are incompatible. To provide better performance in debug builds, fstlog's Debug build on windows is an optimized build by default, This option switches to the unoptimized build to debug fstlog itself.
 
-~~~
+```
 -DFSTLOG_DEFAULT_BUFFERSIZE=16*1024
-~~~
+```
 - Sets the default size for the log buffers (in bytes).
 
-~~~
+```
 -DFSTLOG_MAX_BUFFERSIZE=128*1024
-~~~
-- Sets the max allowed size for the log buffers (in bytes).
+```
+- Sets the maximum allowed size for the log buffers (in bytes).
 
-~~~
+```
 -DFSTLOG_MIN_BUFFERSIZE=1024
-~~~
-- Sets the min allowed size for the log buffers (in bytes).
+```
+- Sets the minimum allowed size for the log buffers (in bytes).
 
-~~~
+```
 -DFSTLOG_MAX_MESSAGESIZE=32*1024
-~~~
-- Sets the max allowed log message size in the buffer (in bytes).
+```
+- Sets the maximum allowed log message size in the buffer (in bytes).
 
-~~~
+```
 -DFSTLOG_NO_NESTING=ON
-~~~
+```
 - Disable logging of nested containers in client code. 
-This macro is passed to the compiler of the client code
-using CMake.
+This macro is passed to the compiler of the client code by CMake.
 
-~~~
+```
 -DFSTLOG_CONTAINER_NESTING_DEPTH=10
-~~~
+```
 - Limits the processing depth of nested containers in the background thread, 
-(recursive call safeguard).
+(recursive function call safeguard).
 
-~~~
+```
 -DFSTLOG_POLLINTERVAL=0
-~~~
+```
 - Sets the default buffer polling interval for the background thread (in milliseconds), 
-default '0' means no polling. 
+default zero means no polling. 
 
-~~~
+```
 -DFSTLOG_SINK_FLUSHINTERVAL=0
-~~~
+```
 - Sets the default flush interval for the sinks (in milliseconds),
-default '0' means no periodic flushing.
+default zero means no periodic flushing.
 
-~~~
--DFSTLOG_ALLOCATOR=...
-~~~
-- Copies the file to the source tree and uses it for the allocator.
-
-- Default setting is:
-~~~
+```
 -DFSTLOG_ALLOCATOR=.../fstlog/include/fstlog/detail/pmr_allocator.hpp
-~~~
-- The allocator usable if exceptions are disabled:
-~~~
+```
+- Copies the file into the source tree and uses it for the allocator.
+Default is the pmr allocator, the malloc_allocator can be used 
+if compiling with disabled exceptions.
+```
 -DFSTLOG_ALLOCATOR=.../fstlog/include/fstlog/detail/malloc_allocator.hpp
-~~~
+```
