@@ -42,6 +42,10 @@ namespace fstlog {
 			unsigned char* buffer_ptr, 
 			const unsigned char* buffer_end) noexcept 
 		{
+			if (timestamp < std::chrono::system_clock::time_point{}) {
+				return detail::buffer_operation_result<unsigned char>{ 
+					buffer_ptr, error_code::input_contract_violation};
+			}
 			detail::nano_to_seconds_txt sec_f(timestamp, second_char_num_);
 			const auto min{ std::chrono::duration_cast<std::chrono::minutes>(sec_f.minutes().time_since_epoch()).count() };
 			auto t_str_ptr = tstr_cache_.find(min);
@@ -124,11 +128,6 @@ namespace fstlog {
 		}
 
 		time_string<64> create_time_string(stamp_type minutes) noexcept {
-			if (minutes < std::chrono::system_clock::time_point{ std::chrono::seconds{0} }) {
-				constexpr auto temp{ "Pre epoch timestamp!" };
-				return time_string<64>{byte_span<const char>{temp,
-					sizeof("Pre epoch timestamp!") - 1 } };
-			}
 			time_t const t{	std::chrono::system_clock::to_time_t(minutes) };
 			tm time;
 			if (tzone_ == tz_format::UTC) {

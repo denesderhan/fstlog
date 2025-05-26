@@ -114,6 +114,12 @@ TEST_CASE("nano_to_seconds_txt") {
 				std::tuple<long long, int, int, std::string_view>{0, 5, 0, "00.00"},
 				std::tuple<long long, int, int, std::string_view>{0, 9, 0, "00.000000"},
 				std::tuple<long long, int, int, std::string_view>{0, 9, 0, "00.000000"},
+				std::tuple<long long, int, int, std::string_view>{1'000'000, 0, 0, ""},
+				std::tuple<long long, int, int, std::string_view>{1'000'000, 2, 0, "01"},
+				std::tuple<long long, int, int, std::string_view>{1'000'000, 4, 0, "01.0"},
+				std::tuple<long long, int, int, std::string_view>{1'000'000, 5, 0, "01.00"},
+				std::tuple<long long, int, int, std::string_view>{1'000'000, 9, 0, "01.000000"},
+				std::tuple<long long, int, int, std::string_view>{1'000'000, 9, 0, "01.000000"},
 				std::tuple<long long, int, int, std::string_view>{29'999'999, 0, 0, ""},
 				std::tuple<long long, int, int, std::string_view>{30'000'000, 0, 1, ""},
 				std::tuple<long long, int, int, std::string_view>{90'000'000, 0, 2, ""},
@@ -220,13 +226,13 @@ TEST_CASE("nano_to_seconds_txt_benchmark", "[.][benchmark]") {
 	DYNAMIC_SECTION("nanosec_" << microsecond) {
 		int char_num = GENERATE(0, 2, 6, 9);
 		DYNAMIC_SECTION("char_num_" << char_num) {
-			BENCHMARK_ADVANCED("minutes_sec_frac construct")(Catch::Benchmark::Chronometer meter) {
+			BENCHMARK_ADVANCED("nano_to_seconds_txt construct")(Catch::Benchmark::Chronometer meter) {
 				meter.measure([microsecond, char_num] {
 					return fstlog::detail::nano_to_seconds_txt(
 						std::chrono::system_clock::time_point{ std::chrono::microseconds{microsecond} },
 						char_num).minutes(); });
 			};
-			BENCHMARK_ADVANCED("minutes_sec_frac_naive construct")(Catch::Benchmark::Chronometer meter) {
+			BENCHMARK_ADVANCED("nano_to_seconds_txt_naive construct")(Catch::Benchmark::Chronometer meter) {
 				meter.measure([microsecond, char_num] {
 					return nano_to_seconds_txt_naive(microsecond * 1000, char_num).minutes(); });
 			};
@@ -251,32 +257,3 @@ TEST_CASE("nano_to_seconds_txt_bruteforce", "[.][bruteforce]") {
 		== msf_ctrl.minutes());
 	CHECK(msf.second_str()	== std::string_view{ msf_ctrl.data(), static_cast<size_t>(msf_ctrl.size()) });
 };
-
-#if defined(__cpp_lib_chrono)
-TEST_CASE("nano_to_seconds_txt_pre_epoch") {
-	long long microseconds = GENERATE(
-		-1'264'527'351'532LL, 
-		0LL,
-		-1LL,
-		-60'000'000LL, 
-		-59'999'999LL,
-		-60'000'001LL,
-		-30'000'000LL,
-		-30'000'001LL,
-		-29'999'999LL);
-
-	std::stringstream control;
-	control << std::chrono::time_point_cast<std::chrono::duration<long long, std::ratio<1, 10000000>>>(std::chrono::system_clock::time_point{ std::chrono::microseconds{ microseconds } });
-
-	fstlog::detail::nano_to_seconds_txt msf(
-		std::chrono::system_clock::time_point{ std::chrono::microseconds{ microseconds } },
-		10);
-	std::stringstream result_ss;
-	result_ss << std::chrono::time_point_cast<std::chrono::duration<long long, std::ratio<1, 10000000>>>(msf.minutes());
-	std::string result = result_ss.str();
-	CHECK(result.substr(17, 10) == "00.0000000");
-	result.resize(17);
-	result += msf.second_str();
-	CHECK(result == control.str());
-};
-#endif
