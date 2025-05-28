@@ -6,7 +6,6 @@
 #include <array>
 
 #include <fstlog/detail/constants.hpp>
-#include <fstlog/detail/fast_to_str.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/types.hpp>
 
@@ -22,86 +21,93 @@ namespace fstlog {
 					|| second_char_num == 2
 					|| (second_char_num >= 4 && second_char_num <= 12))
 					&& "Invalid second_char_num value!");
-				FSTLOG_ASSERT(timestamp >= std::chrono::system_clock::time_point{} );
-
-				int second_precision = 6;
-				if (second_char_num == 0) second_precision = -1;
-				else if (second_char_num == 2) second_precision = 0;
-				else second_precision = second_char_num - 3;
-				// get the rounded minute and second parts
-				auto [minutes, seconds] = decompose_timestamp(timestamp, second_precision);
-				minutes_ = minutes;
-				auto nanosecs_remain = std::chrono::duration_cast<std::chrono::nanoseconds>(seconds).count();
-				// set second string
-				if (second_char_num != 0) {
-					to_dec(static_cast<std::uint64_t>(nanosecs_remain), sec_str_);
-					const auto sec_pos{ sec_str_ + buffer_size - 11 };
-					*(sec_pos - 1) = *(sec_pos);
-					*sec_pos = *(sec_pos + 1);
-					*(sec_pos + 1) = '.';
-				}
+				FSTLOG_ASSERT(timestamp >= std::chrono::system_clock::time_point{});
+				// set the rounded minute and second string
+				decompose_timestamp(timestamp);
 			}
 
 			std::string_view second_str() const noexcept {
-				return { sec_str_ + buffer_size - 12, static_cast<std::size_t>(second_char_num_) };
+				return { sec_str_.data(), static_cast<std::size_t>(second_char_num_) };
 			}
 
 			stamp_type minutes() const noexcept {
-				return minutes_;
+				return std::chrono::system_clock::time_point(
+					std::chrono::duration_cast<std::chrono::system_clock::duration>(
+						std::chrono::minutes(minutes_)));
 			}
 
 		private:
-			
-			std::pair<std::chrono::system_clock::time_point, std::chrono::system_clock::duration>
-				decompose_timestamp(std::chrono::system_clock::time_point timestamp, int second_precision)
-			{
-				constexpr long long minute_in_nano = 60'000'000'000LL;
-				std::array<long long, 11> lut_nano{
-					60'000'000'000LL,
-					1'000'000'000LL,
-					100'000'000LL,
-					10'000'000LL,
-					1'000'000LL,
-					100'000LL,
-					10'000LL,
-					1'000LL,
-					100LL,
-					10LL,
-					1LL };
+			static constexpr long long nano_minute = 60'000'000'000LL;
+			static constexpr std::intmax_t ticks_minute{ 
+				(stamp_type::period::den * 60) / stamp_type::period::num };
+			static_assert(ticks_minute > 0, "Tick, nano error.");
+			static_assert(ticks_minute <= nano_minute 
+				&& nano_minute % ticks_minute == 0, "Tick, nano error.");
 
-				FSTLOG_ASSERT(second_precision >= -1 && second_precision <= 9);
-				long long unit = lut_nano[second_precision + 1];
-				long long half_unit = unit / 2;
-				long long nano_epoch = 
-					std::chrono::duration_cast<std::chrono::nanoseconds>(
-						timestamp.time_since_epoch()).count();
-				long long count = 0LL;
+			inline void decompose_timestamp(std::chrono::system_clock::time_point timestamp)
+			{
+				constexpr std::array<long long, 11> round_ticks{
+						ticks_minute / 2LL,
+						ticks_minute / 120LL,
+						ticks_minute / 1'200LL,
+						ticks_minute / 12'000LL,
+						ticks_minute / 120'000LL,
+						ticks_minute / 1'200'000LL,
+						ticks_minute / 12'000'000LL,
+						ticks_minute / 120'000'000LL,
+						ticks_minute / 1'200'000'000LL,
+						ticks_minute / 12'000'000'000LL };
+				int round_ind = 0;
+				if (second_char_num_ > 3) round_ind = second_char_num_ - 2;
+				else if (second_char_num_ == 2) round_ind = 1;
+				FSTLOG_ASSERT(round_ind >= 0 && round_ind <= 10);
+				const long long rounder = round_ticks[round_ind];
+				
+				std::intmax_t ticks{ timestamp.time_since_epoch().count() };
 				// preventing overflow
-				if (nano_epoch <= (std::numeric_limits<long long>::max)() - half_unit) {
-					count = (nano_epoch + half_unit) / unit; // round to nearest
+				if (ticks <= (std::numeric_limits<std::intmax_t>::max)() - (ticks_minute / 2LL)) {
+					ticks += rounder; // round to nearest
 				}
-				else {
-					count = nano_epoch / unit; // round down
-				}
-				long long rounded_nano = count * unit;
 				// floor minutes
-				long long minutes_part = rounded_nano / minute_in_nano;
-				long long seconds_part = rounded_nano - minutes_part * minute_in_nano;
-				return {
-					std::chrono::system_clock::time_point(
-						std::chrono::duration_cast<std::chrono::system_clock::duration>(
-							std::chrono::minutes(minutes_part))),
-					std::chrono::duration_cast<std::chrono::system_clock::duration>(
-						std::chrono::nanoseconds(seconds_part)) };
+				minutes_ = ticks / ticks_minute;
+				if (second_char_num_ != 0) {
+					set_second(ticks);
+				}
 			}
 
-			static constexpr std::size_t buffer_size = 32;
-			alignas(constants::cache_ls_nosharing) char sec_str_[buffer_size]{
-				'0', '0', '0', '0', '0', '0', '0', '0',
-				'0', '0', '0', '0', '0', '0', '0', '0',
-				'0', '0', '0', '0', '0', '0', '0', '0',
-				'0', '0', '0', '0', '0', '0', '0', '0' };
-			stamp_type minutes_;
+			inline void set_second(std::intmax_t ticks) {
+				// compute remainder
+				ticks -= minutes_ * ticks_minute;
+				FSTLOG_ASSERT(ticks >= 0LL && ticks < ticks_minute);
+				std::intmax_t nano_ticks = ticks * (nano_minute / ticks_minute);
+				
+				// digit conversion table
+				const char digits2[]{
+					"0001020304050607080910111213141516171819"
+					"2021222324252627282930313233343536373839"
+					"4041424344454647484950515253545556575859"
+					"6061626364656667686970717273747576777879"
+					"8081828384858687888990919293949596979899" };
+				int char_ind = 10;
+				// converting digits, two at a time
+				while (nano_ticks != 0) {
+					const long long next_nano = nano_ticks / 100;
+					const long long fraq = nano_ticks - next_nano * 100;
+					const long long digit_ind = fraq * 2;
+					sec_str_[char_ind] = digits2[digit_ind];
+					sec_str_[char_ind + 1] = digits2[digit_ind + 1];
+					char_ind -= 2;
+					nano_ticks = next_nano;
+				}
+				// inserting decimal point
+				sec_str_[0] = sec_str_[1];
+				sec_str_[1] = sec_str_[2];
+				sec_str_[2] = '.';
+			}
+
+			alignas(constants::cache_ls_nosharing) std::array<char, 12> sec_str_{
+				'0','0','0','0','0','0','0','0','0','0','0','0' };
+			std::intmax_t minutes_{ 0 };
 			int second_char_num_{ 0 };
 		};
 	}
