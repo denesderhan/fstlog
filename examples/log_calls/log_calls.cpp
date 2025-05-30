@@ -61,13 +61,13 @@ int main()
 		LOG_INFO(my_logger, "Logging fundamental types, signed char: {}, unsigned char: {}, char: {}.",
 			(signed char)-128, (unsigned char)255, 'A');
 #ifdef __cpp_char8_t
-		LOG_INFO(my_logger, "Logging fundamental types, char8_t: {}, char8 string: {}.", char8_t(0x40), u8"Ω$€£¥");
+		LOG_INFO(my_logger, "Logging fundamental types, char8_t: {}, char8 string: {}.", char8_t(0x40), u8"¤$€£¥");
 #endif
 		LOG_INFO(my_logger, "Logging fundamental types, char16_t: {}, char32_t: {}.", char16_t('A'), char32_t('B'));
-		LOG_INFO(my_logger, "Logging strings: {} {}, {}.", "Hello", u"World Ω", U"Hello Ω");
+		LOG_INFO(my_logger, "Logging strings: {} {}, {}.", "Hello", u"World ʘ", U"Hello ʘ");
 
 		using namespace std::string_literals;
-		LOG_INFO(my_logger, U"Logging string literals: {} {}."s, u"Hello Ω"s, std::basic_string_view{U"World Ω"});
+		LOG_INFO(my_logger, U"Logging string literals: {} {}."s, u"Hello ʘ"s, std::basic_string_view{U"World ʘ"});
 
 		// logging works with arbitrary message types
 		LOG_INFO(my_logger, 42);
@@ -90,7 +90,7 @@ int main()
 		// Formatting messages
 		// the syntax of std::format is used, (available formatting options are dependent on formatter type)
 		// align message parameters with filler chars
-		LOG_INFO(my_logger, "Logging aligned: {:.>10}, {:•^10}", 3, "TEXT");
+		LOG_INFO(my_logger, "Logging aligned: {:.>10}, {:ʘ^10}", 3, "TEXT");
 		// number formatting
 		LOG_INFO(my_logger, "Number formatting: hex: {:#X}, binary: {:+#b}, precision: {:.2}, scientific: {:.3e}", -10, (signed char)10, 1.23456f, 100000.5f);
 	

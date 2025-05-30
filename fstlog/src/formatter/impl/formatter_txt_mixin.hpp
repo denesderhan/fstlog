@@ -290,8 +290,8 @@ namespace fstlog {
 			auto replacement_field = get_replacement_field(str);
 
 			const auto field_name = argument_name(replacement_field);
-			const auto rf_id = get_repl_field_id(field_name);
-			if (rf_id == logfield::Invalid) {
+			const auto field_id = get_repl_field_id(field_name);
+			if (field_id == logfield::Invalid) {
 				this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
 				return;
 				//return "Invalid or empty field name!";
@@ -301,45 +301,19 @@ namespace fstlog {
 				return;
 				//return "Format string too long!";
 			}
-			*this->output_ptr() = ut_cast(rf_id);
+			*this->output_ptr() = ut_cast(field_id);
 			this->advance_output_unchecked(1);
 			auto form_spec = format_spec(replacement_field);
 
-			// FIX THIS move to init_time_to_str_converter??
-			if (rf_id == logfield::Timestamp) {
-				// FIX THIS
-				// if (time_field_set) return "Only one timestamp field allowed!";
-				// time_field_set = true;
-				auto begin = form_spec.data();
-				auto end = begin + form_spec.size_bytes();
-				auto pos = skip_numbers(skip_align(begin, end), end);
-				form_spec = buff_span_const{ begin, static_cast<std::size_t>(pos - begin) };
-				auto precision = get_precision(pos, end);
-				tz_format t_zone = get_zone(pos, end);
-
-				auto time_fmt = buff_span_const{ pos, static_cast<std::size_t>(end - pos) };
-				if (time_fmt.empty()) {
-					if (t_zone == tz_format::Local) {
-						constexpr auto temp{ "%Y-%m-%d %H:%M:%S %z" };
-						time_fmt = buff_span_const{
-							safe_reinterpret_cast<const unsigned char*>(temp),
-							sizeof("%Y-%m-%d %H:%M:%S %z") - 1 };
-					}
-					else {
-						constexpr auto temp{ "%Y-%m-%d %H:%M:%S +0000" };
-						time_fmt = buff_span_const{
-							safe_reinterpret_cast<const unsigned char*>(temp),
-							sizeof("%Y-%m-%d %H:%M:%S +0000") - 1 };
-					}
-				}
-				auto error2 = this->init_time_to_str_converter(time_fmt, precision, t_zone);
+			if (field_id == logfield::Timestamp) {
+				
+				auto error2 = this->init_time_to_str_converter(time_format(form_spec));
 				if (error2 != nullptr) {
 					this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
 					return;
-					//return error2;
 				}
 			}
-			this->set_format(rf_id, form_spec);
+			this->set_format(field_id, form_spec);
 		}
 		
         void process_message() noexcept {

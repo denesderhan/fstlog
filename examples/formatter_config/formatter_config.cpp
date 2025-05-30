@@ -28,7 +28,7 @@ int main()
 			// fill align
 			"{timestamp} {level:*<10} {message:*>20}", 
 			// truncation	
-			"{timestamp} {level:} {message:.5}",	
+			"{timestamp} {level:} {message:.<10.5}",	
 			// timestamp seconds in 2 decimal precision	
 			"{timestamp:.2} {level} {message}", 
 			// timestamp in UTC	(precision 2)		

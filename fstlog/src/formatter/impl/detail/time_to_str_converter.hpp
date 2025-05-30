@@ -11,7 +11,9 @@
 #pragma intrinsic(memcpy)
 
 #include <detail/buffer_operation_result.hpp>
+#include <detail/byte_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
+#include <formatter/impl/detail/format_str_helper.hpp>
 #include <formatter/impl/detail/nano_to_seconds_txt.hpp>
 #include <formatter/impl/detail/time_string_cache.hpp>
 #include <formatter/impl/detail/tz_format.hpp>
@@ -24,17 +26,29 @@ namespace fstlog {
 	class time_to_str_converter
 	{
 	public:
-		const char* init_time_to_str_converter(
-			buff_span_const time_format,
-			int second_precision = 6,
-			tz_format tzone = tz_format::Local) noexcept
-		{
-			if (!detail::valid_strftime_string(time_format, tzone)) return "Invalid strftime string!";
+		const char* init_time_to_str_converter(buff_span_const time_format) noexcept {
+			if (time_format_.size() != 0) return "Time to string converter already initialized!";
+			auto begin = time_format.data();
+			auto end = begin + time_format.size_bytes();
+			auto precision = get_precision(begin, end);
+			tz_format tzone = get_zone(begin, end);
+		
+			// no strftime string, set default
+			if (begin == end) {	
+				std::string_view strft_str = tzone == tz_format::Local ?
+					"%Y-%m-%d %H:%M:%S %z"
+					: "%Y-%m-%d %H:%M:%S +0000";
+				begin = safe_reinterpret_cast<const unsigned char*>(strft_str.data());
+				end = safe_reinterpret_cast<const unsigned char*>(strft_str.data() + strft_str.size());
+			}
+			const auto strftime_str = buff_span_const{ begin, static_cast<std::size_t>(end - begin) };
+						
+			if (!detail::valid_strftime_string(strftime_str, tzone)) return "Invalid strftime string!";
 			tstr_cache_.clear();
-			if (second_precision > 9 || second_precision < 0) second_precision = 6;
-			second_char_num_ = second_precision == 0 ? 2 : 3 + second_precision;
+			if (precision > 9 || precision < 0) precision = 6;
+			second_char_num_ = precision == 0 ? 2 : 3 + precision;
 			tzone_ = tzone;
-			return set_time_format(time_format, second_char_num_);
+			return set_time_format(strftime_str, second_char_num_);
 		}
 
 		detail::buffer_operation_result<unsigned char> timestamp_to_chars(

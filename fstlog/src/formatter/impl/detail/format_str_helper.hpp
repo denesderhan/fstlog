@@ -153,6 +153,14 @@ namespace fstlog {
 		return num;
     }
 
+	inline buff_span_const time_format(buff_span_const& form_spec) noexcept {
+		auto begin = form_spec.data();
+		auto end = begin + form_spec.size_bytes();
+		auto pos = skip_numbers(skip_align(begin, end), end);
+		form_spec = buff_span_const{ begin, static_cast<std::size_t>(pos - begin) };
+		return buff_span_const{ pos, static_cast<std::size_t>(end - pos) };
+	}
+
 	inline logfield get_repl_field_id(buff_span_const name) noexcept {
 		auto str_v = std::string_view{
 			safe_reinterpret_cast<const char*>(name.data()), name.size_bytes() };
