@@ -11,7 +11,6 @@
 #include <detail/safe_reinterpret_cast.hpp>
 #include <detail/utf8_helper.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
-#include <formatter/impl/detail/format_string_error.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 #include <formatter/impl/detail/policy_txt.hpp>
 #include <formatter/impl/detail/severity_txt.hpp>
@@ -62,59 +61,18 @@ namespace fstlog {
 					safe_reinterpret_cast<const unsigned char*>(config::default_format_string.data()), 
 					config::default_format_string.size() };
 			}
-			const auto error = format_string_error(format_string);
-			if (error != nullptr) return error;
-			this->clear_error();
+			return parse_format_string(format_string);
+		}
+
+		inline const char* parse_format_string(buff_span_const format_string) {
 			this->output_span_init(formatting_buffer_);
-
-			bool time_field_set{ false };
-			while (true) {
-				write_literal_escaped(format_string);
-				if (this->has_error()) return "Format string too long!";
-				if (format_string.empty()) break;
-				auto replacement_field = get_replacement_field(format_string);
-				const auto field_name = argument_name(replacement_field);
-				const auto rf_id = get_repl_field_id(field_name);
-				if (rf_id == logfield::Invalid) return "Invalid or empty field name!";
-				if (!this->output_has_space()) return "Format string too long!";
-				*this->output_ptr() = ut_cast(rf_id);
-				this->advance_output_unchecked(1);
-				auto form_spec = format_spec(replacement_field);
-
-				if (rf_id == logfield::Timestamp) {
-					if (time_field_set) return "Only one timestamp field allowed!";
-					time_field_set = true;
-					auto begin = form_spec.data();
-					auto end = begin + form_spec.size_bytes();
-					auto pos = skip_numbers(skip_align(begin, end), end);
-					form_spec = buff_span_const{ begin, static_cast<std::size_t>(pos - begin) };
-					auto precision = get_precision(pos, end);
-					tz_format t_zone = get_zone(pos, end);
-
-					auto time_fmt = buff_span_const{ pos, static_cast<std::size_t>(end - pos) };
-					if (time_fmt.empty()) {
-                        if (t_zone == tz_format::Local) {
-							constexpr auto temp{ "%Y-%m-%d %H:%M:%S %z" };
-							time_fmt = buff_span_const{
-								safe_reinterpret_cast<const unsigned char*>(temp),
-								sizeof("%Y-%m-%d %H:%M:%S %z") - 1 };
-						}
-						else {
-							constexpr auto temp{ "%Y-%m-%d %H:%M:%S +0000" };
-							time_fmt = buff_span_const{
-								safe_reinterpret_cast<const unsigned char*>(temp),
-								sizeof("%Y-%m-%d %H:%M:%S +0000") - 1};
-						}
-					}
-					auto error2 = this->init_time_to_str_converter(time_fmt, precision, t_zone);
-					if (error2 != nullptr) return error2;
-				}
-				this->set_format(rf_id, form_spec);
+			while (!format_string.empty()) {
+				parse_fmt_text(format_string);
+				if (this->has_error()) return this->get_error().message();
+				parse_fmt_repl_field(format_string);
+				if (this->has_error()) return this->get_error().message();
 			}
-			if (this->has_error()) {
-				return this->get_error().message();
-			}
-
+			
 			log_format_size_ =
 				static_cast<std::uint32_t>(this->output_ptr() - formatting_buffer_.data());
 			msg_template_start_ =
@@ -285,39 +243,105 @@ namespace fstlog {
             this->set_output_ptr_unchecked(pos);
         }
 
-        inline void write_literal_escaped(buff_span_const& str) noexcept {
-			FSTLOG_ASSERT(str.data() != nullptr);
-			auto str_pos = str.data();
-            const auto str_end = str_pos + str.size_bytes();
-            auto out_pos = this->output_ptr();
-            const auto out_end = this->output_end();
-            while (out_pos < out_end && str_pos < str_end) {
-                const auto ch{ *str_pos };
-                if (ch == '{' || ch == '}') {
-                    if (str_pos < str_end
-                        && *(str_pos + 1) == ch)
-                    {
-                        str_pos++;
-                    }
-                    else {
-                        this->set_output_ptr_unchecked(out_pos);
-                        str = buff_span_const{ 
-							str_pos, 
-							static_cast<std::size_t>(str_end - str_pos) };
-                        return;
-                    }
-                }
-                *out_pos++ = *str_pos++;
-            }
-            if (str_pos == str_end) {
-                this->set_output_ptr_unchecked(out_pos);
-                str = buff_span_const{ str_end, 0 };
-            }
-            else {
-                this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
-            }
-        }
 
+		// write the text part of the format string str to this->output and update str
+		inline void parse_fmt_text(buff_span_const& str) noexcept {
+			FSTLOG_ASSERT(str.data() != nullptr);
+			auto in = str.data();
+			const auto in_end = in + str.size_bytes();
+			auto out = this->output_ptr();
+			const auto out_end = this->output_end();
+			while (in < in_end) {
+				if (*in == '{' || *in == '}') {
+					if (in_end - in > 1 && *(in + 1) == *in) {
+						// skip the first duplicated '{' or '}'
+						// write it in the if(out < out_end)
+						in++;
+					}
+					else {
+						if(*in == '}') this->set_error(
+							__FILE__, __LINE__, error_code::input_contract_violation);
+						// stop at the beginning of a replacement field
+						in++;
+						break;
+					}
+				}
+				if (out < out_end) {
+					// write byte
+					*out++ = *in++;
+				}
+				else {
+					// stop (no space)
+					this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+					break;
+				}
+			}
+			//FIX THIS sanitize utf_8_string
+			this->set_output_ptr_unchecked(out);
+			str = buff_span_const{
+				in,
+				static_cast<std::size_t>(in_end - in) };
+		}
+
+		// parse the replacement field part of the format string str and update str
+		inline void parse_fmt_repl_field(buff_span_const& str) noexcept {
+			FSTLOG_ASSERT(str.data() != nullptr);
+			if (str.empty()) return;
+			auto replacement_field = get_replacement_field(str);
+
+			const auto field_name = argument_name(replacement_field);
+			const auto rf_id = get_repl_field_id(field_name);
+			if (rf_id == logfield::Invalid) {
+				this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
+				return;
+				//return "Invalid or empty field name!";
+			}
+			if (!this->output_has_space()) {
+				this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+				return;
+				//return "Format string too long!";
+			}
+			*this->output_ptr() = ut_cast(rf_id);
+			this->advance_output_unchecked(1);
+			auto form_spec = format_spec(replacement_field);
+
+			// FIX THIS move to init_time_to_str_converter??
+			if (rf_id == logfield::Timestamp) {
+				// FIX THIS
+				// if (time_field_set) return "Only one timestamp field allowed!";
+				// time_field_set = true;
+				auto begin = form_spec.data();
+				auto end = begin + form_spec.size_bytes();
+				auto pos = skip_numbers(skip_align(begin, end), end);
+				form_spec = buff_span_const{ begin, static_cast<std::size_t>(pos - begin) };
+				auto precision = get_precision(pos, end);
+				tz_format t_zone = get_zone(pos, end);
+
+				auto time_fmt = buff_span_const{ pos, static_cast<std::size_t>(end - pos) };
+				if (time_fmt.empty()) {
+					if (t_zone == tz_format::Local) {
+						constexpr auto temp{ "%Y-%m-%d %H:%M:%S %z" };
+						time_fmt = buff_span_const{
+							safe_reinterpret_cast<const unsigned char*>(temp),
+							sizeof("%Y-%m-%d %H:%M:%S %z") - 1 };
+					}
+					else {
+						constexpr auto temp{ "%Y-%m-%d %H:%M:%S +0000" };
+						time_fmt = buff_span_const{
+							safe_reinterpret_cast<const unsigned char*>(temp),
+							sizeof("%Y-%m-%d %H:%M:%S +0000") - 1 };
+					}
+				}
+				auto error2 = this->init_time_to_str_converter(time_fmt, precision, t_zone);
+				if (error2 != nullptr) {
+					this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
+					return;
+					//return error2;
+				}
+			}
+			this->set_format(rf_id, form_spec);
+		}
+		
         void process_message() noexcept {
 			buff_span_const msg_template{ msg_template_buffer() };
 			bool has_repl_field = true;
@@ -325,7 +349,7 @@ namespace fstlog {
 
             do {
                 auto form = this->get_default_format();
-                write_literal_escaped(msg_template);
+				parse_fmt_text(msg_template);
 
                 if (!msg_template.empty()) {
                     auto replacement_field = get_replacement_field(msg_template);
@@ -370,22 +394,6 @@ namespace fstlog {
 			return buff_span{
 				formatting_buffer_.data() + msg_template_start_, 
 				msg_template_size_ };
-		}
-
-		inline std::string_view get_repl_field_name(logfield field_id) noexcept {
-			switch (field_id) {
-				case logfield::Severity: return "severity";
-				case logfield::Policy: return "policy";
-				case logfield::Channel:	return "channel";
-				case logfield::Timestamp: return "timestamp";
-				case logfield::Thread: return "thread";
-				case logfield::Logger: return "logger";
-				case logfield::File: return "file";
-				case logfield::Line: return "line";
-				case logfield::Function: return "function";
-				case logfield::Message:	return "message";
-				default: return "invalid";
-			}
 		}
 
 		alignas(constants::cache_ls_nosharing) std::array<unsigned char, 512> formatting_buffer_{ 0 };

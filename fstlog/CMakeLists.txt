@@ -220,7 +220,6 @@ set(src_formatter_impl_detail
     "src/formatter/impl/detail/format_setting_txt.hpp"
     "src/formatter/impl/detail/format_setting_txt_fast.hpp"
     "src/formatter/impl/detail/format_str_helper.hpp"
-    "src/formatter/impl/detail/format_string_error.hpp"
     "src/formatter/impl/detail/hash_converter_null_mixin.hpp"
     "src/formatter/impl/detail/logfield.hpp"
     "src/formatter/impl/detail/nano_to_seconds_txt.hpp"

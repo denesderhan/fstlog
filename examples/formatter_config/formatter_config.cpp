@@ -28,19 +28,22 @@ int main()
 			// fill align
 			"{timestamp} {level:*<10} {message:*>20}", 
 			// truncation	
-			"{message:.5}",	
-			// timestamp in UTC			
-			"{timestamp:U}",
-			// timestamp in UTC (first U/L determines UTC/local zone and is consumed), custom timestamp (strftime)
-			"{timestamp:UUTC:%H:%M:%S +0000}", 
-			// seconds in 2 decimal precision	
-			"{timestamp:.2%H:%M:%S %z}", 
+			"{timestamp} {level:} {message:.5}",	
+			// timestamp seconds in 2 decimal precision	
+			"{timestamp:.2} {level} {message}", 
+			// timestamp in UTC	(precision 2)		
+			"{timestamp:.2U} {level} {message}",
+			// timestamp in UTC with strftime formatting (precision 2)
+			// first U/L determines UTC/Local zone and is not printed
+			"{timestamp:.2UUTC:%H:%M:%S +0000} {level} {message}", 
 			// seconds in 0 decimal precision
-			"{timestamp:.0%H:%M:%S %z}",
-			// fill align with timestamp
-			"{timestamp:*^20.3%H:%M:%S}",
+			"{timestamp:.0} {level} {message}",
+			// fill align with timestamp (precision 3 custom strftime format)
+			"{timestamp:*^20.3%H:%M:%S} {level} {message}",
 			// all fields
-			"{timestamp} {level} {policy} {channel} {logger} {thread} {file}:{line} {function} {message}"
+			"{timestamp} {level} {policy} {channel} {logger} {thread} {file}:{line} {function} {message}",
+			// using '{' '}' chars in format string (usage inside replacement field is invalid)
+			"{{{timestamp}}} {{}}{level} {{message:}}{message:}"
 		};
 
 		// create core
@@ -77,16 +80,19 @@ int main()
 }
 
 void log_with_formatter(fstlog::logger& logger, fstlog::formatter formatter) {
-	//create sink
+	// create sink with the supplied formatter
 	fstlog::sink my_sink = fstlog::sink_sort(
 		formatter,
 		fstlog::output_console());
+	// retrieve the core that the logger is linked to
 	auto core{ logger.get_core() };
-	//assign sink to core
+	// assign sink to the core
 	core.add_sink(my_sink);
+
 	LOG_INFO(logger, "Hello {}!", "World");
-	//flush sink
+	
+	// flush sink
 	core.flush();
-	//remove sink from core
+	// remove sink from core
 	core.release_sink(my_sink);
 }

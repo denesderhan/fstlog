@@ -13,15 +13,15 @@
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
-    
-    inline buff_span_const get_replacement_field(
+		
+	inline buff_span_const get_replacement_field(
         buff_span_const& str) noexcept
     {
 		FSTLOG_ASSERT(str.data() != nullptr);
 		if (str.size_bytes() == 0) {
             return str;
         }
-        auto pos = str.data() + 1;
+		auto pos = str.data();
         auto end_pos = str.data() + str.size_bytes();
         auto repl_begin = pos;
         while (pos != end_pos 
@@ -153,9 +153,7 @@ namespace fstlog {
 		return num;
     }
 
-	inline logfield get_repl_field_id(
-		buff_span_const name) noexcept
-	{
+	inline logfield get_repl_field_id(buff_span_const name) noexcept {
 		auto str_v = std::string_view{
 			safe_reinterpret_cast<const char*>(name.data()), name.size_bytes() };
 		if (str_v == "time") return logfield::Timestamp;
@@ -171,5 +169,21 @@ namespace fstlog {
 		if (str_v == "severity") return logfield::Severity;
 		if (str_v == "timestamp") return logfield::Timestamp;
 		return logfield::Invalid;
+	}
+
+	inline std::string_view get_repl_field_name(logfield field_id) noexcept {
+		switch (field_id) {
+		case logfield::Severity: return "severity";
+		case logfield::Policy: return "policy";
+		case logfield::Channel:	return "channel";
+		case logfield::Timestamp: return "timestamp";
+		case logfield::Thread: return "thread";
+		case logfield::Logger: return "logger";
+		case logfield::File: return "file";
+		case logfield::Line: return "line";
+		case logfield::Function: return "function";
+		case logfield::Message:	return "message";
+		default: return "invalid";
+		}
 	}
 }
