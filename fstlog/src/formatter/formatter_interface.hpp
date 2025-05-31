@@ -22,8 +22,8 @@ namespace fstlog {
 		virtual buff_span format_message(
 			buff_span_const in,
 			buff_span out) noexcept = 0;
-		virtual const char* clone(formatter& out) const noexcept = 0;
-		virtual const char* clone(
+		virtual error_code clone(formatter& out) const noexcept = 0;
+		virtual error_code clone(
 			formatter& out,
 			fstlog_allocator const& allocator) const noexcept = 0;
 		virtual bool use() noexcept = 0;

@@ -45,20 +45,20 @@ namespace fstlog {
 		reference_counter_mixin<
 		allocator_mixin>>>>>>>>>>>>>>>;
 	
-	static const char* formatter_txt(
+	static error_code formatter_txt(
 		formatter& out,
 		buff_span_const format_string,
 		fstlog_allocator const& allocator) noexcept
 	{
 		out = make_allocated<formatter_txt_type>(allocator);
-		if (out.pimpl() == nullptr) return "Allocation failed (formatter obj.)!";
+		if (out.pimpl() == nullptr) return error_code::alloc_fail;
 		auto error = static_cast<formatter_txt_type*>(out.pimpl())->
 			formatter_init(format_string);
-		if (error != nullptr) out = formatter{};
+		if (error != error_code::none) out = formatter{};
 		return error;
 	}
 
-	const char* formatter_txt(
+	error_code formatter_txt(
 		formatter& out,
 		std::string_view format_string,
 		fstlog_allocator const& allocator) noexcept
@@ -71,7 +71,7 @@ namespace fstlog {
 			allocator);
 	}
 
-	const char* formatter_txt(
+	error_code formatter_txt(
 		formatter& out,
 		fstlog_allocator const& allocator) noexcept
 	{

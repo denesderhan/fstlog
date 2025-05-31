@@ -432,11 +432,11 @@ default zero means no polling.
 default zero means no periodic flushing.
 
 ```
--DFSTLOG_ALLOCATOR=.../fstlog/include/fstlog/detail/pmr_allocator.hpp
+-DFSTLOG_ALLOCATOR=../fstlog/include/fstlog/detail/pmr_allocator.hpp
 ```
 - Copies the file into the source tree and uses it for the allocator.
 Default is the pmr allocator, the malloc_allocator can be used 
 if compiling with disabled exceptions.
 ```
--DFSTLOG_ALLOCATOR=.../fstlog/include/fstlog/detail/malloc_allocator.hpp
+-DFSTLOG_ALLOCATOR=../fstlog/include/fstlog/detail/malloc_allocator.hpp
 ```

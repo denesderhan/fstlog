@@ -13,7 +13,7 @@
 #include <detail/byte_span.hpp>
 #include <detail/checked_iterator.hpp>
 #include <detail/utf_conv.hpp>
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <fstlog/detail/convert_to_basic_string_view.hpp>
 #include <fstlog/detail/constants.hpp>
@@ -87,7 +87,7 @@ namespace fstlog {
                     safe_reinterpret_cast<unsigned char*>(result.get_ptr()));
             }
             catch(...) {
-                this->set_error(__FILE__, __LINE__, error_code::external_code_error);
+                this->set_error(__FILE__, __LINE__, error_code::extern_err);
             }
         }
 

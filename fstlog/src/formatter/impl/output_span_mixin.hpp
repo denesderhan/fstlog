@@ -3,7 +3,7 @@
 #pragma once
 #include <cstddef>
 
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <detail/byte_span.hpp>
 
@@ -61,7 +61,7 @@ namespace fstlog {
                 output_ptr_ += bytes;
             }
             else {
-                this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+                this->set_error(__FILE__, __LINE__, error_code::buff_full);
             }
         }
 

@@ -143,7 +143,7 @@ namespace fstlog {
 			auto bytes = valid_utf8(input, input_end);
 			if (bytes == 0) {
 				return detail::buffer_operation_result<O>{
-					dest, error_code::input_contract_violation };
+					dest, error_code::input_bad };
 			}
 
 			if (dest_end - dest >= bytes) {
@@ -155,7 +155,7 @@ namespace fstlog {
 			else {
 				char_num = num;
 				return detail::buffer_operation_result<O>{
-					dest, error_code::no_space_in_buffer };
+					dest, error_code::buff_full };
 			}
 		}
 		char_num = num;

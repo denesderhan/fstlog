@@ -42,22 +42,22 @@ namespace fstlog {
 		return *this;
 	}
 
-	const char* formatter::clone(formatter& out) const noexcept {
+	error_code formatter::clone(formatter& out) const noexcept {
 		if (pimpl_ == nullptr) {
 			out = formatter{};
-			return nullptr;
+			return error_code::none;
 		}
 		else {
 			return pimpl_->clone(out);
 		}
 	}
-	const char* formatter::clone(
+	error_code formatter::clone(
 		formatter& out,
 		fstlog_allocator const& allocator) const noexcept
 	{
 		if (pimpl_ == nullptr) {
 			out = formatter{};
-			return nullptr;
+			return error_code::none;
 		}
 		else {
 			return pimpl_->clone(out, allocator);

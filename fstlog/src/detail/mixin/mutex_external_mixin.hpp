@@ -28,10 +28,10 @@ namespace fstlog {
        
         ~mutex_external_mixin() = default;
 
-		const char* set_mutex(std::shared_ptr<std::mutex> mutex) noexcept {
+		error_code set_mutex(std::shared_ptr<std::mutex> mutex) noexcept {
 			sync_mutex_ = std::move(mutex);
-			if (sync_mutex_ == nullptr) return "Mutex was nullptr!";
-			return nullptr;
+			if (sync_mutex_ == nullptr) return error_code::obj_null;
+			return error_code::none;
         }
 
         std::mutex& get_mutex() noexcept {

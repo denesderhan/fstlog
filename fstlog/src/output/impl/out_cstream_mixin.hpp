@@ -32,10 +32,10 @@ namespace fstlog {
             }
         }
 
-        const char* set_stream(FILE* stream_ptr) noexcept {
-			if (stream_ptr == nullptr) return "Stream was nullptr!";
+		error_code set_stream(FILE* stream_ptr) noexcept {
+			if (stream_ptr == nullptr) return error_code::obj_null;
 			stream_ = stream_ptr;
-			return nullptr;
+			return error_code::none;
         }
 
         void write_message(buff_span_const msg) noexcept {

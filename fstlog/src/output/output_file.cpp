@@ -17,14 +17,14 @@ namespace fstlog {
         exclusive_use_mixin<
         allocator_mixin>>>>;
     
-    const char* output_file(
+	error_code output_file(
 		output& out,
         const char* file_path,
         fstlog_allocator const& allocator) noexcept
 	{
         return output_file(out, file_path, false, allocator);
     }
-	const char* output_file(
+	error_code output_file(
 		output& out,
         const char* file_path,
         bool truncate,
@@ -32,7 +32,7 @@ namespace fstlog {
 	{
         return output_file(out, file_path, truncate, 16 * 1024, allocator);
     }
-	const char* output_file(
+	error_code output_file(
 		output& out,
 		const char* file_path,
 		bool truncate,
@@ -40,10 +40,10 @@ namespace fstlog {
 		fstlog_allocator const& allocator) noexcept
 	{
 		out = make_allocated<output_file_impl_type>(allocator);
-		if (out.pimpl() == nullptr) return "Allocation failed (output obj.)!";
+		if (out.pimpl() == nullptr) return error_code::alloc_fail;
 		const auto error = static_cast<output_file_impl_type*>(out.pimpl())->
 			init_output(file_path, truncate, buffer_size);
-		if (error != nullptr) out = output{};
+		if (error != error_code::none) out = output{};
 		return error;
 	}
 }

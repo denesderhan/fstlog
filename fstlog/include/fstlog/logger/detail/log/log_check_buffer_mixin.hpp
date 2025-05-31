@@ -14,26 +14,26 @@ namespace fstlog {
 			template<class T> class policy, 
 			log_call_flag flags,  
 			class... Args>
-		void log(Args const&... args) noexcept(
-			noexcept(error_if(true, ""))
+		void log(Args const&... args)  noexcept(
+			noexcept(error_if(true, error_code::none))
 			&& noexcept(this->is_buffer_set())
 			&& noexcept(L{}.template log<level, policy, flags>(args...)))
 		{
 			//Safe to throw here: (not through API boundary.)
-			error_if(!L::is_buffer_set(), "Log_buffer not set!");
+			error_if(!L::is_buffer_set(), error_code::buff_null);
 			L::template log<level, policy, flags>(args...);
 		}
 		template<
 			template<class T> class policy,
 			log_call_flag flags,
 			class... Args>
-		void log(level level, Args const&... args)  noexcept(
-			noexcept(error_if(true, ""))
+		void log(level level, Args const&... args)   noexcept(
+			noexcept(error_if(true, error_code::none))
 			&& noexcept(this->is_buffer_set())
 			&& noexcept(L{}.template log<policy, flags>(level, args...)))
 		{
 			//Safe to throw here: (not through API boundary.)
-			error_if(!L::is_buffer_set(), "Log_buffer not set!");
+			error_if(!L::is_buffer_set(), error_code::buff_null);
 			L::template log<policy, flags>(level, args...);
 		}
 	};

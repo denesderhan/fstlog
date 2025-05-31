@@ -9,19 +9,19 @@
 #include <filter/filter_impl.hpp>
 
 namespace fstlog {
-	const char* filter::init(allocator_type const& allocator) noexcept {
+	error_code filter::init(allocator_type const& allocator) noexcept {
 		FSTLOG_ASSERT(pimpl_ == nullptr);
 		pimpl_ = make_allocated<filter_impl>(allocator);
-		if (pimpl_ == nullptr) return "Allocation failed (filter)!";
-		return nullptr;
+		if (pimpl_ == nullptr) return error_code::alloc_fail;
+		return error_code::none;
 	}
-	const char* filter::init(
+	error_code filter::init(
 		level level,
 		channel_type channel,
 		allocator_type const& allocator)  noexcept 
 	{
 		auto error = init(allocator);
-		if (error == nullptr) {
+		if (error == error_code::none) {
 			if (level == level::All)
 				add_level(level::Fatal, level::Trace);
 			else if (level != level::None)
@@ -30,14 +30,14 @@ namespace fstlog {
 		}
 		return error;
 	}
-	const char* filter::init(
+	error_code filter::init(
 		level level,
 		channel_type first_channel,
 		channel_type last_channel,
 		allocator_type const& allocator) noexcept
 	{
 		auto error = init(allocator);
-		if (error == nullptr) {
+		if (error == error_code::none) {
 			if (level == level::All)
 				add_level(level::Fatal, level::Trace);
 			else if (level != level::None)
@@ -46,23 +46,23 @@ namespace fstlog {
 		}
 		return error;
 	}
-	const char* filter::init(const filter& other) noexcept {
-		if (pimpl_ != nullptr) return "Already initialized (filter)!";
-		if (other.pimpl_ == nullptr) return nullptr;
+	error_code filter::init(const filter& other) noexcept {
+		if (pimpl_ != nullptr) return error_code::double_init;
+		if (other.pimpl_ == nullptr) return error_code::none;
 		pimpl_ = make_allocated<filter_impl>(
 			other.pimpl_->get_allocator(),
 			*other.pimpl_);
-		if (pimpl_ == nullptr) return "Allocation failed (filter)!";
-		return nullptr;
+		if (pimpl_ == nullptr) return error_code::alloc_fail;
+		return error_code::none;
 	}
-	const char* filter::init(const filter& other, allocator_type const& allocator) noexcept {
-		if (pimpl_ != nullptr) return "Already initialized (filter)!";
-		if (other.pimpl_ == nullptr) return nullptr;
+	error_code filter::init(const filter& other, allocator_type const& allocator) noexcept {
+		if (pimpl_ != nullptr) return error_code::double_init;
+		if (other.pimpl_ == nullptr) return error_code::none;
 		pimpl_ = make_allocated<filter_impl>(
 			allocator, 
 			*other.pimpl_);
-		if (pimpl_ == nullptr) return "Allocation failed (filter)!";
-		return nullptr;
+		if (pimpl_ == nullptr) return error_code::alloc_fail;
+		return error_code::none;
 	}
 	filter& filter::operator=(const filter& other) noexcept {
 		if (this != &other && pimpl_ != nullptr) {

@@ -18,19 +18,19 @@ namespace fstlog {
     public:
         using allocator_type = fstlog_allocator;
 
-		FSTLOG_API core() noexcept(
+		FSTLOG_API core()  noexcept(
 			noexcept(allocator_type())
-			&& noexcept(handle_error("")))
+			 && noexcept(handle_error(error_code::none)))
 			: core(allocator_type{}) {}
-		FSTLOG_API explicit core(allocator_type const& allocator)  noexcept(
-			noexcept(handle_error("")))
+		FSTLOG_API explicit core(allocator_type const& allocator) noexcept(
+			noexcept(handle_error(error_code::none)))
 		{
 			[[maybe_unused]] const auto error = init(allocator);
 			handle_error(error);
 		}
 		FSTLOG_API core(
 			std::string_view name, 
-			allocator_type const& allocator = {}) noexcept(noexcept(handle_error("")))
+			allocator_type const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 		{
 			[[maybe_unused]] const auto error = init(name, allocator);
 			handle_error(error);
@@ -41,8 +41,8 @@ namespace fstlog {
 		FSTLOG_API core(core&& other) noexcept;
 		FSTLOG_API core& operator=(core&& other) noexcept;
 
-		FSTLOG_API const char* init(allocator_type const& allocator = {}) noexcept;
-		FSTLOG_API const char* init(
+		FSTLOG_API error_code init(allocator_type const& allocator = {}) noexcept;
+		FSTLOG_API error_code init(
 			std::string_view name,
 			allocator_type const& allocator = {}) noexcept;
 

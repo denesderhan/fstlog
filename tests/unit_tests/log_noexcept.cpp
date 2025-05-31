@@ -19,7 +19,7 @@
 
 namespace {
 	template<class L>
-	class fake_policy_true : public L {
+	class fake_policy_noexcept : public L {
 	public:
 		template<fstlog::level level, fstlog::log_call_flag flags, typename... Args>
 		void log(Args const&... args) noexcept {}
@@ -28,7 +28,7 @@ namespace {
 		void log(fstlog::level level, Args const&... args) noexcept {}
 	};
 	template<class L>
-	class fake_policy_false : public L {
+	class fake_policy_except : public L {
 	public:
 		template<fstlog::level level, fstlog::log_call_flag flags, typename... Args>
 		void log(Args const&... args) {}
@@ -96,24 +96,24 @@ TEST_CASE("log_noexcept") {
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_guaranteed, 0>(0)) == noexceptions);
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_nonguaranteed, 0>(0)) == noexceptions);
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_lowlatency, 0>(0)) == noexceptions);
-		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_false, 0>(0)) == false);
-		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_true, 0>(0)) == noexceptions);
+		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_except, 0>(0)) == false);
+		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_noexcept, 0>(0)) == noexceptions);
 	};
 	SECTION("logger_mt") {
 		fstlog::logger_mt l{ fstlog::core{nullptr} };
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_guaranteed, 0>(0)) == noexceptions);
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_nonguaranteed, 0>(0)) == noexceptions);
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_lowlatency, 0>(0)) == noexceptions);
-		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_false, 0>(0)) == false);
-		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_true, 0>(0)) == noexceptions);
+		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_except, 0>(0)) == false);
+		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_noexcept, 0>(0)) == noexceptions);
 	};
 	SECTION("logger_st") {
 		fstlog::logger_st l{ fstlog::core{nullptr} };
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_guaranteed, 0>(0)) == noexceptions);
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_nonguaranteed, 0>(0)) == noexceptions);
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_lowlatency, 0>(0)) == noexceptions);
-		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_false, 0>(0)) == false);
-		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_true, 0>(0)) == noexceptions);
+		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_except, 0>(0)) == false);
+		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_noexcept, 0>(0)) == noexceptions);
 	};
 #ifdef FSTLOG_TEST_FIX_LOGGER
 	SECTION("logger_st_fix") {
@@ -121,8 +121,8 @@ TEST_CASE("log_noexcept") {
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_guaranteed, 0>(0)) == noexceptions);
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_nonguaranteed, 0>(0)) == noexceptions);
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_lowlatency, 0>(0)) == noexceptions);
-		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_false, 0>(0)) == false);
-		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_true, 0>(0)) == noexceptions);
+		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_except, 0>(0)) == false);
+		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_noexcept, 0>(0)) == noexceptions);
 	};
 #endif
 	SECTION("logger_test") {
@@ -130,7 +130,7 @@ TEST_CASE("log_noexcept") {
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_guaranteed, 0>(0)) == true);
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_nonguaranteed, 0>(0)) == true);
 		CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_lowlatency, 0>(0)) == true);
-		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_false, 0>(0)) == false);
-		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_true, 0>(0)) == true);
+		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_except, 0>(0)) == false);
+		CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_noexcept, 0>(0)) == true);
 	};
 }

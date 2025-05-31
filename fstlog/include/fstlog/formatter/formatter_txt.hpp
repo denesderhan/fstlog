@@ -9,15 +9,15 @@
 #include <fstlog/detail/fstlog_allocator.hpp>
 
 namespace fstlog {
-	FSTLOG_API const char* formatter_txt(
+	FSTLOG_API error_code formatter_txt(
 		formatter& out,
 		fstlog_allocator const& allocator = {}) noexcept;
-	FSTLOG_API const char* formatter_txt(
+	FSTLOG_API error_code formatter_txt(
 		formatter& out,
 		std::string_view format_string,
 		fstlog_allocator const& allocator = {}) noexcept;
 	inline formatter formatter_txt(
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error("")))
+		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 	{
 		formatter out;
 		[[maybe_unused]] const auto error = formatter_txt(out, allocator);
@@ -26,7 +26,7 @@ namespace fstlog {
 	}
 	inline formatter formatter_txt(
 		std::string_view format_string,
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error("")))
+		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 	{
 		formatter out;
 		[[maybe_unused]] const auto error = formatter_txt(out, format_string, allocator);
@@ -36,7 +36,7 @@ namespace fstlog {
 #ifdef __cpp_char8_t
 	inline formatter formatter_txt(
 		std::u8string_view format_string,
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error("")))
+		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 	{
 		return formatter_txt(
 			std::string_view{ reinterpret_cast<const char*>(format_string.data()), format_string.size() },

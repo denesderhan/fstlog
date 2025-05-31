@@ -6,7 +6,7 @@
 #pragma intrinsic(memset, memmove)
 
 #include <detail/buffer_operation_result.hpp>
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <detail/utf8_helper.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -106,7 +106,7 @@ namespace fstlog {
 					error_code::none};
             }
             else {
-                return detail::buffer_operation_result<unsigned char>{begin + str_bytes, error_code::no_space_in_buffer};
+                return detail::buffer_operation_result<unsigned char>{begin + str_bytes, error_code::buff_full};
             }
         }
         else {

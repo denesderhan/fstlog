@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <new>
+#include <utility>
 
 #include <fstlog/detail/noexceptions.hpp>
 #include <detail/nothrow_allocate.hpp>

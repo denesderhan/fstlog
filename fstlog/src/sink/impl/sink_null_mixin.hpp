@@ -2,7 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <fstlog/detail/types.hpp>
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 
 namespace fstlog {
     template<class L>

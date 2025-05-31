@@ -7,11 +7,11 @@
 #include <fstlog/detail/fstlog_allocator.hpp>
 
 namespace fstlog {
-    FSTLOG_API const char* sink_null(
+    FSTLOG_API error_code sink_null(
 		sink& out,
 		fstlog_allocator const& allocator) noexcept;
 	inline sink sink_null(
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error("")))
+		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 	{
 		sink out;
 		[[maybe_unused]] const auto error = sink_null(out, allocator);

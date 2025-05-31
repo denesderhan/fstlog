@@ -34,7 +34,7 @@ namespace fstlog {
         exclusive_use_mixin<
         allocator_mixin>>>>>>>>>>;
 
-	static const char* sink_sort(
+	static error_code sink_sort(
 		sink& out,
 		formatter formatter,
 		output output,
@@ -45,20 +45,20 @@ namespace fstlog {
 	{
 		out = make_allocated<sink_sort_impl_type>(allocator);
 		const auto pimpl = static_cast<sink_sort_impl_type*>(out.pimpl());
-		if (pimpl == nullptr) return "Allocation failed (sink obj.)!";
+		if (pimpl == nullptr) return error_code::alloc_fail;
 		auto error = pimpl->set_formatter(std::move(formatter));
-		if (error == nullptr) error = pimpl->set_output(std::move(output));
-		if (error != nullptr) {
+		if (error == error_code::none) error = pimpl->set_output(std::move(output));
+		if (error != error_code::none) {
 			out = sink{};
 			return error;
 		}
 		pimpl->set_filter(filter);
 		pimpl->set_flush_interval(flush_interval);
 		pimpl->set_max_data_size(max_buffer_bytes);
-		return nullptr;
+		return error_code::none;
 	}
 
-	const char* sink_sort(
+	error_code sink_sort(
 		sink& out,
 		formatter formatter, 
 		output output,
@@ -75,7 +75,7 @@ namespace fstlog {
             15 * 1024, 
             allocator);
     }
-	const char* sink_sort(
+	error_code sink_sort(
 		sink& out,
 		formatter formatter, 
 		output output,
@@ -91,7 +91,7 @@ namespace fstlog {
             15 * 1024, 
             allocator);
     }
-	const char* sink_sort(
+	error_code sink_sort(
 		sink& out,
 		formatter formatter, 
         output output,
@@ -107,7 +107,7 @@ namespace fstlog {
 			15 * 1024, 
 			allocator);
     }
-	const char* sink_sort(
+	error_code sink_sort(
 		sink& out,
 		formatter formatter,
 		output output,
@@ -117,7 +117,7 @@ namespace fstlog {
         fstlog_allocator const& allocator) noexcept
 	{
 		out = sink{};
-		if (!filter.good()) return "Filter was bad!";
+		if (!filter.good()) return error_code::obj_null;
 		return sink_sort(
 			out,
 			std::move(formatter),

@@ -15,10 +15,10 @@ namespace fstlog {
 
 		FSTLOG_API filter() noexcept(
 			noexcept(allocator_type())
-			&& noexcept(handle_error("")))
+			 && noexcept(handle_error(error_code::none)))
 			: filter( allocator_type{} ) {}
 		explicit FSTLOG_API filter(allocator_type const& allocator) noexcept(
-			noexcept(handle_error("")))
+			noexcept(handle_error(error_code::none)))
 		{
 			[[maybe_unused]] const auto error = init(allocator);
 			handle_error(error);
@@ -27,7 +27,7 @@ namespace fstlog {
 			level level,
 			channel_type channel,
 			allocator_type const& allocator = {}) noexcept(
-				noexcept(handle_error("")))
+				noexcept(handle_error(error_code::none)))
 		{
 			[[maybe_unused]] const auto error = init(level, channel, allocator);
 			handle_error(error);
@@ -37,21 +37,22 @@ namespace fstlog {
 			channel_type first_channel,
 			channel_type last_channel,
 			allocator_type const& allocator = {}) noexcept(
-				noexcept(handle_error("")))
+				noexcept(handle_error(error_code::none)))
 		{
 			[[maybe_unused]] const auto error = 
 				init(level, first_channel, last_channel, allocator);
 			handle_error(error);
 		}
 		FSTLOG_API filter(const filter& other) noexcept(
-			noexcept(handle_error(""))) {
+			noexcept(handle_error(error_code::none))) 
+		{
 			[[maybe_unused]] const auto error = init(other);
 			handle_error(error);
 		}
 		FSTLOG_API filter(
 			const filter& other, 
 			allocator_type const& allocator) noexcept(
-				noexcept(handle_error(""))) 
+				noexcept(handle_error(error_code::none))) 
 		{
 			[[maybe_unused]] const auto error = init(other, allocator);
 			handle_error(error);
@@ -61,18 +62,18 @@ namespace fstlog {
 		FSTLOG_API filter& operator=(filter&& other) noexcept;
 		FSTLOG_API ~filter() noexcept;
 
-		FSTLOG_API const char* init(allocator_type const& allocator) noexcept;
-		FSTLOG_API const char* init(
+		FSTLOG_API error_code init(allocator_type const& allocator) noexcept;
+		FSTLOG_API error_code init(
 			level level,
 			channel_type channel,
 			allocator_type const& allocator = {}) noexcept;
-		FSTLOG_API const char* init(
+		FSTLOG_API error_code init(
 			level level,
 			channel_type first_channel,
 			channel_type last_channel,
 			allocator_type const& allocator = {}) noexcept;
-		FSTLOG_API const char* init(const filter& other) noexcept;
-		FSTLOG_API const char* init(const filter& other, allocator_type const& allocator) noexcept;
+		FSTLOG_API error_code init(const filter& other) noexcept;
+		FSTLOG_API error_code init(const filter& other, allocator_type const& allocator) noexcept;
 		
 		FSTLOG_API bool good() const noexcept;
 		

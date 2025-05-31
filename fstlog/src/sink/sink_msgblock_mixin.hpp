@@ -6,7 +6,7 @@
 #pragma intrinsic(memcpy)
 
 #include <detail/byte_span.hpp>
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>
 #include <fstlog/detail/padded_size.hpp>
@@ -46,7 +46,7 @@ namespace fstlog {
 				static_assert(sizeof(internal_msg_header::msg_type) == 1);
 				if (remaining_data == 0 || *dat_ptr != ut_cast(log_msg_type::Internal)) break;
 				if (remaining_data < internal_msg_header::padded_data_size) {
-					errc = error_code::input_contract_violation;
+					errc = error_code::input_bad;
 					break;
 				}
 				msg_counter msg_size;
@@ -67,7 +67,7 @@ namespace fstlog {
                     dat_ptr += padded_msg_size;
                 }
                 else {
-                    errc = error_code::input_contract_violation;
+                    errc = error_code::input_bad;
                     break;
                 }
             }

@@ -4,7 +4,7 @@
 
 #include <fstlog/detail/aggregate_type.hpp>
 #include <fstlog/detail/types.hpp>
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 
 namespace fstlog {
     template<typename L>
@@ -44,7 +44,7 @@ namespace fstlog {
                 this->advance_output_unchecked(1);
             }
             else {
-                this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+                this->set_error(__FILE__, __LINE__, error_code::buff_full);
             }
         }
         void encode_aggregate_element_separator() noexcept {
@@ -55,7 +55,7 @@ namespace fstlog {
                 this->advance_output_unchecked(2);
             }
             else {
-                this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+                this->set_error(__FILE__, __LINE__, error_code::buff_full);
             }
         }
         void encode_aggregate_stop() noexcept {
@@ -64,7 +64,7 @@ namespace fstlog {
                 this->advance_output_unchecked(1);
             }
             else {
-                this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+                this->set_error(__FILE__, __LINE__, error_code::buff_full);
             }
         }
     };

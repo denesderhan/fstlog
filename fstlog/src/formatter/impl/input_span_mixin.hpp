@@ -3,7 +3,7 @@
 #pragma once
 #include <cstddef>
 
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/types.hpp>
 #include <detail/byte_span.hpp>
@@ -54,7 +54,7 @@ namespace fstlog {
                 input_msg_ptr_ += bytes;
             }
             else {
-                this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
+                this->set_error(__FILE__, __LINE__, error_code::input_bad);
             }
         }
 

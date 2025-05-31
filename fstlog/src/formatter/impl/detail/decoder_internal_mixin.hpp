@@ -6,7 +6,7 @@
 #include <cstring>
 #pragma intrinsic(memcpy)
 
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <detail/byte_span.hpp>
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -53,7 +53,7 @@ namespace fstlog {
 				if (this->message_type() != log_msg_type::Internal
 					|| this->message_size() != msg.size_bytes())
 				{
-					this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
+					this->set_error(__FILE__, __LINE__, error_code::input_bad);
 				}
 			}
         }
@@ -83,7 +83,7 @@ namespace fstlog {
 					else return { header_begin, 0 };
 				}
 			}
-			this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
+			this->set_error(__FILE__, __LINE__, error_code::input_bad);
 			return { header_begin, 0 };
         }
 
@@ -99,7 +99,7 @@ namespace fstlog {
 					internal_arg_header<char>::data_size);
 				this->advance_input(header.arg_size);
 			}
-			else this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
+			else this->set_error(__FILE__, __LINE__, error_code::input_bad);
         }
 
         template<typename T, bool padded = true>

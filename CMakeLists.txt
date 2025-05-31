@@ -141,6 +141,7 @@ if(MSVC)
 else()
 	add_compile_options(
 		-fno-rtti
+		-Wno-psabi	# suppress ABI alignment change notification in gcc
 	)
 endif()
 

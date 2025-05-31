@@ -45,18 +45,18 @@ namespace fstlog {
 		}
 
 		// allocates and constructs a new type erased formatter object
-		const char* clone(wrapper_type& out) const noexcept final {
+		error_code clone(wrapper_type& out) const noexcept final {
 			return clone( out, L::get_allocator() );
 		}
 
 		// allocates and constructs a new type erased formatter object
-		const char* clone(
+		error_code clone(
 			wrapper_type& out,
 			allocator_type const& allocator) const noexcept final
 		{
 			out = make_allocated<formatter_interface_mixin<L>>(allocator, *this);
-			if (out.pimpl() == nullptr) return "Allocation failed (formatter obj.)!";
-			else return nullptr;
+			if (out.pimpl() == nullptr) return error_code::alloc_fail;
+			else return error_code::none;
 		}
 
         bool use() noexcept final {

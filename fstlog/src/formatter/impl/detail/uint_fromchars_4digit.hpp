@@ -2,7 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstdint>
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 
 namespace fstlog {
 	inline error_code uint_fromchars_4digit(
@@ -41,6 +41,6 @@ namespace fstlog {
 			num = out;
 			return error_code::none;
         }
-		else return error_code::input_contract_violation;
+		else return error_code::input_bad;
     }
 }

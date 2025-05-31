@@ -37,7 +37,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 			encoder.output_ptr() - encoder.output_begin());
 		CAPTURE(res);
 		CHECK(encoder.has_error());
-		CHECK(encoder.get_error().code() == fstlog::error_code::external_code_error);
+		CHECK(encoder.get_error().code() == fstlog::error_code::extern_err);
 		CHECK(res == "");
 		CHECK(encoder.output_ptr() == encoder.output_begin());
 	};

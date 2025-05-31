@@ -55,7 +55,7 @@ namespace fstlog {
         
         ~formatter_txt_mixin() = default;
 
-		const char* formatter_init(buff_span_const format_string) noexcept {
+		error_code formatter_init(buff_span_const format_string) noexcept {
 			if (format_string.empty()) {
 				format_string = buff_span_const {
 					safe_reinterpret_cast<const unsigned char*>(config::default_format_string.data()), 
@@ -64,13 +64,13 @@ namespace fstlog {
 			return parse_format_string(format_string);
 		}
 
-		inline const char* parse_format_string(buff_span_const format_string) {
+		inline error_code parse_format_string(buff_span_const format_string) {
 			this->output_span_init(formatting_buffer_);
 			while (!format_string.empty()) {
 				parse_fmt_text(format_string);
-				if (this->has_error()) return this->get_error().message();
+				if (this->has_error()) return this->get_error().code();
 				parse_fmt_repl_field(format_string);
-				if (this->has_error()) return this->get_error().message();
+				if (this->has_error()) return this->get_error().code();
 			}
 			
 			log_format_size_ =
@@ -79,8 +79,8 @@ namespace fstlog {
 				padded_size<constants::cache_ls_nosharing>(log_format_size_);
 			msg_template_capacity_ =
 				static_cast<std::uint32_t>(formatting_buffer_.size() - msg_template_start_);
-			if (msg_template_capacity_ < formatting_buffer_.size() / 4) return "Format string too long!";
-			return nullptr;
+			if (msg_template_capacity_ < formatting_buffer_.size() / 4) return error_code::str_long;
+			return error_code::none;
 		}
 
         buff_span format_message(
@@ -228,7 +228,7 @@ namespace fstlog {
 			while (!this->has_error() && ch < ch_end) {
                 if ((*ch & 0b11100000) != 0) {
                     if (pos < end) *pos++ = *ch;
-					else  this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+					else  this->set_error(__FILE__, __LINE__, error_code::buff_full);
                 }
                 else if(*ch < ut_cast(logfield::Args) ){
                     this->set_output_ptr_unchecked(pos);
@@ -236,7 +236,7 @@ namespace fstlog {
                     pos = this->output_ptr();
                 }
                 else {
-                    this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
+                    this->set_error(__FILE__, __LINE__, error_code::input_bad);
                 }
                 ch++;
             }
@@ -260,7 +260,7 @@ namespace fstlog {
 					}
 					else {
 						if(*in == '}') this->set_error(
-							__FILE__, __LINE__, error_code::input_contract_violation);
+							__FILE__, __LINE__, error_code::input_bad);
 						// stop at the beginning of a replacement field
 						in++;
 						break;
@@ -272,7 +272,7 @@ namespace fstlog {
 				}
 				else {
 					// stop (no space)
-					this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+					this->set_error(__FILE__, __LINE__, error_code::buff_full);
 					break;
 				}
 			}
@@ -292,12 +292,12 @@ namespace fstlog {
 			const auto field_name = argument_name(replacement_field);
 			const auto field_id = get_repl_field_id(field_name);
 			if (field_id == logfield::Invalid) {
-				this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
+				this->set_error(__FILE__, __LINE__, error_code::input_bad);
 				return;
 				//return "Invalid or empty field name!";
 			}
 			if (!this->output_has_space()) {
-				this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+				this->set_error(__FILE__, __LINE__, error_code::buff_full);
 				return;
 				//return "Format string too long!";
 			}
@@ -309,7 +309,7 @@ namespace fstlog {
 				
 				auto error2 = this->init_time_to_str_converter(time_format(form_spec));
 				if (error2 != nullptr) {
-					this->set_error(__FILE__, __LINE__, error_code::input_contract_violation);
+					this->set_error(__FILE__, __LINE__, error_code::input_bad);
 					return;
 				}
 			}

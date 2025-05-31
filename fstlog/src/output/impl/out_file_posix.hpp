@@ -28,13 +28,13 @@ namespace fstlog {
             deallocate_buffer();
         }
 
-        const char* open(
+		error_code open(
             const char* file_path,
             bool truncate,
             std::size_t buffer_size) noexcept
         {
-			if (file_path == nullptr) return "Path nullptr!";
-			if (handle_ != nullptr) return "Output already opened!";
+			if (file_path == nullptr) return error_code::obj_null;
+			if (handle_ != nullptr) return error_code::double_init;
 
 #if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
 			const unsigned char* path_begin{ safe_reinterpret_cast<const unsigned char*>(file_path) };
@@ -44,7 +44,9 @@ namespace fstlog {
 			//511 (last char must be '/0')
 			const auto result = detail::utf8_to_utf16<char, wchar_t>(path_begin, p_end, path, path + 511, char_num);
 			//Path was too long!
-			if (result.ec != error_code::none) return "Path invalid or too long!";
+			if (result.ec != error_code::none) {
+				return error_code::path_bad;
+			}
 #endif
 			//Win32 api: Allowable range : 2 <= size <= INT_MAX(2147483647) 
 			if (buffer_size == 1) buffer_size = 2;
@@ -58,7 +60,7 @@ namespace fstlog {
 						buffer_size,
 						constants::cache_ls_nosharing));
 					if (buffer_ == nullptr) {
-						return "Allocation failed (output buffer)!";
+						return error_code::alloc_fail;
 					}
 					buffer_size_ = buffer_size;
 				}
@@ -83,14 +85,14 @@ namespace fstlog {
 			}
 #endif
 			//buffer wont be deallocated
-			if (handle_ == nullptr) return "Opening file path failed (invalid)!";
+			if (handle_ == nullptr) return error_code::path_bad;
 			
 			const auto buffer_mode = buffer_size_ == 0 ? _IONBF : _IOFBF;
 			if (setvbuf(handle_, buffer_, buffer_mode, buffer_size_)) {
 				close();
-				return "Setting file buffer failed!";
+				return error_code::extern_err;
 			}
-			return nullptr;
+			return error_code::none;
         }
 
         void try_reopen(const char* file_path) noexcept {

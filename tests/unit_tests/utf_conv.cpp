@@ -150,7 +150,7 @@ TEST_CASE("utf_conv") {
 			in_pos, in_end,
 			out_buff.data(), out_buff.data() + out_buff.size(),
 			char_num);
-		CHECK(result.ec == fstlog::error_code::input_contract_violation);
+		CHECK(result.ec == fstlog::error_code::input_bad);
 		CHECK(in_pos == in_end - 1);
 		const auto converted_char_num{ char_num };
 
@@ -181,7 +181,7 @@ TEST_CASE("utf_conv") {
 			in_pos, in_end,
 			out_buff.data(), out_buff.data() + out_buff.size(),
 			char_num);
-		CHECK(result.ec == fstlog::error_code::input_contract_violation);
+		CHECK(result.ec == fstlog::error_code::input_bad);
 		CHECK(in_pos == in_end - sizeof(char32_t));
 		const auto converted_char_num{ char_num };
 		CHECK(converted_char_num == conv_length - 1);
@@ -212,7 +212,7 @@ TEST_CASE("utf_conv") {
 			in_pos, in_end,
 			out_buff.data(), out_buff.data() + out_buff.size(),
 			char_num);
-		CHECK(result.ec == fstlog::error_code::input_contract_violation);
+		CHECK(result.ec == fstlog::error_code::input_bad);
 		CHECK(in_pos == in_end - sizeof(char16_t));
 		const auto converted_char_num{ char_num };
 		CHECK(converted_char_num == conv_length - 1);

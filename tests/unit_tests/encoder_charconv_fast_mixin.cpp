@@ -40,7 +40,7 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 			encoder.output_ptr() - encoder.output_begin());
 		CAPTURE(res);
 		CHECK(encoder.has_error());
-		CHECK(encoder.get_error().code() == fstlog::error_code::no_space_in_buffer);
+		CHECK(encoder.get_error().code() == fstlog::error_code::buff_full);
 		CHECK(res == "");
 		CHECK(encoder.output_ptr() == encoder.output_begin());
 	};

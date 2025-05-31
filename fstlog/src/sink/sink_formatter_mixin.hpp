@@ -34,11 +34,11 @@ namespace fstlog {
 			}
         }
 
-		const char* set_formatter(formatter formatter) noexcept {
-			if (!formatter.good()) return "Formatter was bad!";
-			if (!formatter.pimpl()->use()) return "Formatter used by another sink.";
+		error_code set_formatter(formatter formatter) noexcept {
+			if (!formatter.good()) return error_code::obj_null;
+			if (!formatter.pimpl()->use()) return error_code::obj_locked;
 			formatter_ = std::move(formatter);
-			return nullptr;
+			return error_code::none;
 		}
 
         buff_span_const format(buff_span_const message) noexcept {

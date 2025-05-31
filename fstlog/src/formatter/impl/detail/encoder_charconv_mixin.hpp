@@ -9,7 +9,7 @@
 #include <type_traits>
 
 #include <detail/byte_span.hpp>
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <detail/utf_conv.hpp>
 #include <formatter/impl/detail/encoder_helper.hpp>
@@ -67,7 +67,7 @@ namespace fstlog {
 		void encode(T data, format_type format) noexcept {
 			// ensure minimum space for sign + prefix
 			if (!this->output_has_space(3)) {
-				this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+				this->set_error(__FILE__, __LINE__, error_code::buff_full);
 				return;
 			}
 			const auto str_begin = this->output_ptr();
@@ -94,7 +94,7 @@ namespace fstlog {
 				abs_data,
 				base);
 			if (result.ec != std::errc{}) {
-				this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+				this->set_error(__FILE__, __LINE__, error_code::buff_full);
 				return;
 			}
 			auto str_end = safe_reinterpret_cast<unsigned char*>(result.ptr);
@@ -133,7 +133,7 @@ namespace fstlog {
 			const auto buffer_end = this->output_end();
 			// ensure minimum space for sign
 			if (buffer_pos >= buffer_end) {
-				this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+				this->set_error(__FILE__, __LINE__, error_code::buff_full);
 				return;
 			}
 			// write the sign
@@ -175,7 +175,7 @@ namespace fstlog {
             }
 
             if (result.ec != std::errc{}) {
-                this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+                this->set_error(__FILE__, __LINE__, error_code::buff_full);
                 return;
             }
 
@@ -212,7 +212,7 @@ namespace fstlog {
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
             if (!this->output_has_space()) {
-				this->set_error(__FILE__, __LINE__, error_code::no_space_in_buffer);
+				this->set_error(__FILE__, __LINE__, error_code::buff_full);
 				return;
 			}
             const auto data_ptr = safe_reinterpret_cast<const unsigned char*>(&data);

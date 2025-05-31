@@ -34,14 +34,14 @@ namespace fstlog {
             }
         }
 
-        const char* set_stream(std::shared_ptr<std::ostream> stream_smart_ptr) noexcept {
+		error_code set_stream(std::shared_ptr<std::ostream> stream_smart_ptr) noexcept {
 			if (stream_smart_ptr == nullptr || !stream_smart_ptr->good()) {
-				return "Stream was bad/nullptr!";
+				return error_code::obj_null;
 			}
 			//this can not throw, stream was good() (no error state)
 			stream_smart_ptr->exceptions(std::ios_base::iostate(0));
 			stream_ = std::move(stream_smart_ptr);
-			return nullptr;
+			return error_code::none;
         }
 
         void write_message(buff_span_const msg) noexcept {

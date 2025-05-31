@@ -32,11 +32,11 @@ namespace fstlog {
             }
         }
 
-		const char* set_output(output output) noexcept {
-			if (!output.good()) return "Output was bad!";
-			if (!output.pimpl()->use()) return "Output used by another sink!";
+		error_code set_output(output output) noexcept {
+			if (!output.good()) return error_code::obj_null;
+			if (!output.pimpl()->use()) return error_code::obj_locked;
 			output_ = std::move(output);
-			return nullptr;
+			return error_code::none;
 		}
 
         void write_message(buff_span_const message) noexcept {

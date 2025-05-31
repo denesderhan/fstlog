@@ -17,12 +17,12 @@ namespace fstlog {
         concurrent_use_mixin<
         allocator_mixin>>>>;
 
-	const char* output_null(
+	error_code output_null(
 		output& out, 
 		fstlog_allocator const& allocator) noexcept 
 	{
 		out = make_allocated<output_null_impl_type>(allocator);
-		if (out.pimpl() == nullptr) return "Allocation failed (output obj.)!";
-		return nullptr;
+		if (out.pimpl() == nullptr) return error_code::alloc_fail;
+		return error_code::none;
 	}
 }

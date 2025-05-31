@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <chrono>
 
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 
 namespace fstlog {
 	class sink_interface

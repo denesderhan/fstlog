@@ -38,7 +38,7 @@ namespace fstlog {
         core_impl& operator=(const core_impl&) = delete;
         core_impl& operator=(core_impl&& other) = delete;
         ~core_impl() noexcept;
-		const char* init();
+        error_code init();
 	public:    
         void start() noexcept;
         void stop() noexcept;

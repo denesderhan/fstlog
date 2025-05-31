@@ -426,7 +426,7 @@ TEST_CASE("time_to_str_converter_pre_epoch") {
 		auto result = time_conv.timestamp_to_chars(
 			std::chrono::system_clock::time_point{ std::chrono::microseconds{ microsecond } }, 
 			buffer.data(), buffer.data() + buffer.size());
-		CHECK(result.ec == fstlog::error_code::input_contract_violation);
+		CHECK(result.ec == fstlog::error_code::input_bad);
 		CHECK(std::string_view(fstlog::safe_reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data())
 			== "");
 }

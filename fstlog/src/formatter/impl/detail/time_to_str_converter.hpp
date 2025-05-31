@@ -58,7 +58,7 @@ namespace fstlog {
 		{
 			if (timestamp < std::chrono::system_clock::time_point{}) {
 				return detail::buffer_operation_result<unsigned char>{ 
-					buffer_ptr, error_code::input_contract_violation};
+					buffer_ptr, error_code::input_bad};
 			}
 			detail::nano_to_seconds_txt sec_f(timestamp, second_char_num_);
 			const auto min{ std::chrono::duration_cast<std::chrono::minutes>(sec_f.minutes().time_since_epoch()).count() };
@@ -87,7 +87,7 @@ namespace fstlog {
 				return detail::buffer_operation_result<unsigned char>{ buffer_ptr, error_code::none };
 			}
 			else {
-				return detail::buffer_operation_result<unsigned char>{ buffer_ptr, error_code::no_space_in_buffer };
+				return detail::buffer_operation_result<unsigned char>{ buffer_ptr, error_code::buff_full };
 			}
 		}
 

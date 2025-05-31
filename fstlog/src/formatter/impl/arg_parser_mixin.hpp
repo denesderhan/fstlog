@@ -6,7 +6,7 @@
 
 #include <config_parser.hpp>
 #include <detail/byte_span.hpp>
-#include <detail/error_code.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/aggregate_type.hpp>
 #include <fstlog/detail/char_type.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -81,7 +81,7 @@ namespace fstlog {
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_contract_violation);
+					error_code::input_bad);
             }
         }
 
@@ -119,7 +119,7 @@ namespace fstlog {
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_contract_violation);
+					error_code::input_bad);
             }
         }
 
@@ -164,7 +164,7 @@ namespace fstlog {
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_contract_violation);
+					error_code::input_bad);
             }
         }
         
@@ -244,7 +244,7 @@ namespace fstlog {
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_contract_violation);
+					error_code::input_bad);
             }
         }
 
@@ -271,7 +271,7 @@ namespace fstlog {
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_contract_violation);
+					error_code::input_bad);
             }
         }
 
@@ -284,7 +284,7 @@ namespace fstlog {
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_contract_violation);
+					error_code::input_bad);
             }
         }
 
@@ -325,7 +325,7 @@ namespace fstlog {
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_contract_violation);
+					error_code::input_bad);
             }
         }
 
@@ -336,7 +336,7 @@ namespace fstlog {
             while (loop_counter-- != 0) {
                 if (str_ind >= end_ind) {
                     this->set_error(__FILE__, __LINE__, 
-						error_code::input_contract_violation);
+						error_code::input_bad);
                     return;
                 }
                 const unsigned char data_type = 
@@ -352,7 +352,7 @@ namespace fstlog {
                     else if (meta == ut_cast(aggregate_type::Tuple)) {
                         if (str_ind >= end_ind) {
                             this->set_error(__FILE__, __LINE__, 
-								error_code::input_contract_violation);
+								error_code::input_bad);
                             return;
                         }
                         const unsigned char tuple_size = 
@@ -362,7 +362,7 @@ namespace fstlog {
                     }
                     else {
                         this->set_error(__FILE__, __LINE__, 
-							error_code::input_contract_violation);
+							error_code::input_bad);
                         return;
                     }
                 }
@@ -411,7 +411,7 @@ namespace fstlog {
 		{
             if (type_signature.size_bytes() < 2) {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_contract_violation);
+					error_code::input_bad);
                 return;
             }
 			FSTLOG_ASSERT(	*type_signature.data() == 
@@ -455,7 +455,7 @@ namespace fstlog {
 					tree_depth++;
 					if (tree_depth > config::max_parser_tree_depth) {
 						this->set_error(__FILE__, __LINE__, 
-							error_code::recursion_limit);
+							error_code::recur_lim);
 						//cant use skip_type() alone, should make skip_data too!!
 					}
 					else if (meta == ut_cast(aggregate_type::List)) {
@@ -466,13 +466,13 @@ namespace fstlog {
 					}
 					else {
 						this->set_error(__FILE__, __LINE__, 
-							error_code::input_contract_violation);
+							error_code::input_bad);
 					}
 				}
 			}
 			else if (!this->has_error())
 				this->set_error(__FILE__, __LINE__, 
-					error_code::input_contract_violation);
+					error_code::input_bad);
         }
     };
 }

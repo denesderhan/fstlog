@@ -10,17 +10,16 @@
 #include <detail/make_allocated.hpp>
 
 namespace fstlog {
-	const char* core::init(allocator_type const& allocator) noexcept {
+	error_code core::init(allocator_type const& allocator) noexcept {
 		return init("Unnamed", allocator);
 	}
-	const char* core::init(std::string_view name, allocator_type const& allocator) noexcept {
-		if (pimpl_ != nullptr) return "Already initialized (core)!";
+	error_code core::init(std::string_view name, allocator_type const& allocator) noexcept {
+		if (pimpl_ != nullptr) return error_code::double_init;
 		pimpl_ = make_allocated<core_impl>(allocator, name);
-		if (pimpl_ == nullptr) return "Allocation failed (core obj.)!";
+		if (pimpl_ == nullptr) return error_code::alloc_fail;
 		pimpl_->add_reference();
 		const auto error = pimpl_->init();
-		if (error != nullptr) return error;
-		return nullptr;
+		return error;
 	}
 
 	//this is needed, to be able to construct an empty core (core{nullptr} in logger_core_mixin)

@@ -9,13 +9,13 @@
 #include <fstlog/detail/fstlog_allocator.hpp>
 
 namespace fstlog {
-	FSTLOG_API const char* output_file(
+	FSTLOG_API error_code output_file(
 		output& out,
 		const char* file_path,
 		fstlog_allocator const& allocator = {}) noexcept;
 	inline output output_file(
 		const char* file_path,
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error("")))
+		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 	{
 		output out;
 		[[maybe_unused]] const auto error = output_file(out, file_path, allocator);
@@ -23,7 +23,7 @@ namespace fstlog {
 		return out;
 	}
 
-	FSTLOG_API const char* output_file(
+	FSTLOG_API error_code output_file(
 		output& out,
 		const char* file_path,
 		bool truncate,
@@ -31,14 +31,14 @@ namespace fstlog {
 	inline output output_file(
 		const char* file_path,
 		bool truncate,
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error("")))
+		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 	{
 		output out;
 		[[maybe_unused]] const auto error = output_file(out, file_path, truncate, allocator);
 		handle_error(error);
 		return out;
 	}
-	FSTLOG_API const char* output_file(
+	FSTLOG_API error_code output_file(
 		output& out,
 		const char* file_path,
 		bool truncate,
@@ -48,7 +48,7 @@ namespace fstlog {
 		const char* file_path,
 		bool truncate,
 		std::uint32_t buffer_size,
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error("")))
+		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 	{
 		output out;
 		[[maybe_unused]] const auto error = output_file(out, file_path, truncate, buffer_size, allocator);

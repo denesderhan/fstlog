@@ -251,14 +251,14 @@ namespace fstlog {
 				if (!valid_code_point(code_point)) {
 					char_num = char_count;
 					return buffer_operation_result<O>{
-						dest, error_code::input_contract_violation };
+						dest, error_code::input_bad };
 				}
 
 				O* next_dest = encode_utf8(static_cast<std::uint32_t>(code_point), dest, dest_end);
 				// encoding failed (no space)
 				if (next_dest == nullptr) {
 					char_num = char_count;
-					return buffer_operation_result<O>{ dest, error_code::no_space_in_buffer };
+					return buffer_operation_result<O>{ dest, error_code::buff_full };
 				}
 
 				in += sizeof(I);
@@ -287,14 +287,14 @@ namespace fstlog {
 				if (next_in == nullptr) {
 					char_num = char_count;
 					return buffer_operation_result<O>{
-						dest, error_code::input_contract_violation };
+						dest, error_code::input_bad };
 				}
 				O* next_dest = encode_utf8(code_p, dest, dest_end);
 				// encoding failed, no space
 				if (next_dest == nullptr) {
 					char_num = char_count;
 					return buffer_operation_result<O>{ 
-						dest, error_code::no_space_in_buffer };
+						dest, error_code::buff_full };
 				}
 				in = next_in;
 				dest = next_dest;
@@ -322,7 +322,7 @@ namespace fstlog {
 				if (dest >= dest_end) {
 					char_num = char_count;
 					return buffer_operation_result<O>{
-						dest, error_code::no_space_in_buffer };
+						dest, error_code::buff_full };
 				}
 				std::uint32_t code_point{0};
 				unsigned char const* next_input = decode_utf8<I>(code_point, input, input_end);
@@ -330,7 +330,7 @@ namespace fstlog {
 				if (next_input == nullptr) {
 					char_num = char_count;
 					return buffer_operation_result<O>{
-						dest, error_code::input_contract_violation };
+						dest, error_code::input_bad };
 				}
 
 				*dest++ = static_cast<O>(code_point);
@@ -362,7 +362,7 @@ namespace fstlog {
 				if (next_input == nullptr) {
 					char_num = char_count;
 					return buffer_operation_result<O>{
-						dest, error_code::input_contract_violation };
+						dest, error_code::input_bad };
 				}
 				
 				O* next_dest = encode_utf16(code_point, dest, dest_end);
@@ -370,7 +370,7 @@ namespace fstlog {
 				if (next_dest == nullptr) {
 					char_num = char_count;
 					return buffer_operation_result<O>{
-						dest, error_code::no_space_in_buffer };
+						dest, error_code::buff_full };
 				}
 
 				input = next_input;

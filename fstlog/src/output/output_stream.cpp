@@ -17,15 +17,15 @@ namespace fstlog {
         exclusive_use_mixin<
         allocator_mixin>>>>;
 
-    const char* output_stream(
+	error_code output_stream(
 		output& out,
         std::shared_ptr<std::ostream> stream,
         fstlog_allocator const& allocator) noexcept
 	{
 		out = make_allocated<output_stream_impl_type>(allocator);
-		if (out.pimpl() == nullptr) return "Allocation failed (output obj.)!";
+		if (out.pimpl() == nullptr) return error_code::alloc_fail;
 		const auto error = static_cast<output_stream_impl_type*>(out.pimpl())->set_stream(stream);
-		if (error != nullptr) out = output{};
+		if (error != error_code::none) out = output{};
 		return error;
     }
 }

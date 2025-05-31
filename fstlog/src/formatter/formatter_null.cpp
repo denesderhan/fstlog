@@ -18,12 +18,12 @@ namespace fstlog {
 		reference_counter_mixin<
         allocator_mixin>>>>;
 
-    const char* formatter_null(
+    error_code formatter_null(
 		formatter& out,
 		fstlog_allocator const& allocator) noexcept 
 	{
 		out = make_allocated<formatter_null_type>(allocator);
-		if (out.pimpl() == nullptr) return "Allocation failed (formatter obj.)!";
-		return nullptr;
+		if (out.pimpl() == nullptr) return error_code::alloc_fail;
+		return error_code::none;
     }
 }

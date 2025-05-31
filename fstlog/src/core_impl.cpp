@@ -35,7 +35,7 @@ namespace fstlog {
 			sink.pimpl()->release();
     }
 
-	const char* core_impl::init() {
+	error_code core_impl::init() {
 		if constexpr (level::FSTLOG_COMPILETIME_LOGLEVEL != level::None) {
 #ifdef FSTLOG_DEBUG
 			logger_.init(get_buffer(128 * 1024));
@@ -44,10 +44,10 @@ namespace fstlog {
 #endif // FSTLOG_DEBUG
 		}
 		start();
-		if (!running()) return "Starting background thread failed!";
+		if (!running()) return error_code::thread_fail;
 		if (bufferstore_.capacity() < 64 || sinkstore_.capacity() < 8)
-			return "Core, internal memory allocation failure!";
-		return nullptr;
+			return error_code::alloc_fail;
+		return error_code::none;
 	}
 
 	bool core_impl::running() const noexcept {

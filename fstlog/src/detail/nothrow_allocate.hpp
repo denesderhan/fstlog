@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 
 #include <detail/safe_reinterpret_cast.hpp>

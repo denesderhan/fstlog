@@ -13,18 +13,18 @@
 #include <fstlog/output/output.hpp>
 
 namespace fstlog {
-    FSTLOG_API const char* sink_unsort(
+    FSTLOG_API error_code sink_unsort(
 		sink& out,
         formatter formatter, 
         output output, 
         fstlog_allocator const& allocator = {}) noexcept;
-    FSTLOG_API const char* sink_unsort(
+    FSTLOG_API error_code sink_unsort(
 		sink& out,
 		formatter formatter, 
 		output output,
         filter filter,
         fstlog_allocator const& allocator = {}) noexcept;
-    FSTLOG_API const char* sink_unsort(
+    FSTLOG_API error_code sink_unsort(
 		sink& out,
 		formatter formatter, 
 		output output,
@@ -35,7 +35,7 @@ namespace fstlog {
 	inline sink sink_unsort(
 		formatter formatter,
 		output output,
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error("")))
+		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 	{
 		sink out;
 		[[maybe_unused]] const auto error = 
@@ -47,7 +47,7 @@ namespace fstlog {
 		formatter formatter,
 		output output,
 		filter filter,
-		fstlog_allocator const& allocator = {})  noexcept(noexcept(handle_error("")))
+		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 	{
 		sink out;
 		[[maybe_unused]] const auto error = 
@@ -60,7 +60,7 @@ namespace fstlog {
 		output output,
 		filter filter,
 		std::chrono::milliseconds flush_interval,
-		fstlog_allocator const& allocator = {})  noexcept(noexcept(handle_error("")))
+		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
 	{
 		sink out;
 		[[maybe_unused]] const auto error =

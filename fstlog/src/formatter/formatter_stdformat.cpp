@@ -51,33 +51,29 @@ namespace fstlog {
 		reference_counter_mixin<
         allocator_mixin>>>>>>>>>>>>>>>;
 
-	static const char* formatter_stdformat(
+	static error_code formatter_stdformat(
 		formatter& out,
 		buff_span_const format_string,
 		fstlog_allocator const& allocator) noexcept 
 	{
 		out = make_allocated<formatter_stdformat_type>(allocator);
-		if (out.pimpl() == nullptr) return "Allocation failed (formatter obj.)!";
+		if (out.pimpl() == nullptr) return error_code::alloc_fail;
 		auto error = static_cast<formatter_stdformat_type*>(out.pimpl())->
 			formatter_init(format_string);
-		if (error != nullptr) out = formatter{};
+		if (error != error_code::none) out = formatter{};
 		return error;
 	}
 #else
-	static const char* formatter_stdformat(
+	static error_code formatter_stdformat(
 		[[maybe_unused]] formatter& out,
 		[[maybe_unused]] buff_span_const format_string,
 		[[maybe_unused]] fstlog_allocator const& allocator) noexcept
 	{
-#if defined(__cpp_lib_format)
-		return "formatter_stdformat not available (exceptions disabled)!";
-#else
-		return "formatter_stdformat not available (std::format not available)!";
-#endif
+		return error_code::cpp_err;
 	}
 #endif
 
-	const char* formatter_stdformat(
+	error_code formatter_stdformat(
 		formatter& out, 
 		std::string_view format_string,
         fstlog_allocator const& allocator) noexcept 
@@ -90,7 +86,7 @@ namespace fstlog {
 			allocator);
     }
 
-	const char* formatter_stdformat(
+	error_code formatter_stdformat(
 		formatter& out,
 		fstlog_allocator const& allocator) noexcept
 	{

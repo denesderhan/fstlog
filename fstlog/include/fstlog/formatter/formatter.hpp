@@ -15,14 +15,14 @@ namespace fstlog {
 		FSTLOG_API formatter& operator=(const formatter& other) noexcept;
 		FSTLOG_API formatter(formatter&& other) noexcept;
 		FSTLOG_API formatter& operator=(formatter&& other) noexcept;
-		FSTLOG_API formatter clone() const noexcept(noexcept(handle_error(""))) {
+		FSTLOG_API formatter clone() const noexcept(noexcept(handle_error(error_code::none))) {
 			formatter out{};
 			[[maybe_unused]] const auto error = clone(out);
 			handle_error(error);
 			return out;
 		}
 		FSTLOG_API formatter clone(
-			fstlog_allocator const& allocator) const noexcept(noexcept(handle_error(""))) 
+			fstlog_allocator const& allocator) const noexcept(noexcept(handle_error(error_code::none)))
 		{
 			formatter out{};
 			[[maybe_unused]] const auto error = clone(out, allocator);
@@ -31,8 +31,8 @@ namespace fstlog {
 		}
 		
 		FSTLOG_API bool good() const noexcept;
-		FSTLOG_API const char* clone(formatter& out) const noexcept;
-		FSTLOG_API const char* clone(formatter& out, fstlog_allocator const& allocator) const noexcept;
+		FSTLOG_API error_code clone(formatter& out) const noexcept;
+		FSTLOG_API error_code clone(formatter& out, fstlog_allocator const& allocator) const noexcept;
 		
 		explicit formatter(formatter_interface* pimpl) noexcept;
 		formatter_interface* pimpl() const noexcept;
