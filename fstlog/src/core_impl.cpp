@@ -36,17 +36,30 @@ namespace fstlog {
     }
 
 	error_code core_impl::init() {
+		bool self_buffer_good = true;
+		// if there is no self logging, no need to init self buffer
 		if constexpr (level::FSTLOG_COMPILETIME_LOGLEVEL != level::None) {
 #ifdef FSTLOG_DEBUG
-			logger_.init(get_buffer(128 * 1024));
+			auto log_buff = get_buffer(128 * 1024);
 #else
-			logger_.init(get_buffer(4 * 1024));
+			auto log_buff = get_buffer(4 * 1024);
 #endif // FSTLOG_DEBUG
+			// first try to set buffer (start() can log)
+			// if buffer is null there will be no logging, see: log_nobuffer_nolog_mixin
+			logger_.init(log_buff);
+			self_buffer_good = log_buff.good();
 		}
+		
+		// always try to start background thread
 		start();
+		// report errors
 		if (!running()) return error_code::thread_fail;
-		if (bufferstore_.capacity() < 64 || sinkstore_.capacity() < 8)
+		if (bufferstore_.capacity() < 64
+			|| sinkstore_.capacity() < 8
+			|| !self_buffer_good)
+		{
 			return error_code::alloc_fail;
+		}
 		return error_code::none;
 	}
 
