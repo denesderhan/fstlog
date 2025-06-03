@@ -14,55 +14,88 @@
 
 namespace fstlog {
 		
-	inline buff_span_const get_replacement_field(
-        buff_span_const& str) noexcept
-    {
-		FSTLOG_ASSERT(str.data() != nullptr);
-		if (str.size_bytes() == 0) {
-            return str;
-        }
-		auto pos = str.data();
-        auto end_pos = str.data() + str.size_bytes();
-        auto repl_begin = pos;
-        while (pos != end_pos 
-            && *pos != '{'
-            && *pos != '}') 
-        {
-            pos++;
-        }
-        auto repl_end = pos;
-        //replacement field end marker not missing (skip it)
-        if (repl_end != end_pos) {
-            pos++;    
-        }
-        str = buff_span_const{ pos, static_cast<std::size_t>(end_pos - pos) };
-        return buff_span_const{ repl_begin, static_cast<std::size_t>(repl_end - repl_begin) };
-    }
-
-    inline buff_span_const format_spec(
-        buff_span_const replacement_field) noexcept
-    {
-        const unsigned char* pos = replacement_field.data();
-        const unsigned char* const end = pos + replacement_field.size_bytes();
-        while (pos < end) {
-            if (*pos++ == ':') break;
-        }
-        return buff_span_const{ pos, static_cast<std::size_t>(end - pos) };
-    }
-
-    inline buff_span_const argument_name(
-        buff_span_const& replacement_field) noexcept
+	// write the text part of the fmt format string in to out
+	inline error_code parse_fmt_text(
+		unsigned char const*& in_pos, unsigned char const* in_end,
+		unsigned char*& out_pos, unsigned char const* out_end) noexcept
 	{
-        const unsigned char* const begin = replacement_field.data();
-        const unsigned char* const end = begin + replacement_field.size_bytes();
-        const unsigned char* pos = begin;
-        while (pos < end) {
-			if (*pos == ':') break;
-			pos++;
-        }
-		replacement_field = buff_span_const{ pos, static_cast<std::size_t>(end - pos) };
-        return buff_span_const{ begin, static_cast<std::size_t>(pos - begin) };
-    }
+		FSTLOG_ASSERT(in_pos != nullptr && out_pos != nullptr);
+		error_code error = error_code::none;
+		auto out_beg = out_pos;
+		while (in_pos < in_end) {
+			bool skip = false;
+			if (*in_pos == '{' || *in_pos == '}') {
+				if (in_end - in_pos > 1 && *(in_pos + 1) == *in_pos) {
+					// skip the duplicated '{' or '}'
+					skip = true;
+				}
+				else {
+					if (*in_pos == '}') {
+						// we got '}' instead of '{'
+						error = error_code::fmt_bad;
+					}
+					break;
+				}
+			}
+			if (out_pos < out_end) {
+				// write byte
+				*out_pos++ = *in_pos++;
+				if(skip) in_pos++;
+			}
+			else {
+				// stop (no space)
+				error = error_code::buff_full;
+				break;
+			}
+		}
+		sanitize_utf8_str(out_beg, out_pos);
+		return error;
+	}
+
+	// parse the replacement field part of the fmt format string in to out
+	inline error_code parse_fmt_repl_field(
+		unsigned char const*& in_pos, unsigned char const* in_end,
+		buff_span_const& field_name,
+		buff_span_const& format_spec) noexcept
+	{
+		FSTLOG_ASSERT(in_pos != nullptr && in_pos < in_end && *in_pos == '{');
+		in_pos++;
+		bool name_set = false;
+		const auto name_begin = in_pos;
+		auto name_end = name_begin;
+		auto spec_begin = in_pos;
+		auto spec_end = spec_begin;
+		error_code error = error_code::fmt_bad;
+		while (in_pos < in_end) {
+			if (*in_pos == '}') {
+				if (!name_set) {
+					name_end = in_pos;
+					spec_begin = in_pos;
+				}
+				spec_end = in_pos++;
+				error = error_code::none;
+				break;
+			}
+			else if (*in_pos == '{') {
+				// error unmatched '{'
+				break;
+			}
+			else if (!name_set && *in_pos == ':') {
+				name_end = in_pos;
+				spec_begin = in_pos + 1;
+				name_set = true;
+			}
+			in_pos++;
+		}
+
+		if (error != error_code::none) {
+			name_end = name_begin;
+			spec_begin = spec_end;
+		}
+		field_name = buff_span_const(name_begin, static_cast<std::size_t>(name_end - name_begin));
+		format_spec = buff_span_const(spec_begin, static_cast<std::size_t>(spec_end - spec_begin));
+		return error;
+	}
     
     inline const unsigned char* skip_align(
 		const unsigned char* begin, 
@@ -73,21 +106,27 @@ namespace fstlog {
         const auto char_bytes = utf8_bytes(ch);
         if (char_bytes == 0) return begin;
 
+		// check if there is a fill char (possibly utf8) + align char
         if (end - begin > char_bytes) {
             const auto align{ *(begin + char_bytes) };
             if (align == '<' ||
                 align == '>' ||
                 align == '^')
             {
-                return begin + char_bytes + 1;
+                // skip fill char + align char
+				return begin + char_bytes + 1;
             }
         }
+		// if there was no fill char + align char
+		// chek if there is a single align char
         if (ch == '<' ||
             ch == '>' ||
             ch == '^')
         {
-            return begin + 1;
+            // skip single align char
+			return begin + 1;
         }
+		// nothing to skip
         return begin;
     }
 

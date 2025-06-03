@@ -65,16 +65,32 @@ namespace fstlog {
 		}
 
 		inline error_code parse_format_string(buff_span_const format_string) {
-			this->output_span_init(formatting_buffer_);
-			while (!format_string.empty()) {
-				parse_fmt_text(format_string);
-				if (this->has_error()) return this->get_error().code();
-				parse_fmt_repl_field(format_string);
-				if (this->has_error()) return this->get_error().code();
+			auto in_pos = format_string.data();
+			const auto in_end = in_pos + format_string.size_bytes();
+			auto out_pos = formatting_buffer_.data();
+			const auto out_end = out_pos + formatting_buffer_.size();
+			while (true) {
+				auto error = parse_fmt_text(in_pos, in_end, out_pos, out_end);
+				if (error != error_code::none) return error;
+				if (in_pos == in_end) break;
+				buff_span_const field_name;
+				buff_span_const format_spec;
+				error = parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
+				if (error != error_code::none) return error;
+				const auto field_id = get_repl_field_id(field_name);
+				if (field_id == logfield::Invalid) return error_code::fmt_bad;
+				if (out_pos == out_end) return error_code::buff_full;
+				*out_pos++ = ut_cast(field_id);
+				
+				if (field_id == logfield::Timestamp) {
+					error = this->init_time_to_str_converter(time_format(format_spec));
+					if (error != error_code::none) return error;
+				}
+				this->set_format(field_id, format_spec);
 			}
-			
+						
 			log_format_size_ =
-				static_cast<std::uint32_t>(this->output_ptr() - formatting_buffer_.data());
+				static_cast<std::uint32_t>(out_pos - formatting_buffer_.data());
 			msg_template_start_ =
 				padded_size<constants::cache_ls_nosharing>(log_format_size_);
 			msg_template_capacity_ =
@@ -242,102 +258,34 @@ namespace fstlog {
             }
             this->set_output_ptr_unchecked(pos);
         }
-
-
-		// write the text part of the format string str to this->output and update str
-		inline void parse_fmt_text(buff_span_const& str) noexcept {
-			FSTLOG_ASSERT(str.data() != nullptr);
-			auto in = str.data();
-			const auto in_end = in + str.size_bytes();
-			auto out = this->output_ptr();
-			const auto out_end = this->output_end();
-			while (in < in_end) {
-				if (*in == '{' || *in == '}') {
-					if (in_end - in > 1 && *(in + 1) == *in) {
-						// skip the first duplicated '{' or '}'
-						// write it in the if(out < out_end)
-						in++;
-					}
-					else {
-						if(*in == '}') this->set_error(
-							__FILE__, __LINE__, error_code::input_bad);
-						// stop at the beginning of a replacement field
-						in++;
-						break;
-					}
-				}
-				if (out < out_end) {
-					// write byte
-					*out++ = *in++;
-				}
-				else {
-					// stop (no space)
-					this->set_error(__FILE__, __LINE__, error_code::buff_full);
-					break;
-				}
-			}
-			//FIX THIS sanitize utf_8_string
-			this->set_output_ptr_unchecked(out);
-			str = buff_span_const{
-				in,
-				static_cast<std::size_t>(in_end - in) };
-		}
-
-		// parse the replacement field part of the format string str and update str
-		inline void parse_fmt_repl_field(buff_span_const& str) noexcept {
-			FSTLOG_ASSERT(str.data() != nullptr);
-			if (str.empty()) return;
-			auto replacement_field = get_replacement_field(str);
-
-			const auto field_name = argument_name(replacement_field);
-			const auto field_id = get_repl_field_id(field_name);
-			if (field_id == logfield::Invalid) {
-				this->set_error(__FILE__, __LINE__, error_code::input_bad);
-				return;
-				//return "Invalid or empty field name!";
-			}
-			if (!this->output_has_space()) {
-				this->set_error(__FILE__, __LINE__, error_code::buff_full);
-				return;
-				//return "Format string too long!";
-			}
-			*this->output_ptr() = ut_cast(field_id);
-			this->advance_output_unchecked(1);
-			auto form_spec = format_spec(replacement_field);
-
-			if (field_id == logfield::Timestamp) {
-				
-				auto error = this->init_time_to_str_converter(time_format(form_spec));
-				if (error != error_code::none) {
-					this->set_error(__FILE__, __LINE__, error);
-					return;
-				}
-			}
-			this->set_format(field_id, form_spec);
-		}
-		
+	
         void process_message() noexcept {
-			buff_span_const msg_template{ msg_template_buffer() };
+			const unsigned char* in_pos = formatting_buffer_.data() + msg_template_start_;
+			const unsigned char* const in_end = in_pos + msg_template_size_;
+			const unsigned char* const out_end = this->output_end();	
 			bool has_repl_field = true;
 			bool has_input = this->seek_field(logfield::Args);
-
+			auto error = error_code::none;
             do {
-                auto form = this->get_default_format();
-				parse_fmt_text(msg_template);
-
-                if (!msg_template.empty()) {
-                    auto replacement_field = get_replacement_field(msg_template);
-                    auto form_spec = format_spec(replacement_field);
-                    form = this->get_format(form_spec);
-                }
+				auto out_pos = this->output_ptr();
+				auto form = this->get_default_format();
+				error = parse_fmt_text(in_pos, in_end, out_pos, out_end);
+				if (error != error_code::none) break;
+				if (in_pos < in_end) {
+					buff_span_const field_name;
+					buff_span_const format_spec;
+					error = parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
+					if (error != error_code::none) break;
+					form = this->get_format(format_spec);
+				}
                 else {
                     has_repl_field = false;
-                    if (has_input && this->output_has_space()) {
-                        *this->output_ptr() = ' ';
-                        this->advance_output_unchecked(1);
+                    if (has_input && out_pos < out_end) {
+						*out_pos++ = ' ';
                     }
                 }
-                
+				this->set_output_ptr_unchecked(out_pos);
+
                 if (has_input) {
                     auto type_signature = L::get_signature_skip_arg_header();
 					if (this->has_error()) break;
@@ -357,6 +305,7 @@ namespace fstlog {
                 }
             } while (!this->has_error()
                 && (has_repl_field || has_input));
+			if(error != error_code::none) this->set_error(__FILE__, __LINE__, error);
         }
 
 		buff_span_const log_format_str() noexcept {
