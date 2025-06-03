@@ -75,7 +75,7 @@ TEST_CASE("time_to_str_converter") {
 			form_temp.size() };
 		
 		auto success = time_conv.init_time_to_str_converter(time_format);
-		CHECK(success == nullptr);
+		CHECK(success == fstlog::error_code::none);
 
 		auto extent = GENERATE(table<uint64_t, std::string_view>({
 			std::tuple<uint64_t, std::string_view>{0, "00"},
@@ -111,7 +111,7 @@ TEST_CASE("time_to_str_converter") {
 			form_temp.size() };
 		
 		auto success = time_conv.init_time_to_str_converter(time_format);
-		CHECK(success == nullptr);
+		CHECK(success == fstlog::error_code::none);
 		buffer.fill( 0 );
 
 		auto result = time_conv.timestamp_to_chars(
@@ -136,7 +136,7 @@ TEST_CASE("time_to_str_converter_common") {
 		
 		//int prec = 4;
 		auto success = time_conv.init_time_to_str_converter(time_format);
-		CHECK(success == nullptr);
+		CHECK(success == fstlog::error_code::none);
 
 		auto extent = GENERATE(table<uint64_t, std::string_view>({
 			std::tuple<uint64_t, std::string_view>{1000000, "01.0000"},
@@ -180,7 +180,7 @@ TEST_CASE("time_to_str_converter_common") {
 		bool result = std::get<1>(extent);
 
 		auto success = time_conv.init_time_to_str_converter(time_format);
-		CHECK(result == (success == nullptr));
+		CHECK(result == (success == fstlog::error_code::none));
 	};
 
 	SECTION("timeformat") {
@@ -219,7 +219,7 @@ TEST_CASE("time_to_str_converter_common") {
 		std::string_view control = std::get<1>(extent);
 
 		auto success = time_conv.init_time_to_str_converter(time_format);
-		CHECK(success == nullptr);
+		CHECK(success == fstlog::error_code::none);
 		buffer.fill(0);
 		auto result = time_conv.timestamp_to_chars(std::chrono::system_clock::time_point{}, buffer.data(), buffer.data() + buffer.size());
 		CHECK(result.ec == fstlog::error_code::none);
@@ -239,7 +239,7 @@ TEST_CASE("time_to_str_converter_common") {
 				form_temp.size() };
 
 		auto success = time_conv.init_time_to_str_converter(time_format);
-		CHECK(success == nullptr);
+		CHECK(success == fstlog::error_code::none);
 		buffer.fill(0);
 		auto result = time_conv.timestamp_to_chars(
 			time_p + std::chrono::milliseconds{ 420 }, 
@@ -278,7 +278,7 @@ TEST_CASE("time_to_str_converter_common") {
 				form_temp.size() };
 
 		auto success = time_conv.init_time_to_str_converter(time_format);
-		CHECK(success == nullptr);
+		CHECK(success == fstlog::error_code::none);
 		buffer.fill(0);
 		auto result = time_conv.timestamp_to_chars(time_p, buffer.data(), buffer.data() + buffer.size());
 		CHECK(result.ec == fstlog::error_code::none);
@@ -299,7 +299,7 @@ TEST_CASE("time_to_str_converter_brute_force", "[.][brute]") {
 				form_temp.size() };
 
 		auto success = time_conv.init_time_to_str_converter(time_format);
-		CHECK(success == nullptr);
+		CHECK(success == fstlog::error_code::none);
 		uint64_t sub = GENERATE(1, 5, 9);
 		uint64_t microsec = GENERATE(Catch::Generators::range(uint64_t(1), uint64_t(10))) * uint64_t(100000) - sub;
 		CAPTURE(prec, microsec);
@@ -321,7 +321,7 @@ TEST_CASE("time_to_str_converter_brute_force", "[.][brute]") {
 			fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
 				form_temp.size() };
 		auto success = time_conv.init_time_to_str_converter(time_format);
-		CHECK(success == nullptr);
+		CHECK(success == fstlog::error_code::none);
 		uint64_t microsec = GENERATE(399950, 99950, 500000);
 		CAPTURE(prec, microsec);
 		buffer.fill(0);
@@ -346,7 +346,7 @@ TEST_CASE("time_to_str_converter_benchmark_seconds", "[.][benchmark]") {
 		form_temp.size() };
 
 	auto success = time_conv.init_time_to_str_converter(time_format);
-	CHECK(success == nullptr);
+	CHECK(success == fstlog::error_code::none);
 	uint64_t microsec = GENERATE(59999999, 500000, 0);
 
 	std::cout << "PRECISION: " << prec << " MICROSEC: " << microsec <<'\n';
@@ -370,7 +370,7 @@ TEST_CASE("time_to_str_converter_create_timestring", "[.][benchmark]") {
 		fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
 		form_temp.size() };
 	auto success = time_conv.init_time_to_str_converter(time_format);
-	CHECK(success == nullptr);
+	CHECK(success == fstlog::error_code::none);
 	long long microseconds = 0;
 	BENCHMARK_ADVANCED("create_time_string")(Catch::Benchmark::Chronometer meter) {
 		meter.measure([&buffer, &time_conv, &microseconds] { 
@@ -393,7 +393,7 @@ TEST_CASE("time_to_str_converter_benchmark_sec2", "[.][benchmark]") {
 	
 	long long microsec = 10000000;
 	auto success = time_conv.init_time_to_str_converter(time_format);
-	CHECK(success == nullptr);
+	CHECK(success == fstlog::error_code::none);
 	std::cout << "PRECISION: " << prec << " MICROSEC: " << microsec << '\n';
 	BENCHMARK_ADVANCED("seconds2")(Catch::Benchmark::Chronometer meter) {
 		time_conv.timestamp_to_chars(
@@ -417,7 +417,7 @@ TEST_CASE("time_to_str_converter_pre_epoch") {
 		form_temp.size() };
 
 	auto success = time_conv.init_time_to_str_converter(time_format);
-	CHECK(success == nullptr);
+	CHECK(success == fstlog::error_code::none);
 	long long microsecond = GENERATE(-1LL, -1000000LL);
 
 		CAPTURE(microsecond);

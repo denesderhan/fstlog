@@ -19,6 +19,7 @@
 #include <formatter/impl/detail/tz_format.hpp>
 #include <formatter/impl/detail/valid_strftime_string.hpp>
 #include <fstlog/detail/constants.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/types.hpp>
 
@@ -26,8 +27,8 @@ namespace fstlog {
 	class time_to_str_converter
 	{
 	public:
-		const char* init_time_to_str_converter(buff_span_const time_format) noexcept {
-			if (time_format_.size() != 0) return "Time to string converter already initialized!";
+		error_code init_time_to_str_converter(buff_span_const time_format) noexcept {
+			if (time_format_.size() != 0) return error_code::double_init;
 			auto begin = time_format.data();
 			auto end = begin + time_format.size_bytes();
 			auto precision = get_precision(begin, end);
@@ -43,7 +44,7 @@ namespace fstlog {
 			}
 			const auto strftime_str = buff_span_const{ begin, static_cast<std::size_t>(end - begin) };
 						
-			if (!detail::valid_strftime_string(strftime_str, tzone)) return "Invalid strftime string!";
+			if (!detail::valid_strftime_string(strftime_str, tzone)) return error_code::input_bad;
 			tstr_cache_.clear();
 			if (precision > 9 || precision < 0) precision = 6;
 			second_char_num_ = precision == 0 ? 2 : 3 + precision;
@@ -92,7 +93,7 @@ namespace fstlog {
 		}
 
 	private:
-		const char* set_time_format(buff_span_const strft_str, int second_char_num) noexcept {
+		error_code set_time_format(buff_span_const strft_str, int second_char_num) noexcept {
 			FSTLOG_ASSERT(
 				second_char_num == 0
 				|| second_char_num == 2
@@ -100,7 +101,7 @@ namespace fstlog {
 			const std::size_t tfstr_size = strft_str.size_bytes();
 			if (tfstr_size == 0
 				|| tfstr_size > time_string<64>::capacity())
-				return "Strftime string too long or empty!";
+				return error_code::str_long;
 			int str_length = static_cast<int>(tfstr_size);
 			int sec_pos = 0;
 			while (sec_pos < str_length) {
@@ -118,12 +119,12 @@ namespace fstlog {
 			//no second in string
 			if (sec_pos == str_length) {
 				time_format_ = time_string<64>(strft_str);
-				return nullptr;
+				return error_code::none;
 			}
 
 			str_length += second_char_num - 2;
 			if (str_length > static_cast<int>(time_string<64>::capacity()))
-				return "Strftime string too long!";
+				return error_code::str_long;
 			std::array<unsigned char, 64> buff{ 0 };
 			auto dest_ptr{ buff.data() };
 			auto src_ptr{ strft_str.data() };
@@ -138,7 +139,7 @@ namespace fstlog {
 			time_format_ = time_string<64>(
 				buff_span_const{ buff.data(), static_cast<std::size_t>(str_length) },
 				static_cast<unsigned char>(sec_pos));
-			return nullptr;
+			return error_code::none;
 		}
 
 		time_string<64> create_time_string(stamp_type minutes) noexcept {

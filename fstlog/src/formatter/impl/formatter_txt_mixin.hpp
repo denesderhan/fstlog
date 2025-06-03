@@ -307,9 +307,9 @@ namespace fstlog {
 
 			if (field_id == logfield::Timestamp) {
 				
-				auto error2 = this->init_time_to_str_converter(time_format(form_spec));
-				if (error2 != nullptr) {
-					this->set_error(__FILE__, __LINE__, error_code::input_bad);
+				auto error = this->init_time_to_str_converter(time_format(form_spec));
+				if (error != error_code::none) {
+					this->set_error(__FILE__, __LINE__, error);
 					return;
 				}
 			}
