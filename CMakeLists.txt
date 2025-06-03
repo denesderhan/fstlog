@@ -103,14 +103,15 @@ set(CMAKE_PDB_OUTPUT_DIRECTORY     ${CMAKE_CURRENT_BINARY_DIR}/bin/${STAT_OR_SHA
 #--------------------------------
 if(MSVC)
 	add_compile_options(
-		/options:strict			#abort on unrecognized compiler option
-		/permissive-			#CXX_EXTENSIONS=OFF does not set /permissive-
-		/Zc:__cplusplus			#set c++ standard feature test
-		/MP						#multi process compilation
-		/wd4324					#supress automatic padding warning
-		/Zc:tlsGuards-			#Do not use TLS initialization checks. (Remove if causes errors for dynamically loaded dll-s.) see: https://developercommunity.visualstudio.com/t/5x-performance-degrade-in-vs2019-1671-for-thread-l/1184366 https://developercommunity.visualstudio.com/t/thread-local-variables-fail-to-be-initialized-when/124121
-		/utf-8					#UTF8 for source and execution char sets
-		/GR-					#disable RTTI
+		/options:strict         #abort on unrecognized compiler option
+		/permissive-            #CXX_EXTENSIONS=OFF does not set /permissive-
+		/Zc:__cplusplus         #set c++ standard feature test
+		/MP                     #multi process compilation
+		/wd4324                 #supress automatic padding warning
+		/wd4530                 #supress unwind semantics used but exceptions disabled warning
+		/Zc:tlsGuards-          #Do not use TLS initialization checks. (Remove if causes errors for dynamically loaded dll-s.) see: https://developercommunity.visualstudio.com/t/5x-performance-degrade-in-vs2019-1671-for-thread-l/1184366 https://developercommunity.visualstudio.com/t/thread-local-variables-fail-to-be-initialized-when/124121
+		/utf-8                  #UTF8 for source and execution char sets
+		/GR-                    #disable RTTI
 	)
 	add_compile_definitions(
 		"_UNICODE"				#set unicode for C runtime headers
