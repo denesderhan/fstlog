@@ -78,7 +78,7 @@ int main()
 
 		// Logging containers
 		std::tuple<std::vector<int>, std::pair<bool, float>, int> var3{ {1, 2}, {true, 1.5f}, 2 };
-		LOG_INFO(my_logger, "Logging containers: std::tuple<std::vector<int>, std::pair<bool, float>: {}", var3);
+		LOG_INFO(my_logger, "Logging containers: std::tuple<std::vector<int>, std::pair<bool, float>, int>: {}", var3);
 
 		// All containers are loggable that have: a value_type, a size() method, an iterator
 		// and contain loggable types
