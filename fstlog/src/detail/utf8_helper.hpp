@@ -20,15 +20,14 @@ namespace fstlog {
 		const unsigned char* data, 
 		const unsigned char* end) noexcept
 	{
-        FSTLOG_ASSERT(data != nullptr && end >= data);
-		const auto byte_num = utf8_bytes(*data);
-		if (byte_num != 0 && end - data >= byte_num) {
-			data++;
-			for (int i = 0; i < byte_num - 1; i++)
-				if ((*data++ & 0b11000000) != 0b10000000) return 0;
-			return byte_num;
+        FSTLOG_ASSERT(data != nullptr && data < end);
+		const int byte_num = utf8_bytes(*data);
+		if (byte_num <= 1) return byte_num; // ASCII or invalid
+		if (end - data < byte_num) return 0; // missing bytes
+		for (int i = 1; i < byte_num; i++) {
+			if ((*++data & 0b11000000) != 0b10000000) return 0; // invalid continuation byte
 		}
-		else return 0;
+		return byte_num;
     }
 
 	inline constexpr bool printable_utf8(
@@ -51,10 +50,11 @@ namespace fstlog {
 		else return true;
 	}
 
-	inline void sanitize_utf8_str(
+	inline error_code sanitize_utf8_str(
 		unsigned char* data, 
 		const unsigned char* end ) noexcept
 	{
+		auto error = error_code::none;
 		auto pos{ data };
 		while (pos < end) {
 			const auto ch{*pos};
@@ -67,6 +67,7 @@ namespace fstlog {
 				//invalid or control
 				if (byte_num <= 1) {
 					*pos++ = '_';
+					error = error_code::input_bad;
 				}
 				else if (byte_num == 2) {
 					std::uint32_t cp1 = (ch & std::uint32_t{ 0x1F }) << 6;
@@ -75,6 +76,7 @@ namespace fstlog {
 					if (cp <= 159) {
 						*pos = 0xc2;
 						*(pos + 1) = 0xa1;
+						error = error_code::input_bad;
 					}
 					pos += 2;
 				}
@@ -83,6 +85,7 @@ namespace fstlog {
 				}
 			}
 		}
+		return error;
 	}
 
 	template<typename T>
