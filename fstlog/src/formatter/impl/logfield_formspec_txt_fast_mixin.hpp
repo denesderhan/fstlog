@@ -4,7 +4,7 @@
 #include <detail/byte_span.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 #include <formatter/impl/detail/format_setting_txt_fast.hpp>
-#include <formatter/impl/detail/uint_fromchars_4digit.hpp>
+#include <formatter/impl/detail/format_str_helper.hpp>
 
 namespace fstlog {
     template<typename L>
@@ -72,7 +72,9 @@ namespace fstlog {
                         
             while (pos < end && *pos != '.') pos++;
             pos++;
-			uint_fromchars_4digit(form.precision, pos, end);
+			int precision = static_cast<int>(form.precision);
+			uint_fromchars_4digit(precision, pos, end);
+			form.precision = static_cast<std::uint16_t>(precision);
 			return form;
         }
 

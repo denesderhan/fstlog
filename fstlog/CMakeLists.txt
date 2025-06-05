@@ -230,7 +230,6 @@ set(src_formatter_impl_detail
     "src/formatter/impl/detail/time_string_cache.hpp"
     "src/formatter/impl/detail/time_to_str_converter.hpp"
     "src/formatter/impl/detail/tz_format.hpp"
-    "src/formatter/impl/detail/uint_fromchars_4digit.hpp"
     "src/formatter/impl/detail/valid_strftime_string.hpp"
 )
 

@@ -8,7 +8,7 @@
 #include <detail/utf8_helper.hpp>
 
 TEST_CASE("utf8_helper") {
-	SECTION("01") {
+	SECTION("valid_printable") {
 		CHECK(fstlog::utf8_bytes('\0') == 1);
 		const auto text{ u8"123 UTF-8 encoded sample ∮ E⋅da = Q,  n → ∞, ∑ f(i)"
 			u8"= ∏ g(i)ði ıntəˈnæʃənəl fəˈnɛtık əsoʊsiˈeıʃn ‘single’ and"
@@ -48,11 +48,12 @@ TEST_CASE("utf8_helper") {
 
 		std::vector<unsigned char> text2(text_len);
 		memcpy(text2.data(), text, text_len);
-		fstlog::sanitize_utf8_str(text2.data(), text2.data() + text_len);
+		auto error = fstlog::sanitize_utf8_str(text2.data(), text2.data() + text_len);
+		CHECK(error == fstlog::error_code::none);
 		CHECK(!memcmp(text, text2.data(), text_len));
 	};
 
-	SECTION("02") {
+	SECTION("control_or_unprintable") {
 		const auto text{ u8"\n\r\t\u0001\u000b\u001f\u007f\u0080\u009f" };
 		const auto san_text{ u8"_______¡¡_" };
 		auto pos{ reinterpret_cast<const unsigned char*>(text) };
@@ -76,7 +77,8 @@ TEST_CASE("utf8_helper") {
 
 		std::vector<unsigned char> text2(text_len);
 		memcpy(text2.data(), text, text_len);
-		fstlog::sanitize_utf8_str(text2.data(), text2.data() + text_len);
+		auto error = fstlog::sanitize_utf8_str(text2.data(), text2.data() + text_len);
+		CHECK(error == fstlog::error_code::input_bad);
 		CHECK(!memcmp(san_text, text2.data(), text_len));
 	};
 }

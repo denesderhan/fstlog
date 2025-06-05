@@ -31,12 +31,15 @@ namespace fstlog {
 			if (time_format_.size() != 0) return error_code::double_init;
 			auto begin = time_format.data();
 			auto end = begin + time_format.size_bytes();
-			auto precision = get_precision(begin, end);
-			tz_format tzone = get_zone(begin, end);
+			int precision = 6;
+			get_precision(precision, begin, end);
+			if (precision > 9) precision = 9;
+			second_char_num_ = precision <= 0 ? 2 : 3 + precision;
+			tzone_ = get_zone(begin, end);
 		
 			// no strftime string, set default
 			if (begin == end) {	
-				std::string_view strft_str = tzone == tz_format::Local ?
+				std::string_view strft_str = tzone_ == tz_format::Local ?
 					"%Y-%m-%d %H:%M:%S %z"
 					: "%Y-%m-%d %H:%M:%S +0000";
 				begin = safe_reinterpret_cast<const unsigned char*>(strft_str.data());
@@ -44,11 +47,8 @@ namespace fstlog {
 			}
 			const auto strftime_str = buff_span_const{ begin, static_cast<std::size_t>(end - begin) };
 						
-			if (!detail::valid_strftime_string(strftime_str, tzone)) return error_code::input_bad;
+			if (!detail::valid_strftime_string(strftime_str, tzone_)) return error_code::fmt_bad;
 			tstr_cache_.clear();
-			if (precision > 9 || precision < 0) precision = 6;
-			second_char_num_ = precision == 0 ? 2 : 3 + precision;
-			tzone_ = tzone;
 			return set_time_format(strftime_str, second_char_num_);
 		}
 

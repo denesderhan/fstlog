@@ -100,9 +100,8 @@ namespace fstlog {
             //skip ["0"]
             if (*pos == '0') pos++;
 
-            out.width = get_width(pos, end);
+            out.width = static_cast<std::uint16_t>(get_width(pos, end));
             if (out.width != 0) {
-                
 				if (align_size == 1) {
                     out.align = *begin_pos;
                 }
@@ -114,8 +113,9 @@ namespace fstlog {
                 }
                 //if align_size == 0 use default align and fill char
             }
-
-            out.precision = get_precision(pos, end);
+            int precision = static_cast<int>(out.precision);
+            get_precision(precision, pos, end);
+            out.precision = static_cast<std::uint16_t>(out.precision);
             
             if (pos < end && *(end - 1) != 'L') {
                 out.type = *(end - 1);

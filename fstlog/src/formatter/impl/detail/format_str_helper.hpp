@@ -9,11 +9,33 @@
 #include <detail/utf8_helper.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 #include <formatter/impl/detail/tz_format.hpp>
-#include <formatter/impl/detail/uint_fromchars_4digit.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
-		
+	static_assert(
+		'0' + 1 == '1' && '0' + 2 == '2' && '0' + 3 == '3'
+		&& '0' + 4 == '4' && '0' + 5 == '5' && '0' + 6 == '6'
+		&& '0' + 7 == '7' && '0' + 8 == '8' && '0' + 9 == '9');
+
+	inline void uint_fromchars_4digit(
+		int& number,
+		const unsigned char*& begin,
+		const unsigned char* end) noexcept
+	{
+		// there is no number
+		if (begin >= end || !(*begin <= '9' && *begin >= '0')) return;
+
+		number = *begin++ - '0';
+		while (begin < end && *begin <= '9' && *begin >= '0') {
+			if (number < 9999) {
+				number *= 10;
+				number += *begin - '0';
+			}
+			begin++;
+		}
+		if (number > 9999) number = 9999;
+	}
+
 	// write the text part of the fmt format string in to out
 	inline error_code parse_fmt_text(
 		unsigned char const*& in_pos, unsigned char const* in_end,
@@ -48,7 +70,8 @@ namespace fstlog {
 				break;
 			}
 		}
-		sanitize_utf8_str(out_beg, out_pos);
+		auto error_utf8 = sanitize_utf8_str(out_beg, out_pos);
+		if (error == error_code::none) error = error_utf8;
 		return error;
 	}
 
@@ -118,7 +141,7 @@ namespace fstlog {
             }
         }
 		// if there was no fill char + align char
-		// chek if there is a single align char
+		// check if there is a single align char
         if (ch == '<' ||
             ch == '>' ||
             ch == '^')
@@ -169,35 +192,48 @@ namespace fstlog {
         return out;
     }
     
-    inline std::uint16_t get_width(
+    inline int get_width(
 		const unsigned char*& begin, 
 		const unsigned char* end) noexcept 
 	{
-		std::uint16_t width{ 0 };
-		//if error happens width is not changed (default)
+		int width{ 0 };
 		uint_fromchars_4digit(width, begin, end);
 		return width;
     }
 
-    inline std::uint16_t get_precision(
-		const unsigned char*& begin, 
-		const unsigned char* end) noexcept 
+	inline void get_precision(
+		int &precision,
+		const unsigned char*& begin,
+		const unsigned char* end) noexcept
 	{
-		//special case for indicating default value
-		std::uint16_t num{ 0xffff };
-		if (begin != end && *begin == '.') {
-            begin++;
-			uint_fromchars_4digit(num, begin, end);
-        }
-		return num;
-    }
+		if (begin < end && *begin == '.') {
+			uint_fromchars_4digit(precision, ++begin, end);
+		}
+	}
 
-	inline buff_span_const time_format(buff_span_const& form_spec) noexcept {
-		auto begin = form_spec.data();
-		auto end = begin + form_spec.size_bytes();
-		auto pos = skip_numbers(skip_align(begin, end), end);
+	inline error_code time_format(
+		buff_span_const& form_spec, 
+		buff_span_const& time_fmt) noexcept 
+	{
+		auto error = error_code::none;
+		if (form_spec.empty()) {
+			time_fmt = form_spec;
+			return error;
+		}
+		const auto begin = form_spec.data();
+		const auto end = begin + form_spec.size_bytes();
+		auto pos = begin;
+		pos = skip_align(pos, end);
+		const auto pos_0{ pos };
+		pos = skip_sign_alt_0(pos, end);
+		if (pos != pos_0) {
+			// "[sign][#][0] not supported in timestamp formatting (format string)!"
+			error = error_code::fmt_bad;
+		}
+		pos = skip_numbers(pos, end);
 		form_spec = buff_span_const{ begin, static_cast<std::size_t>(pos - begin) };
-		return buff_span_const{ pos, static_cast<std::size_t>(end - pos) };
+		time_fmt = buff_span_const{ pos, static_cast<std::size_t>(end - pos) };
+		return error;
 	}
 
 	inline logfield get_repl_field_id(buff_span_const name) noexcept {

@@ -83,7 +83,10 @@ namespace fstlog {
 				*out_pos++ = ut_cast(field_id);
 				
 				if (field_id == logfield::Timestamp) {
-					error = this->init_time_to_str_converter(time_format(format_spec));
+					buff_span_const time_format_spec;
+					error = time_format(format_spec, time_format_spec);
+					if (error != error_code::none) return error;
+					error = this->init_time_to_str_converter(time_format_spec);
 					if (error != error_code::none) return error;
 				}
 				this->set_format(field_id, format_spec);
