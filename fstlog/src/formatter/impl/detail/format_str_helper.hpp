@@ -43,7 +43,6 @@ namespace fstlog {
 	{
 		FSTLOG_ASSERT(in_pos != nullptr && out_pos != nullptr);
 		error_code error = error_code::none;
-		auto out_beg = out_pos;
 		while (in_pos < in_end) {
 			bool skip = false;
 			if (*in_pos == '{' || *in_pos == '}') {
@@ -70,8 +69,6 @@ namespace fstlog {
 				break;
 			}
 		}
-		auto error_utf8 = sanitize_utf8_str(out_beg, out_pos);
-		if (error == error_code::none) error = error_utf8;
 		return error;
 	}
 

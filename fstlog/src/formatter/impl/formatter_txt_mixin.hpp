@@ -44,9 +44,9 @@ namespace fstlog {
 			noexcept(L(formatter_txt_mixin{}, allocator_type{})))
             : L(other, allocator),
             formatting_buffer_ { other.formatting_buffer_ }, //noexcept
-            log_format_size_{ other.log_format_size_ }, //noexcept
-			msg_template_start_{ other.msg_template_start_ }, //noexcept
-			msg_template_capacity_{ other.msg_template_capacity_ } { //noexcept
+            log_fmt_str_len_{ other.log_fmt_str_len_ }, //noexcept
+			msg_fmt_str_start_{ other.msg_fmt_str_start_ }, //noexcept
+			msg_fmt_str_cap_{ other.msg_fmt_str_cap_ } { //noexcept
         }
 
         formatter_txt_mixin(formatter_txt_mixin&& other) = delete;
@@ -70,7 +70,10 @@ namespace fstlog {
 			auto out_pos = formatting_buffer_.data();
 			const auto out_end = out_pos + formatting_buffer_.size();
 			while (true) {
+				const auto text_beg = out_pos;
 				auto error = parse_fmt_text(in_pos, in_end, out_pos, out_end);
+				if (error != error_code::none) return error;
+				error = sanitize_utf8_str(text_beg, out_pos);
 				if (error != error_code::none) return error;
 				if (in_pos == in_end) break;
 				buff_span_const field_name;
@@ -91,14 +94,14 @@ namespace fstlog {
 				}
 				this->set_format(field_id, format_spec);
 			}
-						
-			log_format_size_ =
+			
+			log_fmt_str_len_ =
 				static_cast<std::uint32_t>(out_pos - formatting_buffer_.data());
-			msg_template_start_ =
-				padded_size<constants::cache_ls_nosharing>(log_format_size_);
-			msg_template_capacity_ =
-				static_cast<std::uint32_t>(formatting_buffer_.size() - msg_template_start_);
-			if (msg_template_capacity_ < formatting_buffer_.size() / 4) return error_code::str_long;
+			msg_fmt_str_start_ =
+				padded_size<constants::cache_ls_nosharing>(log_fmt_str_len_);
+			msg_fmt_str_cap_ =
+				static_cast<std::uint32_t>(formatting_buffer_.size() - msg_fmt_str_start_);
+			if (msg_fmt_str_cap_ < formatting_buffer_.size() / 4) return error_code::str_long;
 			return error_code::none;
 		}
 
@@ -107,48 +110,38 @@ namespace fstlog {
             buff_span out) noexcept
         {
 			//asserting init is called prior to
-			FSTLOG_ASSERT(msg_template_capacity_ != 0);
+			FSTLOG_ASSERT(msg_fmt_str_cap_ != 0);
 			FSTLOG_ASSERT(in.data() != nullptr);
 			FSTLOG_ASSERT(in.size_bytes() <= 
 				(std::numeric_limits<msg_counter>::max)());
 			FSTLOG_ASSERT(out.data() != nullptr);
-			//at least a '\n' must fit in the out buffer
-			FSTLOG_ASSERT(out.size_bytes() >= 64 && "Out buffer too small!");
+			// we have to always have space for '\n' 
+			// and short error message.
+			FSTLOG_ASSERT(out.size_bytes() >= 64);
+
 			this->clear_error();
 			this->decoder_set_input(in);
 			if (!this->has_error()) this->init_logfields();
-			if (!this->has_error()) format_msg_template();
+			if (!this->has_error()) set_message_format_string();
+			// set_message_format_string() can use this->output!!
+			// we have to init output after calling set_message_format_string()
+			// we initialize it 1 byte less, leaving space for '\n'
 			this->output_span_init(
 				{ out.data(),
 				static_cast<std::size_t>(out.size_bytes() - 1) });
-			if (!this->has_error()) write_fields();
-			if (this->has_error()) format_error();
+			if (!this->has_error()) write_log_line();
+			if (this->has_error()) write_error();
 
 			const auto msg_begin{ out.data() };
-            auto msg_end{ this->output_ptr() };
-			sanitize_utf8_str(msg_begin, msg_end);
+			auto msg_end{ this->output_ptr() };
+			FSTLOG_ASSERT(msg_end < msg_begin + out.size_bytes());
 			*msg_end++ = '\n';
-            return {msg_begin,
-                static_cast<std::size_t>(msg_end - msg_begin)};
+			return { msg_begin,
+				static_cast<std::size_t>(msg_end - msg_begin) };
         }
 
     private:
-		void format_msg_template() noexcept {
-			msg_template_size_ = 0;
-			this->output_span_init(
-				{ formatting_buffer_.data() + msg_template_start_, 
-				msg_template_capacity_ });
-			// message is mandatory 
-			// (error was raised in init_logfields() if not present!)
-			this->seek_field(logfield::Message);
-			auto type_signature = L::get_signature_skip_arg_header();
-				if (this->has_error()) return;
-			L::process_element(type_signature, this->get_default_format());
-				if (this->has_error()) return;
-			msg_template_size_ =
-				static_cast<std::uint32_t>(this->output_ptr() - this->output_begin());
-		}
-
+		
 		void encode_error(error err) noexcept {
 			static constexpr std::string_view msg{ "[Log error!: " };
 			const std::string_view err_msg{ err.message(), std::strlen(err.message()) };
@@ -162,7 +155,7 @@ namespace fstlog {
 			this->encode(err.line(), format);
 		}
 
-		void format_error() noexcept {
+		void write_error() noexcept {
 			const auto err = this->get_error();
 			this->clear_error();
 			const auto format = this->get_default_format();
@@ -218,8 +211,9 @@ namespace fstlog {
                     this->get_format(logfield::Policy));
             }
             else if (field_id == logfield::Message) {
-                auto str_begin = this->output_ptr();
-                process_message();
+                const auto str_begin = this->output_ptr();
+                write_message_field();
+				sanitize_utf8_str(str_begin, this->output_ptr());
 				this->reencode_tail_string(
                     str_begin, 
                     this->get_format(logfield::Message));
@@ -237,8 +231,8 @@ namespace fstlog {
             }
         }
 
-        void write_fields() noexcept {
-			const auto fb{ log_format_str() };
+        void write_log_line() noexcept {
+			const auto fb{ log_format_string() };
 			auto ch = fb.data();
 			const auto ch_end = ch + fb.size_bytes();
             auto pos = this->output_ptr();
@@ -259,12 +253,12 @@ namespace fstlog {
                 }
                 ch++;
             }
-            this->set_output_ptr_unchecked(pos);
-        }
+				this->set_output_ptr_unchecked(pos);
+			}
 	
-        void process_message() noexcept {
-			const unsigned char* in_pos = formatting_buffer_.data() + msg_template_start_;
-			const unsigned char* const in_end = in_pos + msg_template_size_;
+        void write_message_field() noexcept {
+			const unsigned char* in_pos = message_fmt_string_.data();
+			const unsigned char* const in_end = in_pos + message_fmt_string_.size_bytes();
 			const unsigned char* const out_end = this->output_end();	
 			bool has_repl_field = true;
 			bool has_input = this->seek_field(logfield::Args);
@@ -311,21 +305,49 @@ namespace fstlog {
 			if(error != error_code::none) this->set_error(__FILE__, __LINE__, error);
         }
 
-		buff_span_const log_format_str() noexcept {
-			return buff_span_const{ 
-				formatting_buffer_.data(), log_format_size_ };
+
+		void set_message_format_string() noexcept {
+			// message is mandatory 
+			// (error was raised in init_logfields() if not present!)
+			this->seek_field(logfield::Message);
+			auto type_signature = L::get_signature_skip_arg_header();
+			if (this->has_error()) return;
+			FSTLOG_ASSERT(!type_signature.empty());
+						
+			auto data_type = *type_signature.data();
+			const unsigned char msg_type = data_type & log_element_type_bitmask;
+			const unsigned char msg_meta = data_type & log_type_metadata_bitmask;
+			if ( msg_type == ut_cast(log_element_type::String)
+				&& (msg_meta == ut_cast(char_type::Char) || msg_meta == ut_cast(char_type::Char8)))
+			{
+				this->get_data(message_fmt_string_);
+			}
+			else {
+				// if the message string has to be decoded/converted to utf8 string
+				// we do this into the free space of the formatting buffer
+				this->output_span_init(log_message_buffer());
+				L::process_element(type_signature, this->get_default_format());
+				message_fmt_string_ = {
+					this->output_begin(),
+					static_cast<std::size_t>(this->output_ptr() - this->output_begin()) };
+			}
 		}
 
-		buff_span msg_template_buffer() noexcept {
+		buff_span_const log_format_string() noexcept {
+			return buff_span_const{ 
+				formatting_buffer_.data(), log_fmt_str_len_ };
+		}
+
+		buff_span log_message_buffer() noexcept {
 			return buff_span{
-				formatting_buffer_.data() + msg_template_start_, 
-				msg_template_size_ };
+				formatting_buffer_.data() + msg_fmt_str_start_, 
+				msg_fmt_str_cap_ };
 		}
 
 		alignas(constants::cache_ls_nosharing) std::array<unsigned char, 512> formatting_buffer_{ 0 };
-		std::uint32_t log_format_size_{ static_cast<std::uint32_t>(formatting_buffer_.size()) };
-		std::uint32_t msg_template_start_{ static_cast<std::uint32_t>(formatting_buffer_.size()) };
-		std::uint32_t msg_template_size_{ 0 };
-		std::uint32_t msg_template_capacity_{ 0 };
+		std::uint32_t log_fmt_str_len_{ static_cast<std::uint32_t>(formatting_buffer_.size()) };
+		std::uint32_t msg_fmt_str_start_{ static_cast<std::uint32_t>(formatting_buffer_.size()) };
+		std::uint32_t msg_fmt_str_cap_{ 0 };
+		buff_span_const message_fmt_string_;
     };
 }

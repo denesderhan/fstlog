@@ -19,9 +19,7 @@ TEST_CASE("parse_fmt_text") {
 			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "ab:}}}" }, std::string_view{ "ab:}" }, 5},
 			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "{{ab:}" }, std::string_view{ "{ab:" }, 5},
 			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abc}" }, std::string_view{ "abc" }, 3},
-			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abc}xyz" }, std::string_view{ "abc" }, 3},
-			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "\1bc}xyz" }, std::string_view{ "_bc" }, 3},
-			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "\1\2\3abxyz}}{{}" }, std::string_view{ "___abxyz}{" }, 12}
+			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abc}xyz" }, std::string_view{ "abc" }, 3}
 		);
 		auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
 		auto in_pos = in_beg;
@@ -68,29 +66,6 @@ TEST_CASE("parse_fmt_text") {
 	out_buff.resize(512);
 	out_end = out_buff.data() + out_buff.size();
 
-	SECTION("error_code::input_bad") {
-
-		std::tuple<std::string_view, std::string_view, int> test_dat = GENERATE(
-				
-			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "\1bc{xyz" }, std::string_view{ "_bc" }, 3},
-			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "\1\2\3abxyz}}{{{" }, std::string_view{ "___abxyz}{" }, 12},
-			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abc\1\2:}}{{{abc" }, std::string_view{ "abc__:}{" }, 10 }
-		);
-		auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-		auto in_pos = in_beg;
-		auto in_end = in_beg + std::get<0>(test_dat).size();
-		auto out_pos = out_buff.data();
-
-		auto error = fstlog::parse_fmt_text(in_pos, in_end, out_pos, out_end);
-		CHECK(error == fstlog::error_code::input_bad);
-		CHECK(in_pos <= in_end);
-		CHECK(out_pos <= out_end);
-		std::string_view repl_out{
-			reinterpret_cast<const char*>(out_buff.data()),
-			static_cast<std::size_t>(out_pos - out_buff.data()) };
-		CHECK(repl_out == std::get<1>(test_dat));
-		CHECK(in_pos == in_beg + std::get<2>(test_dat));
-	};
 
 	SECTION("error_code::none") {
 
@@ -106,7 +81,10 @@ TEST_CASE("parse_fmt_text") {
 			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "{{{{}}}}" }, std::string_view{ "{{}}" }, 8 },
 			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abcd" }, std::string_view{ "abcd" }, 4 },
 			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "{name:}" }, std::string_view{ "" }, 0 },
-			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abc{name:}" }, std::string_view{ "abc" }, 3 }
+			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abc{name:}" }, std::string_view{ "abc" }, 3 },
+			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "\1bc{xyz" }, std::string_view{ "\1bc" }, 3},
+			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "\1\2\3abxyz}}{{{" }, std::string_view{ "\1\2\3abxyz}{" }, 12},
+			std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abc\1\2:}}{{{abc" }, std::string_view{ "abc\1\2:}{" }, 10 }
 		);
 		auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
 		auto in_pos = in_beg;
