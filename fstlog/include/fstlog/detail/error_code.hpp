@@ -23,7 +23,7 @@ namespace fstlog {
 
 	inline const char* error_message(error_code code) noexcept {
 		switch (code){
-			case error_code::none : return nullptr;
+			case error_code::none : return "fstlog error: No error!";
 			case error_code::input_bad : return "fstlog error: Input data was malformed or corrupted!";
 			case error_code::buff_full : return "fstlog error: Not enough space in output buffer!";
 			case error_code::recur_lim : return "fstlog error: Recursion limit reached!";

@@ -130,10 +130,13 @@ namespace fstlog {
 				{ out.data(),
 				static_cast<std::size_t>(out.size_bytes() - 1) });
 			if (!this->has_error()) write_log_line();
-			if (this->has_error()) write_error();
-
 			const auto msg_begin{ out.data() };
 			auto msg_end{ this->output_ptr() };
+
+			if (this->has_error()) {
+				msg_end = this->get_error().write_to(msg_end, this->output_end());
+			}
+			
 			FSTLOG_ASSERT(msg_end < msg_begin + out.size_bytes());
 			*msg_end++ = '\n';
 			return { msg_begin,
@@ -142,52 +145,6 @@ namespace fstlog {
 
     private:
 		
-		void encode_error(error err) noexcept {
-			static constexpr std::string_view msg{ "[Log error!: " };
-			const std::string_view err_msg{ err.message(), std::strlen(err.message()) };
-			const std::string_view file{ err.file(), std::strlen(err.file()) };
-			const auto format = this->get_default_format();
-			this->encode(msg, format);
-			this->encode(err_msg, format);
-			this->encode(' ', format);
-			this->encode(file, format);
-			this->encode(':', format);
-			this->encode(err.line(), format);
-		}
-
-		void write_error() noexcept {
-			const auto err = this->get_error();
-			this->clear_error();
-			const auto format = this->get_default_format();
-#ifndef NDEBUG
-			// try to append error message to log line
-			this->encode(' ', format);
-			encode_error(err);
-			if (this->has_error()) {
-				//if fails, delete log line and format error message
-				this->clear_error();
-				this->output_span_init({ 
-					this->output_begin(),
-					static_cast<std::size_t>(this->output_end() - this->output_begin()) });
-				encode_error(err);
-			}
-			//if fails write short error
-			if (this->has_error()) {
-				this->clear_error();
-				this->output_span_init({
-					this->output_begin(),
-					static_cast<std::size_t>(this->output_end() - this->output_begin()) });
-				this->encode(std::string_view{"Log error!:"}, format);
-				this->encode(ut_cast(err.code()), format);
-			}
-#else
-			this->encode(std::string_view{ " Log error!:" }, format);
-			this->encode(ut_cast(err.code()), format);
-#endif // !NDEBUG
-			//setting back original error
-			this->set_error(err.file(), err.line(), err.code());
-		}
-
         void write_field(logfield field_id) noexcept {
 			FSTLOG_ASSERT(ut_cast(field_id) > 0 && ut_cast(field_id) < ut_cast(logfield::Args));
 			if (field_id == logfield::Severity) {
@@ -304,7 +261,6 @@ namespace fstlog {
                 && (has_repl_field || has_input));
 			if(error != error_code::none) this->set_error(__FILE__, __LINE__, error);
         }
-
 
 		void set_message_format_string() noexcept {
 			// message is mandatory 

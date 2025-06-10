@@ -12,6 +12,7 @@ set(src/unit_tests
 	"unit_tests/encoder_charconv_fast_mixin.cpp"
 	"unit_tests/encoder_charconv_mixin.cpp"
 	"unit_tests/encoder_stdformat_mixin.cpp"
+	"unit_tests/error.cpp"
 	"unit_tests/format_str_helper.cpp"
 	"unit_tests/internal_arg_header.cpp"
 	"unit_tests/log_arg_size.cpp"
