@@ -69,6 +69,7 @@ namespace fstlog {
 			const auto in_end = in_pos + format_string.size_bytes();
 			auto out_pos = formatting_buffer_.data();
 			const auto out_end = out_pos + formatting_buffer_.size();
+			bool has_message_field = false;
 			while (true) {
 				const auto text_beg = out_pos;
 				auto error = parse_fmt_text(in_pos, in_end, out_pos, out_end);
@@ -82,6 +83,7 @@ namespace fstlog {
 				if (error != error_code::none) return error;
 				const auto field_id = get_repl_field_id(field_name);
 				if (field_id == logfield::Invalid) return error_code::fmt_bad;
+				else if (field_id == logfield::Message) has_message_field = true;
 				if (out_pos == out_end) return error_code::buff_full;
 				*out_pos++ = ut_cast(field_id);
 				
@@ -92,9 +94,12 @@ namespace fstlog {
 					error = this->init_time_to_str_converter(time_format_spec);
 					if (error != error_code::none) return error;
 				}
+				if (!valid_format_spec(format_spec)) return error_code::fmt_bad;
 				this->set_format(field_id, format_spec);
 			}
 			
+			if (!has_message_field) return error_code::fmt_bad;
+
 			log_fmt_str_len_ =
 				static_cast<std::uint32_t>(out_pos - formatting_buffer_.data());
 			msg_fmt_str_start_ =
@@ -136,132 +141,147 @@ namespace fstlog {
 			if (this->has_error()) {
 				msg_end = this->get_error().write_to(msg_end, this->output_end());
 			}
-			
+
 			FSTLOG_ASSERT(msg_end < msg_begin + out.size_bytes());
 			*msg_end++ = '\n';
 			return { msg_begin,
 				static_cast<std::size_t>(msg_end - msg_begin) };
-        }
+		}
 
-    private:
-		
-        void write_field(logfield field_id) noexcept {
+	private:
+
+		void write_field(logfield field_id) noexcept {
 			FSTLOG_ASSERT(ut_cast(field_id) > 0 && ut_cast(field_id) < ut_cast(logfield::Args));
 			if (field_id == logfield::Severity) {
-                this->encode(
-                    severity_txt(this->severity()), 
-                    this->get_format(logfield::Severity));
-            }
-            else if (field_id == logfield::Timestamp) {
-                this->encode(
-                    this->timestamp(),
-                    this->get_format(logfield::Timestamp));
-            }
-            else if (field_id == logfield::Channel) {
-                this->encode(
-                    this->channel(), 
-                    this->get_format(logfield::Channel));
-            }
-            else if (field_id == logfield::Policy) {
-                this->encode(
-                    policy_txt(this->policy()), 
-                    this->get_format(logfield::Policy));
-            }
-            else if (field_id == logfield::Message) {
-                const auto str_begin = this->output_ptr();
-                write_message_field();
+				this->encode(
+					severity_txt(this->severity()),
+					this->get_format(logfield::Severity));
+			}
+			else if (field_id == logfield::Timestamp) {
+				this->encode(
+					this->timestamp(),
+					this->get_format(logfield::Timestamp));
+			}
+			else if (field_id == logfield::Channel) {
+				this->encode(
+					this->channel(),
+					this->get_format(logfield::Channel));
+			}
+			else if (field_id == logfield::Policy) {
+				this->encode(
+					policy_txt(this->policy()),
+					this->get_format(logfield::Policy));
+			}
+			else if (field_id == logfield::Message) {
+				const auto str_begin = this->output_ptr();
+				write_message_field();
 				sanitize_utf8_str(str_begin, this->output_ptr());
 				this->reencode_tail_string(
-                    str_begin, 
-                    this->get_format(logfield::Message));
-            }
-            else {
-                if (this->seek_field(field_id)) {
-                    auto type_signature = L::get_signature_skip_arg_header();
-					if (!this->has_error()) 
+					str_begin,
+					this->get_format(logfield::Message));
+			}
+			else {
+				if (this->seek_field(field_id)) {
+					auto type_signature = L::get_signature_skip_arg_header();
+					if (!this->has_error())
 						L::process_element(type_signature, this->get_format(field_id));
-                }
-                else {
-                    this->encode(get_repl_field_name(field_id), 
+				}
+				else {
+					this->encode(get_repl_field_name(field_id),
 						this->get_format_align_width(this->get_format(field_id)));
-                }
-            }
-        }
+				}
+			}
+		}
 
-        void write_log_line() noexcept {
+		void write_log_line() noexcept {
 			const auto fb{ log_format_string() };
 			auto ch = fb.data();
 			const auto ch_end = ch + fb.size_bytes();
-            auto pos = this->output_ptr();
-            const auto end = this->output_end();
-			
+			auto pos = this->output_ptr();
+			const auto end = this->output_end();
+
 			while (!this->has_error() && ch < ch_end) {
-                if ((*ch & 0b11100000) != 0) {
-                    if (pos < end) *pos++ = *ch;
+				if ((*ch & 0b11100000) != 0) {
+					if (pos < end) *pos++ = *ch;
 					else  this->set_error(__FILE__, __LINE__, error_code::buff_full);
-                }
-                else if(*ch < ut_cast(logfield::Args) ){
-                    this->set_output_ptr_unchecked(pos);
-                    write_field(logfield(*ch));
-                    pos = this->output_ptr();
-                }
-                else {
-                    this->set_error(__FILE__, __LINE__, error_code::input_bad);
-                }
-                ch++;
-            }
-				this->set_output_ptr_unchecked(pos);
+				}
+				else if (*ch < ut_cast(logfield::Args)) {
+					this->set_output_ptr_unchecked(pos);
+					write_field(logfield(*ch));
+					pos = this->output_ptr();
+				}
+				else {
+					this->set_error(__FILE__, __LINE__, error_code::input_bad);
+				}
+				ch++;
 			}
-	
-        void write_message_field() noexcept {
+			this->set_output_ptr_unchecked(pos);
+		}
+
+		void write_message_field() noexcept {
 			const unsigned char* in_pos = message_fmt_string_.data();
 			const unsigned char* const in_end = in_pos + message_fmt_string_.size_bytes();
-			const unsigned char* const out_end = this->output_end();	
-			bool has_repl_field = true;
-			bool has_input = this->seek_field(logfield::Args);
-			auto error = error_code::none;
-            do {
-				auto out_pos = this->output_ptr();
-				auto form = this->get_default_format();
-				error = parse_fmt_text(in_pos, in_end, out_pos, out_end);
-				if (error != error_code::none) break;
-				if (in_pos < in_end) {
-					buff_span_const field_name;
-					buff_span_const format_spec;
-					error = parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
-					if (error != error_code::none) break;
-					form = this->get_format(format_spec);
+			write_message_text(in_pos, in_end);
+			if (this->has_error()) return;
+			bool has_data = this->seek_field(logfield::Args);
+			// message is only a simple text
+			if ((!has_data && in_pos == in_end)) return;
+			// no data with replacement field or data without replacement field
+			if (!has_data || in_pos == in_end) {
+				this->set_error(__FILE__, __LINE__, error_code::fmt_bad);
+				return;
+			}
+			while (in_pos < in_end) {
+				buff_span_const field_name;
+				buff_span_const format_spec;
+				auto error = parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
+				if (error != error_code::none) {
+					this->set_error(__FILE__, __LINE__, error);
+					return;
 				}
-                else {
-                    has_repl_field = false;
-                    if (has_input && out_pos < out_end) {
-						*out_pos++ = ' ';
-                    }
-                }
-				this->set_output_ptr_unchecked(out_pos);
+				write_message_data(format_spec);
+				if (this->has_error()) return;
+				
+				write_message_text(in_pos, in_end);
+				if (this->has_error()) return;
+			}
+			// more data than replacement field
+			if (!this->end_of_input_data()) {
+				this->set_error(__FILE__, __LINE__, error_code::fmt_bad);
+			}
+		}
 
-                if (has_input) {
-                    auto type_signature = L::get_signature_skip_arg_header();
-					if (this->has_error()) break;
-                    if (type_signature.size_bytes() <= 1) {
-                        L::process_element(type_signature, form);
-                    }
-                    //aggregate
-                    else {
-                        auto str_begin = this->output_ptr();
-                        L::process_element(type_signature, this->get_default_format());
-						this->reencode_tail_string(str_begin, form);
-                    }
-                    has_input = !this->end_of_input_data();
-                }
-                else if( has_repl_field ) {
-					this->encode(std::string_view{ "{missing}" }, this->get_default_format());
-                }
-            } while (!this->has_error()
-                && (has_repl_field || has_input));
-			if(error != error_code::none) this->set_error(__FILE__, __LINE__, error);
-        }
+		void write_message_text(const unsigned char* &in_pos, const unsigned char* in_end) {
+			auto out_pos = this->output_ptr();
+			auto error = parse_fmt_text(in_pos, in_end, out_pos, this->output_end());
+			this->set_output_ptr_unchecked(out_pos);
+			if (error != error_code::none) {
+				this->set_error(__FILE__, __LINE__, error);
+			}
+		}
 
+		void write_message_data(buff_span_const format_spec) {
+			auto type_signature = L::get_signature_skip_arg_header();
+			// no data
+			if (this->has_error()) return;
+#ifndef NDEBUG
+			if (!valid_format_spec(format_spec)) {
+				this->set_error(__FILE__, __LINE__, error_code::fmt_bad);
+			}
+#endif
+			auto form = this->get_format(format_spec);
+			// non aggregate
+			if (type_signature.size_bytes() <= 1) {
+				L::process_element(type_signature, form);
+			}
+			//aggregate
+			else {
+				auto str_begin = this->output_ptr();
+				L::process_element(type_signature, this->get_default_format());
+				this->reencode_tail_string(str_begin, form);
+			}
+		}
+		
 		void set_message_format_string() noexcept {
 			// message is mandatory 
 			// (error was raised in init_logfields() if not present!)

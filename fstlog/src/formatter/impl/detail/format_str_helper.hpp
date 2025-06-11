@@ -266,4 +266,54 @@ namespace fstlog {
 		default: return "invalid";
 		}
 	}
+
+	inline bool valid_format_spec(buff_span_const format_spec) {
+		if (format_spec.empty()) return true;
+		auto pos = format_spec.data();
+		const auto end = pos + format_spec.size_bytes();
+		// fill-align
+		const auto align_char = pos;
+		pos = skip_align(pos, end);
+		if (pos - align_char > 1) {
+			auto bytes = valid_utf8(align_char, pos);
+			if (bytes != pos - align_char - 1) return false;
+			if (!printable_utf8(align_char, bytes)) return false;
+			if (*align_char == '{' || *align_char == '}') return false;
+		}
+		// sign '#' '0'
+		pos = skip_sign_alt_0(pos, end);
+		// width
+		const auto num_begin = pos;
+		pos = skip_numbers(pos, end);
+		if (pos - num_begin > 0) {
+			if (*num_begin == '0') return false;
+			if (pos - num_begin > 4) return false;
+		}
+		// precision
+		if (pos < end && *pos == '.') {
+			pos++;
+			const auto prec_begin = pos;
+			pos = skip_numbers(pos, end);
+			if (pos - prec_begin > 0) {
+				if (*prec_begin == '0') return false;
+				if (pos - prec_begin > 4) return false;
+			}
+			else {
+				return false;
+			}
+		}
+		// 'L' local number separator
+		if (pos < end && *pos == 'L') pos++;
+		// type
+		if (pos == end) return true;
+		if (end - pos != 1) return false;
+		// "a" | "A" | "b" | "B" | "c" | "d" | "e" | "E" | "f" | "F" | "g" | "G" | "o" | "p" | "s" | "x" | "X"
+		if (*pos == 'a' || *pos == 'A' || *pos == 'b' || *pos == 'B' || *pos == 'c' || *pos == 'd'
+			|| *pos == 'e' || *pos == 'E' || *pos == 'f' || *pos == 'F' || *pos == 'g' || *pos == 'G'
+			|| *pos == 'o' || *pos == 'p' || *pos == 's' || *pos == 'x' || *pos == 'X')
+		{
+			return true;
+		}
+		return false;
+	}
 }

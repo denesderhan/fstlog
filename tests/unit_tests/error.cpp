@@ -100,9 +100,10 @@ TEST_CASE("fstlog_error") {
 		auto buff_end = buffer.data() + std::get<2>(test_dat);
 		
 		auto str_end = err.write_to(buffer.data(), buff_end);
-			
-		CHECK(static_cast<std::size_t>(str_end - buffer.data()) == std::get<1>(test_dat).size());
-		CHECK(!memcmp(std::get<1>(test_dat).data(), buffer.data(), str_end - buffer.data()));
+		auto contrl_str = std::get<1>(test_dat);
+		CAPTURE(contrl_str);
+		CHECK(static_cast<std::size_t>(str_end - buffer.data()) == contrl_str.size());
+		CHECK(!memcmp(contrl_str.data(), buffer.data(), str_end - buffer.data()));
 	};
 
 }
