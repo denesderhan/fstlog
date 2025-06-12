@@ -2,6 +2,8 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <catch2/catch_all.hpp>
 
+#include <cstdlib>
+
 #include <filter/filter_internal.hpp>
 
 TEST_CASE("filter_internal") {
@@ -144,7 +146,20 @@ TEST_CASE("filter_internal") {
 			ch++;
 		}
 	}
+
+	SECTION("05") {
+		fstlog::filter_internal filt;
+		filt.add_level(fstlog::level::All, fstlog::level::None);
+		filt.add_channel(0, 255);
+		unsigned char ch{ 0 };
+		while (true) {
+			CHECK(filt.filter_msg(fstlog::level::Info, ch) == true);
+			if (ch == 255) break;
+			ch++;
+		}
+	}
 }
+
 TEST_CASE("filter_internal_rand", "[.][random]") {
 	
 	SECTION("one range") {
@@ -188,3 +203,26 @@ TEST_CASE("filter_internal_rand", "[.][random]") {
 		}
 	}
 }
+
+TEST_CASE("filter_internal_benchmark", "[.][benchmark]") {
+	
+	BENCHMARK_ADVANCED("filter_msg")(Catch::Benchmark::Chronometer meter) {
+		fstlog::filter_internal filt;
+		for (int i = 1; i <= 6; i++) {
+			if (std::rand() % 2 == 0) filt.add_level(fstlog::level(static_cast<unsigned char>(i)));
+		}
+		for (int i = 0; i <= 255; i++) {
+			if (std::rand() % 2 == 0) filt.add_channel(static_cast<fstlog::channel_type>(i));
+		}
+		meter.measure([filt] {
+			int res = 0;
+			for (unsigned char i = 1; i <= 6; i++) {
+				res += filt.filter_msg(fstlog::level(i), 0);
+				res += filt.filter_msg(fstlog::level(i), 64);
+				res += filt.filter_msg(fstlog::level(i), 191);
+				res += filt.filter_msg(fstlog::level(i), 255);
+			}
+			return res; });
+	};
+};
+

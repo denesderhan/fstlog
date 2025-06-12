@@ -62,7 +62,7 @@ namespace fstlog {
         fstlog_allocator const& allocator) noexcept
 	{
 		out = sink{};
-		constexpr filter_internal filter{ level::All, 1, 255 };
+		filter_internal filter{ level::All, 1, 255 };
 		return sink_unsort(
 			out,
 			std::move(formatter),
