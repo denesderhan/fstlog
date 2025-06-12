@@ -85,7 +85,7 @@ namespace fstlog {
 			const auto form_beg{ safe_reinterpret_cast<const unsigned char*>(format.data()) };
 			const auto end{ form_beg + format.size() - 1 };
 			auto align_beg = form_beg + 2;
-			auto align_end = skip_align(align_beg, end);
+			auto align_end = skip_fill_align(align_beg, end);
 			auto out_end_pos{ out.data() + 2 };
 			while (align_beg < align_end) {
 				*out_end_pos++ = *align_beg++;

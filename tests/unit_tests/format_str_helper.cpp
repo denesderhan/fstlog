@@ -168,7 +168,7 @@ TEST_CASE("parse_fmt_repl_field") {
 }
 
 
-TEST_CASE("skip_align") {
+TEST_CASE("skip_fill_align") {
 	std::pair<std::string_view, int> test_dat = GENERATE(
 		std::pair<std::string_view, int>{std::string_view{ "" }, 0 },
 		std::pair<std::string_view, int>{std::string_view{ "abcd" }, 0 },
@@ -197,12 +197,13 @@ TEST_CASE("skip_align") {
 		std::pair<std::string_view, int>{std::string_view{ "a\xf8\x2\x3\x1>>>" }, 0 },
 		std::pair<std::string_view, int>{std::string_view{ "a<\xf8\x2\x3\x1>>>" }, 2 },
 		std::pair<std::string_view, int>{std::string_view{ "\xf8<\x1\x2\x3\x1>>>" }, 0 },
-		std::pair<std::string_view, int>{std::string_view{ "a\xf8<\x1\x2\x3\x1>>>" }, 0 }
+		std::pair<std::string_view, int>{std::string_view{ "a\xf8<\x1\x2\x3\x1>>>" }, 0 },
+		std::pair<std::string_view, int>{std::string_view{ "\xc2\x85>200" }, 3 }
 	);
 	auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
 	auto in_end = in_beg + std::get<0>(test_dat).size();
 
-	auto pos = fstlog::skip_align(in_beg, in_end);
+	auto pos = fstlog::skip_fill_align(in_beg, in_end);
 	CHECK(pos == in_beg + std::get<1>(test_dat));
 }
 
@@ -435,6 +436,7 @@ TEST_CASE("valid_format_spec") {
 		std::make_tuple(std::string_view{ "\xc2\xa9^" }, true),
 		std::make_tuple(std::string_view{ "\xe0\xbc\x80<" }, true),
 		std::make_tuple(std::string_view{ "\xf0\x90\xad\x80>" }, true),
+		std::make_tuple(std::string_view{ "\xc2\x85<" }, false),
 		std::make_tuple(std::string_view{ "*> #020.34Ld" }, true),
 		std::make_tuple(std::string_view{ "*> #020.34L" }, true),
 		std::make_tuple(std::string_view{ "*> #020.34d" }, true),
@@ -470,4 +472,74 @@ TEST_CASE("valid_format_spec") {
 		std::get<0>(test_dat).size());
 	auto is_valid = fstlog::valid_format_spec(fmt_spec);
 	CHECK(is_valid == std::get<1>(test_dat));
+}
+
+TEST_CASE("valid_fmt_type_spec") {
+	for (int t = 0; t < 256; t++) {
+		unsigned char type_spec = static_cast<unsigned char>(t);
+		CAPTURE(int(type_spec));
+		switch (type_spec) {
+		case 'a': case 'A': case 'b': case 'B': case 'c': case 'd':
+		case 'e': case 'E': case 'f': case 'F': case 'g': case 'G':
+		case 'o': case 'p': case 's': case 'x': case 'X':
+			CHECK(fstlog::valid_fmt_type_spec(type_spec) == true);
+			break;
+		default:
+			CHECK(fstlog::valid_fmt_type_spec(type_spec) == false);
+			break;
+		}
+	}
+}
+
+TEST_CASE("valid_fmt_fill_char") {
+	auto test_dat = GENERATE(
+		std::make_pair(std::string_view{ "" }, true ),
+		std::make_pair(std::string_view{ "abcd" },   false ),
+		std::make_pair(std::string_view{ "1" },   true ),
+		std::make_pair(std::string_view{ "." },   true ),
+		std::make_pair(std::string_view{ "{" },   false ),
+		std::make_pair(std::string_view{ "}" },   false ),
+		std::make_pair(std::string_view{ ">" },   true ),
+		std::make_pair(std::string_view{ "\x1" },   false ),
+		std::make_pair(std::string_view{ "\xf8" },   false ),
+		std::make_pair(std::string_view{ "\xc2\xa9" },   true ),
+		std::make_pair(std::string_view{ "\xe0\xbc\x80" },   true ),
+		std::make_pair(std::string_view{ "\xf0\x90\xad\x80" },   true ),
+		std::make_pair(std::string_view{ "\xc2\x85>>>" },   false ),
+		std::make_pair(std::string_view{ "\xc2\xa0>>>" },   false ),
+		std::make_pair(std::string_view{ "\xe2\x80\xac>>>" },   false ),
+		std::make_pair(std::string_view{ "\xe2\x80\xa8>>>" },   false )
+	);
+	auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
+	auto in_end = in_beg + std::get<0>(test_dat).size();
+
+	CHECK(fstlog::valid_fmt_fill_char(in_beg, in_end) == std::get<1>(test_dat));
+}
+
+TEST_CASE("skip_valid_fmt_number") {
+	auto test_dat = GENERATE(
+		std::make_tuple(std::string_view{ "" }, true, 0),
+		std::make_tuple(std::string_view{ "abcd" }, true, 0),
+		std::make_tuple(std::string_view{ "1abc" }, true, 1),
+		std::make_tuple(std::string_view{ "12a3abc" }, true, 2),
+		std::make_tuple(std::string_view{ "123abc" }, true, 3),
+		std::make_tuple(std::string_view{ "1000abc" }, true, 4),
+		std::make_tuple(std::string_view{ "9123abc" }, true, 4),
+		std::make_tuple(std::string_view{ "0abc" }, false, 1),
+		std::make_tuple(std::string_view{ "00abc" }, false, 1),
+		std::make_tuple(std::string_view{ "0123abc" }, false, 1),
+		std::make_tuple(std::string_view{ "80000dsf" }, false, 5),
+		std::make_tuple(std::string_view{ "80000234dsf" }, false, 5),
+		std::make_tuple(std::string_view{ "1" }, true, 1),
+		std::make_tuple(std::string_view{ "12" }, true, 2),
+		std::make_tuple(std::string_view{ "123" }, true, 3),
+		std::make_tuple(std::string_view{ "1000" }, true, 4),
+		std::make_tuple(std::string_view{ "9123" }, true, 4)
+	);
+	const auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
+	auto pos = in_beg;
+	auto in_end = in_beg + std::get<0>(test_dat).size();
+
+	CHECK(fstlog::skip_valid_fmt_number(pos, in_end) == std::get<1>(test_dat));
+	CHECK(pos - in_beg == std::get<2>(test_dat));
 }

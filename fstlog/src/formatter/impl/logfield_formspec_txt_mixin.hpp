@@ -77,7 +77,7 @@ namespace fstlog {
             auto pos = begin_pos;
             const auto end = pos + form_spec.size_bytes();
 
-            const auto align_end = skip_align(pos, end);
+            const auto align_end = skip_fill_align(pos, end);
             const std::size_t align_size = static_cast<std::size_t>(align_end - pos);
 
             pos = align_end;
