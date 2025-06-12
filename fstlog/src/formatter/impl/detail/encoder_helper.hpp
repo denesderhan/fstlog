@@ -6,6 +6,8 @@
 #include <type_traits>
 #pragma intrinsic(memcpy)
 
+#include <fstlog/detail/constants.hpp>
+
 namespace fstlog {
 	namespace detail {
 		template <typename T>
@@ -48,53 +50,18 @@ namespace fstlog {
 			if (sign_fmt != 0) *pos++ = sign_fmt;
 		}
 
-		inline static int handle_prefix(
-			unsigned char base_char,
-			bool write_prefix,
-			unsigned char*& pos)
-		{
-			int base = 10;
-			switch (base_char) {
-			case 'd': break;
-			case 0:	break;
-			case 'x':
-				base = 16;
-				if (write_prefix) {
-					*pos++ = '0';
-					*pos++ = 'x';
-				}
-				break;
-			case 'X':
-				base = 16;
-				if (write_prefix) {
-					*pos++ = '0';
-					*pos++ = 'X';
-				}
-				break;
-			case 'b':
-				base = 2;
-				if (write_prefix) {
-					*pos++ = '0';
-					*pos++ = 'b';
-				}
-				break;
-			case 'B':
-				base = 2;
-				if (write_prefix) {
-					*pos++ = '0';
-					*pos++ = 'B';
-				}
-				break;
-			case 'o':
-				base = 8;
-				if (write_prefix) {
-					*pos++ = '0';
-				}
-				break;
-			default:
-				break;
-			}
-			return base;
+		inline static int get_int_base(unsigned char base_char) noexcept {
+			//[10(/0), 2(B,b), 10(d), 10(?), 16(X,x), 10(?), 10(?), 8(o)]
+			alignas(constants::cache_ls_nosharing) const std::array<int, 8> base_table{
+				10, 2, 10, 10, 16, 10, 10, 8 };
+			return base_table[(base_char >> 1) & 0b111];
+		}
+
+		inline void write_prefix(int base, unsigned char base_char, unsigned char* &pos) noexcept {
+			if (base == 10) return;
+			*pos++ = '0';
+			if (base == 8) return;
+			*pos++ = base_char;
 		}
 	}
 }

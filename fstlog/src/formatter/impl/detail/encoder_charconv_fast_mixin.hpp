@@ -77,12 +77,14 @@ namespace fstlog {
 			// write sign
 			if (data < 0) *buffer_pos++ = '-';
 			
-			// write the prefix and set the base for the integer formatting 
-			bool write_prefix = true;
-			// do not write prefix if data is octal 0 (write 0 not 00)
-			if (format.type == 'o' && data == 0) write_prefix = false;
-			const int base = detail::handle_prefix(format.type, write_prefix, buffer_pos);
+			// set base
+			const int base = detail::get_int_base(format.type);
 			
+			// write the prefix 
+			// do not write prefix if data is octal 0 (write 0 not 00)
+			if (!(format.type == 'o' && data == 0)) {
+				detail::write_prefix(base, format.type, buffer_pos);
+			}
 			// convert data to unsigned absolute value
 			const std::make_unsigned_t<T> abs_data = detail::abs_unsigned(data);
 			// use std::to_chars() to format the number
