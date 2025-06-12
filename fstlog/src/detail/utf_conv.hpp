@@ -99,69 +99,24 @@ namespace fstlog {
 			return dest;
 		}
 
-		template <typename I>
 		inline unsigned char const* decode_utf8(
 			std::uint32_t& code_point,
 			unsigned char const* pos,
 			unsigned char const* end) noexcept
 		{
-			FSTLOG_ASSERT(pos != nullptr && pos + sizeof(I) <= end);
-			static_assert(std::is_integral_v<I>, "Invalid type!");
-			rm_cvref_t<I> utf8_char{ 0 };
-			memcpy(&utf8_char, pos, sizeof(I));
-			if (!valid_utf8_char(utf8_char)) return nullptr;
-			pos += sizeof(I);
-			const std::uint32_t first_byte = static_cast<std::uint32_t>(utf8_char);
-			
-			// 1 byte 0xxx xxxx									 (0 - 127 ASCII)
-			// 2 byte 110x xxxx  10xx xxxx						 (128 - 2047)
-			// 3 byte 1110 xxxx  10xx xxxx  10xx xxxx			 (2048 - 65535)
-			// 4 byte 1111 0xxx  10xx xxxx  10xx xxxx  10xx xxxx (65536 - 1114111)
-
-			// 1 byte
-			if ((first_byte & 0b1000'0000) == 0) {
-				code_point = first_byte;
-				return pos;
+			FSTLOG_ASSERT(pos != nullptr && pos <= end);
+			int byte_num = valid_utf8(pos, end);
+			if (byte_num == 0) return nullptr;
+			else if (byte_num == 1) {
+				code_point = *pos;
+				return pos + 1;
 			}
-
-			// multi byte
-			int continuation_bytes = 0;
-			std::uint32_t code_p = 0;
-			// 2 byte
-			if ((first_byte & 0b1110'0000) == 0b1100'0000) {
-				continuation_bytes = 1;
-				// init code_point with the first bytes data
-				code_p = first_byte & 0b0001'1111;
-			}
-			// 3 byte
-			else if ((first_byte & 0b1111'0000) == 0b1110'0000) {
-				continuation_bytes = 2;
-				// init code_point with the first bytes data
-				code_p = first_byte & 0b0000'1111;
-			}
-			// 4 byte
-			else if ((first_byte & 0b1111'1000) == 0b1111'0000) {
-				continuation_bytes = 3;
-				// init code_point with the first bytes data
-				code_p = first_byte & 0b0000'0111;
-			}
-			else {
-				// invalid data in first byte
-				return nullptr;	
-			}
-			// missing data
-			if (pos + continuation_bytes * sizeof(I) > end) return nullptr;
-
+			// first byte
+			std::uint32_t code_p = *pos++ & (0b1111'1111 >> (byte_num + 1));
 			// add continuation byte's 6 bit data
-			while (continuation_bytes-- > 0) {
-				memcpy(&utf8_char, pos, sizeof(I));
-				pos += sizeof(I);
-				if (!valid_utf8_char(utf8_char)) return nullptr;
-				std::uint32_t byte = static_cast<std::uint32_t>(utf8_char);
-				// integrity check
-				if ((byte & 0b1100'0000) != 0b1000'0000) return nullptr;
+			while (byte_num-- > 1) {
 				code_p <<= 6;
-				code_p += byte & 0b0011'1111;
+				code_p += *pos++ & 0b0011'1111;
 			}
 
 			if (valid_code_point(code_p)) {
@@ -325,7 +280,7 @@ namespace fstlog {
 						dest, error_code::buff_full };
 				}
 				std::uint32_t code_point{0};
-				unsigned char const* next_input = decode_utf8<I>(code_point, input, input_end);
+				unsigned char const* next_input = decode_utf8(code_point, input, input_end);
 				// bad or missing input data
 				if (next_input == nullptr) {
 					char_num = char_count;
@@ -357,7 +312,7 @@ namespace fstlog {
 			std::size_t char_count{ 0 };
 			while (input + sizeof(I) <= input_end && char_count != char_num) {
 				std::uint32_t code_point{ 0 };
-				unsigned char const* next_input = decode_utf8<I>(code_point, input, input_end);
+				unsigned char const* next_input = decode_utf8(code_point, input, input_end);
 				// bad or missing input data
 				if (next_input == nullptr) {
 					char_num = char_count;
