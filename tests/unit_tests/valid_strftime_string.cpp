@@ -9,22 +9,19 @@
 TEST_CASE("valid_strftime_string") {
 	SECTION("valid") {
 		std::string_view str = GENERATE(
-			"",
 			"!",
 			"!!",
 			"!!!!",
 			"%Y",
-			"%Od",
 			"%%%%",
 			"%%%%%%",
 			"%%!%%%%!!",
 			"!%S%m",
-			"!!%EY",
-			"!%Od",
-			"Y%Y%%YOE",
 			"%S%z%Z",
 			"%z",
-			"%Z");
+			"%Z",
+			"Y%Y%%YOE",
+			"%H:%M:%S %z %Z");
 
 		CAPTURE(str);
 		fstlog::buff_span_const buff_sp(
@@ -36,6 +33,10 @@ TEST_CASE("valid_strftime_string") {
 
 	SECTION("invalid") {
 		std::string_view str = GENERATE(
+			"",
+			"%Od",
+			"!!%EY",
+			"!%Od",
 			"%",
 			"%%%",
 			"%%%%%",
@@ -52,7 +53,8 @@ TEST_CASE("valid_strftime_string") {
 			"%Z",
 			"%S%z%Z",
 			"%H:%M:%S %z %Z",
-			"H%:%M:%S %z");
+			"H%:%M:%S %z",
+			"H%:%M:%S %S");
 		
 		CAPTURE(str);
 		fstlog::buff_span_const buff_sp(fstlog::safe_reinterpret_cast<const unsigned char*>(str.data()), str.size());
