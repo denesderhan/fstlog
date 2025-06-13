@@ -314,18 +314,19 @@ namespace fstlog {
 			const unsigned char* end) noexcept
 		{
 			FSTLOG_ASSERT(begin <= end);
+			constexpr int max_digits = 4;
 			// no number to skip
 			if (begin == end || *begin < '0' || *begin > '9') return true;
 			// valid number can not begin with '0'
 			if (*begin++ == '0') return false;
 			int digits = 1;
-			while (digits < 5 && begin < end
+			while (digits <= max_digits && begin < end
 				&& *begin >= '0' && *begin <= '9') 
 			{
 				begin++;
 				digits++;
 			}
-			return (digits < 5);
+			return (digits <= max_digits);
 		}
 
 		inline bool valid_format_spec(buff_span_const format_spec) {
@@ -333,7 +334,6 @@ namespace fstlog {
 			auto pos = format_spec.data();
 			const auto end = pos + format_spec.size_bytes();
 			
-			constexpr int num_max_digits = 4;
 			// fill-align
 			const auto fill_char = pos;
 			// skip the fill_char AND the alignment specifier
