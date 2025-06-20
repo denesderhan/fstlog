@@ -9,7 +9,7 @@
 
 TEST_CASE("utf8_helper") {
 	SECTION("valid_printable") {
-		CHECK(fstlog::utf8_bytes('\0') == 1);
+		CHECK(fstlog::utf8_bytes('\x00') == 1);
 		const auto text{ u8"123 UTF-8 encoded sample ∮ E⋅da = Q,  n → ∞, ∑ f(i)"
 			u8"= ∏ g(i)ði ıntəˈnæʃənəl fəˈnɛtık əsoʊsiˈeıʃn ‘single’ and"
 			u8"“double” quotes• †, ‡, ‰, •, 3–4, —, −5 / +5, ™, … χαῖρε, ὦ χαῖρε, "

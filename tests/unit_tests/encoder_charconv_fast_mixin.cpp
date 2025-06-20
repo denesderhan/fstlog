@@ -49,8 +49,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 		auto extent = GENERATE(table<bool, char, std::string_view>({
 			std::tuple<bool, char, std::string_view>{true, 's', "true"},
 			std::tuple<bool, char, std::string_view>{false, 's', "false"},
-			std::tuple<bool, char, std::string_view>{true, '\0', "true"},
-			std::tuple<bool, char, std::string_view>{false, '\0', "false"},
+			std::tuple<bool, char, std::string_view>{true, '\x00', "true"},
+			std::tuple<bool, char, std::string_view>{false, '\x00', "false"},
 			std::tuple<bool, char, std::string_view>{true, 'x', "0x1"},
 			std::tuple<bool, char, std::string_view>{false, 'x', "0x0"},
 			std::tuple<bool, char, std::string_view>{true, 'X', "0X1"},
@@ -91,7 +91,7 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 	SECTION("void*") {
 		auto extent = GENERATE(table<std::uintptr_t, char, std::string_view>({
 			std::tuple<std::uintptr_t, char, std::string_view>{0x12345, 'p', "0x12345"},
-			std::tuple<std::uintptr_t, char, std::string_view>{0x12345, '\0', "0x12345"}
+			std::tuple<std::uintptr_t, char, std::string_view>{0x12345, '\x00', "0x12345"}
 			}));
 
 
@@ -116,10 +116,10 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 	};
 	SECTION("integer") {
 		auto extent = GENERATE(table<int, char, char, bool, std::string_view>({
-			std::tuple<int, char,  char, bool, std::string_view>{(std::numeric_limits<std::int32_t>::min)(), '\0', '+', false, "-2147483648"},
-			std::tuple<int, char,  char, bool, std::string_view>{0, '\0', '+', false, "0"},
-			std::tuple<int, char,  char, bool, std::string_view>{0, '\0', '-', false, "0"},
-			std::tuple<int, char,  char, bool, std::string_view>{1234, '\0', '+', false, "1234"},
+			std::tuple<int, char,  char, bool, std::string_view>{(std::numeric_limits<std::int32_t>::min)(), '\x00', '+', false, "-2147483648"},
+			std::tuple<int, char,  char, bool, std::string_view>{0, '\x00', '+', false, "0"},
+			std::tuple<int, char,  char, bool, std::string_view>{0, '\x00', '-', false, "0"},
+			std::tuple<int, char,  char, bool, std::string_view>{1234, '\x00', '+', false, "1234"},
 			std::tuple<int, char,  char, bool, std::string_view>{-15, 'x', ' ', false, "-0xf"},
 			std::tuple<int, char,  char, bool, std::string_view>{15, 'x', ' ', true, "0xf"},
 			std::tuple<int, char,  char, bool, std::string_view>{15, 'X', '-', true, "0XF"},
@@ -157,7 +157,7 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 		//                                type           sign           alternate   precision
 		using tup_typ = std::tuple<float, char, char, bool, int, std::string_view>;
 		auto extent = GENERATE(table<float, char, char, bool, int, std::string_view>({
-			tup_typ{0.12434234233422f, '\0', '+', false, 4, "0.1243"},
+			tup_typ{0.12434234233422f, '\x00', '+', false, 4, "0.1243"},
 			tup_typ{1.12378f, 'e', ' ', false, 3, "1.124e+00"},
 			tup_typ{-1.12378f, 'e', '+', false, 3, "-1.124e+00"},
 			tup_typ{1.11f, 'g', '-', false, 2, "1.1"},
