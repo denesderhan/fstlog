@@ -185,23 +185,25 @@ TEST_CASE("skip_fill_align") {
 		std::pair<std::string_view, int>{std::string_view{ " >1234" }, 2 },
 		std::pair<std::string_view, int>{std::string_view{ ":>" }, 2 },
 		std::pair<std::string_view, int>{std::string_view{ ">>>>" }, 2 },
-		std::pair<std::string_view, int>{std::string_view{ "\xc2\xa9>>>" }, 3 },
-		std::pair<std::string_view, int>{std::string_view{ "\xe0\xbc\x80>>>" }, 4 },
-		std::pair<std::string_view, int>{std::string_view{ "\xf0\x90\xad\x80>>>" }, 5 },
-		std::pair<std::string_view, int>{std::string_view{ "\xf8>>>" }, 0 },
-		std::pair<std::string_view, int>{std::string_view{ "\xf8\x1\>>>" }, 0 },
-		std::pair<std::string_view, int>{std::string_view{ "\xf8\x1\x2\>>>" }, 0 },
-		std::pair<std::string_view, int>{std::string_view{ "\xf8\x1\x2\x3>>>" }, 0 },
-		std::pair<std::string_view, int>{std::string_view{ "\xf8\x1\x2\x3\x1>>>" }, 0 },
-		std::pair<std::string_view, int>{std::string_view{ "\xf8\x1\x2\x3\x1""a>>>" }, 0 },
-		std::pair<std::string_view, int>{std::string_view{ "a\xf8\x2\x3\x1>>>" }, 0 },
-		std::pair<std::string_view, int>{std::string_view{ "a<\xf8\x2\x3\x1>>>" }, 2 },
-		std::pair<std::string_view, int>{std::string_view{ "\xf8<\x1\x2\x3\x1>>>" }, 0 },
-		std::pair<std::string_view, int>{std::string_view{ "a\xf8<\x1\x2\x3\x1>>>" }, 0 },
+		std::pair<std::string_view, int>{std::string_view{ "\xc2\xa9>>>1" }, 3 },
+		std::pair<std::string_view, int>{std::string_view{ "\xe0\xbc\x80>>>2" }, 4 },
+		std::pair<std::string_view, int>{std::string_view{ "\xf0\x90\xad\x80>>>3" }, 5 },
+		std::pair<std::string_view, int>{std::string_view{ "\xf8>>>4" }, 0 },
+		std::pair<std::string_view, int>{std::string_view{ "\xf8\x1\>>>5" }, 0 },
+		std::pair<std::string_view, int>{std::string_view{ "\xf8\x1\x2\>>>6" }, 0 },
+		std::pair<std::string_view, int>{std::string_view{ "\xf8\x1\x2\x3>>>7" }, 0 },
+		std::pair<std::string_view, int>{std::string_view{ "\xf8\x1\x2\x3\x1>>>8" }, 0 },
+		std::pair<std::string_view, int>{std::string_view{ "\xf8\x1\x2\x3\x1""a>>>9" }, 0 },
+		std::pair<std::string_view, int>{std::string_view{ "a\xf8\x2\x3\x1>>>10" }, 0 },
+		std::pair<std::string_view, int>{std::string_view{ "a<\xf8\x2\x3\x1>>>11" }, 2 },
+		std::pair<std::string_view, int>{std::string_view{ "\xf8<\x1\x2\x3\x1>>>12" }, 0 },
+		std::pair<std::string_view, int>{std::string_view{ "a\xf8<\x1\x2\x3\x1>>>13" }, 0 },
 		std::pair<std::string_view, int>{std::string_view{ "\xc2\x85>200" }, 3 }
 	);
-	auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-	auto in_end = in_beg + std::get<0>(test_dat).size();
+	auto str = std::get<0>(test_dat);
+	CAPTURE(str);
+	auto in_beg = reinterpret_cast<const unsigned char*>(str.data());
+	auto in_end = in_beg + str.size();
 
 	auto pos = fstlog::skip_fill_align(in_beg, in_end);
 	CHECK(pos == in_beg + std::get<1>(test_dat));

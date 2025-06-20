@@ -70,7 +70,7 @@ namespace fstlog {
 		std::uint32_t level_data_{ 0 };
 		std::array<std::uint32_t, 8> channel_data_{ 0, 0, 0, 0, 0, 0, 0, 0 };
 
-		static_assert(sizeof(level_data_) * CHAR_BIT > ut_cast(fstlog::level::All));
+		static_assert(sizeof(level_data_) * 8 > ut_cast(fstlog::level::All));
 		static_assert((std::numeric_limits<channel_type>::max)() <= 255);
 		static_assert((std::numeric_limits<channel_type>::min)() == 0);
 	};
