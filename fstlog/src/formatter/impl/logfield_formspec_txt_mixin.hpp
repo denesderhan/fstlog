@@ -115,7 +115,7 @@ namespace fstlog {
             }
             int precision = static_cast<int>(out.precision);
             get_precision(precision, pos, end);
-            out.precision = static_cast<std::uint16_t>(out.precision);
+            out.precision = static_cast<std::uint16_t>(precision);
             
             if (pos < end && *(end - 1) != 'L') {
                 out.type = *(end - 1);
