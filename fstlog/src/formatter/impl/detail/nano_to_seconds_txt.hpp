@@ -80,7 +80,9 @@ namespace fstlog {
 				ticks -= minutes_ * ticks_minute;
 				FSTLOG_ASSERT(ticks >= 0LL && ticks < ticks_minute);
 				std::intmax_t nano_ticks = ticks * (nano_minute / ticks_minute);
-				
+				FSTLOG_ASSERT(nano_ticks  < nano_minute);
+				nano_ticks &= 0xFFFFFFFFF;
+
 				// digit conversion table
 				const char digits2[]{
 					"0001020304050607080910111213141516171819"
