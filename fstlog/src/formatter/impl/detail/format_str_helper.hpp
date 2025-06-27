@@ -6,18 +6,14 @@
 #include <string_view>
 
 #include <detail/byte_span.hpp>
-#include <detail/utf8_helper.hpp>
+#include <detail/safe_reinterpret_cast.hpp>
+#include <detail/utf_conv.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 #include <formatter/impl/detail/tz_format.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
 	namespace {
-		static_assert(
-			'0' + 1 == '1' && '0' + 2 == '2' && '0' + 3 == '3'
-			&& '0' + 4 == '4' && '0' + 5 == '5' && '0' + 6 == '6'
-			&& '0' + 7 == '7' && '0' + 8 == '8' && '0' + 9 == '9');
-
 		inline void uint_fromchars_4digit(
 			int& number,
 			const unsigned char*& begin,
@@ -28,13 +24,12 @@ namespace fstlog {
 
 			number = *begin++ - '0';
 			while (begin < end && *begin <= '9' && *begin >= '0') {
-				if (number < 9999) {
+				if (number <= 999) {
 					number *= 10;
 					number += *begin - '0';
 				}
 				begin++;
 			}
-			if (number > 9999) number = 9999;
 		}
 
 		// write the text part of the fmt format string in to out
@@ -52,23 +47,24 @@ namespace fstlog {
 						skip = true;
 					}
 					else {
+						// we got '}' instead of '{'
 						if (*in_pos == '}') {
-							// we got '}' instead of '{'
 							error = error_code::fmt_bad;
 						}
+						// break if '{' OR '}' (end of text OR error)
 						break;
 					}
 				}
-				if (out_pos < out_end) {
-					// write byte
-					*out_pos++ = *in_pos++;
-					if (skip) in_pos++;
-				}
-				else {
-					// stop (no space)
+				auto next_in_pos = in_pos;
+				std::uint32_t code_point = detail::decode_utf8_char(next_in_pos, in_end);
+				auto next_out_pos = detail::encode_safe_utf8_char(code_point, out_pos, out_end);
+				if (next_out_pos == nullptr) {
 					error = error_code::buff_full;
 					break;
 				}
+				out_pos = next_out_pos;
+				in_pos = next_in_pos;
+				if (skip) in_pos++;
 			}
 			return error;
 		}
@@ -123,29 +119,36 @@ namespace fstlog {
 			const unsigned char* end) noexcept
 		{
 			if (begin >= end) return begin;
-			const auto ch{ *begin };
-			const auto char_bytes = utf8_bytes(ch);
-			if (char_bytes == 0) return begin;
-
-			// check if there is a fill char (possibly utf8) + align char
-			if (end - begin > char_bytes) {
-				const auto align{ *(begin + char_bytes) };
-				if (align == '<' ||
-					align == '>' ||
-					align == '^')
+			auto pos = begin;
+			const auto first_char = detail::decode_utf8_char(pos, end);
+			
+			// check if there is a good fill char (first_char) + align char
+			if (pos < end) {
+				const unsigned char align_char{ *pos };
+				if (align_char == '<' ||
+					align_char == '>' ||
+					align_char == '^')
 				{
-					// skip fill char + align char
-					return begin + char_bytes + 1;
+					if (first_char != '{' && first_char != '}'
+						&& detail::safe_utf_code_point(first_char))
+					{
+						// skip align char (and fill char)
+						return ++pos;
+					}
+					else {
+						// do not skip invalid/unsafe fill char (+ align char)
+						return begin;
+					}
 				}
 			}
 			// if there was no fill char + align char
 			// check if there is a single align char
-			if (ch == '<' ||
-				ch == '>' ||
-				ch == '^')
+			if (first_char == '<' ||
+				first_char == '>' ||
+				first_char == '^')
 			{
 				// skip single align char
-				return begin + 1;
+				return pos;
 			}
 			// nothing to skip
 			return begin;
@@ -268,23 +271,6 @@ namespace fstlog {
 			}
 		}
 
-		inline bool valid_fmt_fill_char(
-			const unsigned char* begin,
-			const unsigned char* end) noexcept
-		{
-			FSTLOG_ASSERT(begin <= end);
-			// empty fill_char
-			if (begin == end) return true;
-			// non empty fill_char
-			auto bytes = valid_utf8(begin, end);
-			// invalid utf8 or multiple chars
-			if (bytes == 0 || end - begin != bytes) return false;
-			if (!printable_utf8(begin, bytes)) return false;
-			// '{' and '}' is forbidden for a fill char
-			if (*begin == '{' || *begin == '}') return false;
-			return true;
-		}
-
 		inline bool valid_fmt_type_spec(unsigned char type_spec) noexcept {
 			// LUT for chars 'A' - 'x' range in a single 64 bit uint
 			constexpr std::uint64_t valid_type_spec_lut =
@@ -334,19 +320,16 @@ namespace fstlog {
 			auto pos = format_spec.data();
 			const auto end = pos + format_spec.size_bytes();
 			
-			// fill-align
-			const auto fill_char = pos;
-			// skip the fill_char AND the alignment specifier
+			// skip the fill_char AND the alignment specifier if valid + safe
 			pos = skip_fill_align(pos, end);
-			// if there is an align specifier and a (possibly empty) fill char
-			if (pos > fill_char && !valid_fmt_fill_char(fill_char, pos - 1)) return false;
-
+			// if not the following checks will fail 
+						
 			// sign '#' '0'
 			pos = skip_sign_alt_0(pos, end);
 			// width
 			if(!skip_valid_fmt_number(pos, end)) return false;
 			if (pos == end) return true;
-			// there is a precision specifier
+			// if there is a precision specifier
 			if (*pos == '.') {
 				pos++; // skip dot
 				const auto prec_begin = pos;
@@ -359,7 +342,7 @@ namespace fstlog {
 			if (*pos == 'L') pos++;
 			// type is not mandatory
 			if (pos == end) return true;
-			// type is only 1 byte char
+			// type must be 1 char
 			if (end - pos != 1) return false;
 			return valid_fmt_type_spec(*pos);
 		}

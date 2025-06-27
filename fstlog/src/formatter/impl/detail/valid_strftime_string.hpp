@@ -6,7 +6,7 @@
 
 #include <detail/byte_span.hpp>
 #include <formatter/impl/detail/tz_format.hpp>
-#include <detail/utf8_helper.hpp>
+#include <detail/utf_conv.hpp>
 
 namespace fstlog {
 	namespace detail{
@@ -43,29 +43,24 @@ namespace fstlog {
 		// with a limited set of conversion specifiers
 		// for maximum compatibility.
 		inline constexpr bool valid_strftime_string(
-			buff_span_const str, 
-			tz_format tz) noexcept 
+			buff_span_const str,
+			tz_format tz) noexcept
 		{
-			const std::size_t str_len = str.size_bytes();
-			if (str_len == 0) return false;
-
-			const auto str_end{ str.data() + str_len };
-			std::size_t pos = 0;
+			if (str.empty()) return false;
+			const unsigned char *pos = str.data();
+			const auto end{ pos + str.size_bytes() };
 			std::size_t num_sec_specifiers{ 0 };
-			while (pos < str_len) {
-				const auto bytes{ valid_utf8(&str[pos], str_end) };
-				if (bytes == 0) {
-					return false; //invalid utf8
-				}
-				if (!printable_utf8(&str[pos], bytes)) {
-					return false; // invalid code point or control char
-				}
+			while (pos < end) {
+				auto code_point = decode_utf8_char(pos, end);
+				if (!safe_utf_code_point(code_point)) return false;
+				
 				// start of a conversion specifier
-				if (str[pos] == '%') {
-					if (pos + 1 == str_len) {
+				if (code_point == '%') {
+					if (pos == end) {
 						return false; // invalid '%' at end
 					}
-					unsigned char conv_spec = str[pos + 1];
+					// consume conversion specifier
+					unsigned char conv_spec = *pos++;
 					if (conv_spec != '%' && !valid_strft_conv_spec(conv_spec)) {
 						return false; // invalid conversion specifier (%% is valid)
 					}
@@ -75,10 +70,6 @@ namespace fstlog {
 					if (conv_spec == 'S') {
 						num_sec_specifiers++; // count number of '%S' (only 1 is allowed)
 					}
-					pos += 2; // skip the valid  '%' + conversion specifier
-				}
-				else {
-					pos += bytes; // skip the utf8 char
 				}
 			}
 			return num_sec_specifiers <= 1;

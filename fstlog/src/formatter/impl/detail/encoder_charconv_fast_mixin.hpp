@@ -146,27 +146,10 @@ namespace fstlog {
             // update buffer pointer to the first free byte
             this->set_output_ptr_unchecked(safe_reinterpret_cast<unsigned char*>(result.ptr));
         }
-
-        // char char8
+		        
+        // character
         template<typename T, std::enable_if_t<
             is_char_type_v<T>
-            && sizeof(T) == 1
-            >* = nullptr>
-        void encode(T data, [[maybe_unused]] format_type format) noexcept {
-            if (this->output_has_space()) {
-                auto str_begin{ this->output_ptr() };
-                *str_begin = *safe_reinterpret_cast<const unsigned char*>(&data);
-                this->advance_output_unchecked(1);
-            }
-            else {
-                this->set_error(__FILE__, __LINE__, error_code::buff_full);
-            }
-        }
-
-        // utf16 utf32 character
-        template<typename T, std::enable_if_t<
-            is_char_type_v<T>
-            && sizeof(T) != 1
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
             encode(byte_span<T>{ &data, 1 }, format);
@@ -181,32 +164,20 @@ namespace fstlog {
 			FSTLOG_ASSERT(data.data() != nullptr);
 			static_assert(std::numeric_limits<unsigned char>::digits == 8);
             constexpr int bit_size{ sizeof(T) * std::numeric_limits<unsigned char>::digits };
-            if constexpr (bit_size == 8) {
-                auto buff_ptr{ this->output_ptr() };
-                const auto bytes{ data.size_bytes() };
-                if (static_cast<std::size_t>(this->output_end() - buff_ptr) >= bytes) {
-                    memcpy(buff_ptr, data.data(), bytes);
-                    this->advance_output_unchecked(bytes);
-                }
-                else {
-                    this->set_error(__FILE__, __LINE__, error_code::buff_full);
-                }
+            
+            const unsigned char* str_begin{ data.data() };
+            std::size_t char_num{ (std::numeric_limits<std::size_t>::max)() };
+            const auto result = detail::utf8conv<bit_size, T>(
+                str_begin,
+                str_begin + data.size_bytes(),
+                this->output_ptr(),
+                this->output_end(),
+                char_num);
+            if (result.ec == error_code::none) {
+                this->set_output_ptr_unchecked(result.ptr);
             }
             else {
-                const unsigned char* str_begin{ data.data() };
-                std::size_t char_num{ (std::numeric_limits<std::size_t>::max)() };
-                const auto result = detail::utf8conv<bit_size, T, unsigned char>(
-                    str_begin,
-                    str_begin + data.size_bytes(),
-                    this->output_ptr(),
-                    this->output_end(),
-                    char_num);
-                if (result.ec == error_code::none) {
-                    this->set_output_ptr_unchecked(result.ptr);
-                }
-                else {
-                    this->set_error(__FILE__, __LINE__, result.ec);
-                }
+                this->set_error(__FILE__, __LINE__, result.ec);
             }
         }
 

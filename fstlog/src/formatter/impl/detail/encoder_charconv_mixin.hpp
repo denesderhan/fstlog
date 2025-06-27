@@ -209,42 +209,9 @@ namespace fstlog {
 			this->set_output_ptr_unchecked(str_end);
         }
 
-        // char char8
+        // character
         template<typename T, std::enable_if_t<
             is_char_type_v<T>
-            && sizeof(T) == 1
-            >* = nullptr>
-        void encode(T data, format_type format) noexcept {
-            if (!this->output_has_space()) {
-				this->set_error(__FILE__, __LINE__, error_code::buff_full);
-				return;
-			}
-            const auto data_ptr = safe_reinterpret_cast<const unsigned char*>(&data);
-            auto str_begin{ this->output_ptr() };
-            *str_begin = *data_ptr;
-
-			// fill align
-            if (format.width != 0) {
-				auto sf_result = shift_fill(
-					str_begin,
-					this->output_end(),
-					1,
-					1,
-					format.width,
-					format.align,
-					format.fill_char);
-				this->set_output_ptr_unchecked(sf_result.ptr);
-            }
-			// no fill align
-			else {
-				this->advance_output_unchecked(1);
-			}
-        }
-
-        // utf16 utf32 character
-        template<typename T, std::enable_if_t<
-            is_char_type_v<T>
-            && sizeof(T) != 1
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
             encode(byte_span<T>{ &data, 1 }, format);
@@ -265,7 +232,7 @@ namespace fstlog {
             static_assert(std::numeric_limits<unsigned char>::digits == 8);
             constexpr int bit_size{ sizeof(T) * std::numeric_limits<unsigned char>::digits };
             std::size_t char_num{ format.precision };
-            const auto result = detail::utf8conv<bit_size, T, unsigned char>(
+            const auto result = detail::utf8conv<bit_size, T>(
                 str_begin,
                 str_begin + data_byte_size,
                 out_begin,
@@ -367,29 +334,33 @@ namespace fstlog {
 			// fill align
             if (format.width != 0) {
                 const std::size_t byte_size{ static_cast<std::size_t>(str_end - str_begin) };            
-				const std::size_t char_num = charnum_utf8(str_begin, str_end);
-				auto sf_result = shift_fill(
-                    str_begin,
-					buffer_end,
-                    byte_size,
-                    char_num,
-                    format.width,
-                    format.align,
-                    format.fill_char);
-				str_end = sf_result.ptr;
+				if (byte_size / 4 < format.width) { // minimal char number (all 4 byte utf8)
+					std::size_t char_num = (std::numeric_limits<std::size_t>::max)();
+					// compute utf8 char number
+					[[maybe_unused]] auto b = detail::utf8_str_trim(str_begin, str_end, char_num);
+					auto sf_result = shift_fill(
+						str_begin,
+						buffer_end,
+						byte_size,
+						char_num,
+						format.width,
+						format.align,
+						format.fill_char);
+					str_end = sf_result.ptr;
+				}
             }
 			// update first free pos in buffer
             this->set_output_ptr_unchecked(str_end);
         }
 
         void reencode_tail_string(unsigned char* str_begin, format_type format) {
-            auto str_end{ this->output_ptr() };
+            unsigned char *str_end{ this->output_ptr() };
            	FSTLOG_ASSERT(str_begin >= this->output_begin() && str_begin <= str_end);
 			std::size_t char_num{ format.precision };
-            str_end = utf8_str_trim(str_begin, str_end, char_num);
+			std::size_t str_byte_size = detail::utf8_str_trim(str_begin, str_end, char_num);
+			str_end = str_begin + str_byte_size;
             FSTLOG_ASSERT(str_begin <= str_end);                        
             if (format.width > char_num) {
-                std::size_t str_byte_size = static_cast<std::size_t>(str_end - str_begin);
                 auto result = shift_fill(
                     str_begin,
                     this->output_end(),

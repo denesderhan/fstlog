@@ -17,6 +17,9 @@ using enc_type = fstlog::encoder_charconv_fast_mixin<
 					fstlog::output_span_mixin<
 					fstlog::allocator_mixin>>>;
 
+using utf8_char_std = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(u8"")>>>;
+using utf8_char_lib = std::conditional<std::is_signed_v<utf8_char_std>, std::make_unsigned<utf8_char_std>::type, utf8_char_std>::type;
+
 TEST_CASE("encoder_charconv_fast_mixin") {
 	
 	SECTION("no_space_in_buffer") {
@@ -196,4 +199,77 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 		CHECK(!encoder.has_error());
 		CHECK(res == control);
 	};
+
+	SECTION("char") {
+		enc_type encoder;
+		auto format = enc_type::format_type{};
+		std::array<unsigned char, 1024> buffer;
+
+		SECTION("default_format") {
+			buffer.fill('!');
+			encoder.output_span_init(buffer);
+
+			encoder.encode(char{ 'A' }, format);
+			encoder.encode(char{ 0 }, format);
+			encoder.encode(char16_t{ 'B' }, format);
+			encoder.encode(char16_t{ 0xFFFD }, format);
+			encoder.encode(char32_t{ 'C' }, format);
+			encoder.encode(char32_t{ 0xD800 }, format);
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"A\\u0000B\\uFFFDC\\uFFFD");
+		}
+	}
+
+	SECTION("string") {
+		enc_type encoder;
+		auto format = enc_type::format_type{};
+		std::array<unsigned char, 1024> buffer;
+
+		SECTION("default_format") {
+			buffer.fill('!');
+			encoder.output_span_init(buffer);
+
+			encoder.encode(std::basic_string_view("ASCII string\n"), format);
+			encoder.encode(std::basic_string_view(u8"UTF-8 string§©"), format);
+			encoder.encode(std::basic_string_view(u"UTF-16 string§©"), format);
+			encoder.encode(std::basic_string_view(U"UTF-32 string§©"), format);
+
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"ASCII string\\u000AUTF-8 string§©UTF-16 string§©UTF-32 string§©");
+		}
+	}
+
+	SECTION("nanosec_epoch") {
+		enc_type encoder;
+		std::string_view time_fmt = ".2U%Y-%m-%d %H:%M:%S";
+		fstlog::buff_span_const time_format(reinterpret_cast<const unsigned char*>(time_fmt.data()), time_fmt.size());
+		encoder.init_time_to_str_converter(time_format);
+		auto format = enc_type::format_type{};
+		std::array<unsigned char, 1024> buffer;
+
+		SECTION("default_format") {
+			buffer.fill('!');
+			encoder.output_span_init(buffer);
+
+			encoder.encode(std::chrono::system_clock::time_point{}, format);
+			encoder.encode(std::chrono::system_clock::time_point{ std::chrono::system_clock::duration{std::chrono::seconds{60}} }, format);
+			encoder.encode(std::chrono::system_clock::time_point{ std::chrono::system_clock::duration{std::chrono::milliseconds{1751021567230}} }, format);
+
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"1970-01-01 00:00:00.001970-01-01 00:01:00.002025-06-27 10:52:47.23");
+
+			encoder.encode(std::chrono::system_clock::time_point{ std::chrono::system_clock::duration{std::chrono::seconds{-60}} }, format);
+			CHECK(encoder.get_error().code() == fstlog::error_code::input_bad);
+			encoder.clear_error();
+		}
+	}
 }

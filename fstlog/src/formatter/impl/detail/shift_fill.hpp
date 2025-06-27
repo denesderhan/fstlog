@@ -8,7 +8,6 @@
 #include <detail/buffer_operation_result.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
-#include <detail/utf8_helper.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
@@ -64,12 +63,12 @@ namespace fstlog {
 			&& end >= begin 
 			&& str_bytes <= static_cast<std::size_t>(end - begin));
 		if (width > str_chars) {
-			unsigned char first_fill_char{ *fill_char };
+			const unsigned char default_fill_char = ' ';
 			auto fill_ptr{ fill_char };
-			int pattern_size{ utf8_bytes(first_fill_char) };
+			int pattern_size = 0;
+			while (pattern_size < 4 && *(fill_ptr + pattern_size) != 0) pattern_size++;
 			if (pattern_size == 0) {
-				first_fill_char = ' ';
-				fill_ptr = &first_fill_char;
+				fill_ptr = &default_fill_char;
 				pattern_size = 1;
 			}
 			const std::size_t length_grow_in_bytes =

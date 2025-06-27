@@ -8,7 +8,7 @@
 #if defined(__cpp_lib_format) && !defined(FSTLOG_NOEXCEPTIONS)
 #include <catch2/catch_all.hpp>
 
-#include <array>
+#include <vector>
 #include <cstdint>
 #include <type_traits>
 
@@ -22,14 +22,25 @@ using enc_type = fstlog::encoder_stdformat_mixin<
 					fstlog::output_span_mixin<
 					fstlog::allocator_mixin>>>;
 
+using utf8_char_std = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(u8"")>>>;
+using utf8_char_lib = std::conditional<std::is_signed_v<utf8_char_std>, std::make_unsigned<utf8_char_std>::type, utf8_char_std>::type;
+
 TEST_CASE("encoder_stdformat_mixin") {
+	enc_type encoder;
+	std::vector<unsigned char> buffer(128, '!');
+	encoder.clear_error();
+	encoder.output_span_init(fstlog::buff_span(buffer.data(), buffer.size()));
+	encoder.encode(std::string_view{ "string" }, enc_type::format_type{ "{:®<10}" });
+	bool stdformat_utf_fill_char = !encoder.has_error();
+	
 	SECTION("no_space_in_buffer") {
-		enc_type encoder;
-		std::array<unsigned char, 10> buffer{ '!' };
-		buffer.fill('!');
+		buffer.resize(10, '!');
+		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+
 		enc_type::format_type format{ "{}" };
 
-		encoder.output_span_init(buffer);
+		encoder.clear_error();
+		encoder.output_span_init(out_buff);
 		encoder.encode(std::string_view{ "This will be longer than 10 characters!" }, format);
 
 		auto res = std::string_view(
@@ -75,10 +86,10 @@ TEST_CASE("encoder_stdformat_mixin") {
 
 		CAPTURE(to_encode, format);
 
-		enc_type encoder;
-		std::array<unsigned char, 128> buffer{ '!' };
-		buffer.fill('!');
-		encoder.output_span_init(buffer);
+		buffer.resize(128, '!');
+		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		encoder.clear_error();
+		encoder.output_span_init(out_buff);
 		encoder.encode(to_encode, format);
 		auto res = std::string_view(
 			reinterpret_cast<char*>(encoder.output_begin()),
@@ -101,10 +112,10 @@ TEST_CASE("encoder_stdformat_mixin") {
 
 		CAPTURE(to_encode, format);
 
-		enc_type encoder;
-		std::array<unsigned char, 128> buffer{ '!' };
-		buffer.fill('!');
-		encoder.output_span_init(buffer);
+		buffer.resize(128, '!');
+		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		encoder.clear_error();
+		encoder.output_span_init(out_buff);
 		encoder.encode(to_encode, format);
 		auto res = std::string_view(
 			reinterpret_cast<char*>(encoder.output_begin()),
@@ -138,10 +149,10 @@ TEST_CASE("encoder_stdformat_mixin") {
 
 		CAPTURE(to_encode, format);
 
-		enc_type encoder;
-		std::array<unsigned char, 128> buffer{ '!' };
-		buffer.fill('!');
-		encoder.output_span_init(buffer);
+		buffer.resize(128, '!');
+		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		encoder.clear_error();
+		encoder.output_span_init(out_buff);
 		encoder.encode(to_encode, format);
 		auto res = std::string_view(
 			reinterpret_cast<char*>(encoder.output_begin()),
@@ -178,10 +189,10 @@ TEST_CASE("encoder_stdformat_mixin") {
 
 		CAPTURE(to_encode, format);
 
-		enc_type encoder;
-		std::array<unsigned char, 128> buffer{ '!' };
-		buffer.fill('!');
-		encoder.output_span_init(buffer);
+		buffer.resize(128, '!');
+		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		encoder.clear_error();
+		encoder.output_span_init(out_buff);
 		encoder.encode(to_encode, format);
 		auto res = std::string_view(
 			reinterpret_cast<char*>(encoder.output_begin()),
@@ -190,5 +201,271 @@ TEST_CASE("encoder_stdformat_mixin") {
 		CHECK(!encoder.has_error());
 		CHECK(res == control);
 	};
+
+	SECTION("char") {
+		auto format = "{:}";
+		buffer.resize(256, '!');
+		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		
+		SECTION("default_format") {
+			encoder.clear_error();
+			encoder.output_span_init(out_buff);
+
+			encoder.encode(char{ 'A' }, format);
+			encoder.encode(char{ 0 }, format);
+			encoder.encode(char16_t{ 'B' }, format);
+			encoder.encode(char16_t{ 0xFFFD }, format);
+			encoder.encode(char32_t{ 'C' }, format);
+			encoder.encode(char32_t{ 0xD800 }, format);
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"A\\u0000B\\uFFFDC\\uFFFD");
+		}
+
+		if (stdformat_utf_fill_char) {
+
+			SECTION("fill_align_utf") {
+				encoder.clear_error();
+				encoder.output_span_init(out_buff);
+				format = "{:₰^10}";
+
+				encoder.encode(char{ 'A' }, format);
+				encoder.encode(char{ 0 }, format);
+				encoder.encode(char16_t{ 'B' }, format);
+				encoder.encode(char16_t{ 0xFFFD }, format);
+				encoder.encode(char32_t{ 'C' }, format);
+				encoder.encode(char32_t{ 0xD800 }, format);
+				auto res = std::basic_string_view(
+					reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+					encoder.output_ptr() - encoder.output_begin());
+				CHECK(!encoder.has_error());
+				CHECK(res == u8"₰₰₰₰A₰₰₰₰₰₰₰\\u0000₰₰₰₰₰₰B₰₰₰₰₰₰₰\\uFFFD₰₰₰₰₰₰C₰₰₰₰₰₰₰\\uFFFD₰₰");
+			}
+
+			SECTION("fill_align_precision_utf") {
+				encoder.clear_error();
+				encoder.output_span_init(out_buff);
+				format = "{:¤>4.5}";
+
+				encoder.encode(char{ 'A' }, format);
+				encoder.encode(char{ 0 }, format);
+				encoder.encode(char16_t{ u'§' }, format);
+				encoder.encode(char16_t{ 0xFFFD }, format);
+				encoder.encode(char32_t{ U'®' }, format);
+				encoder.encode(char32_t{ 0xD800 }, format);
+				auto res = std::basic_string_view(
+					reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+					encoder.output_ptr() - encoder.output_begin());
+				CHECK(!encoder.has_error());
+				CHECK(res == u8"¤¤¤A\\u000¤¤¤§\\uFFF¤¤¤®\\uFFF");
+			}
+		}
+		
+		SECTION("fill_align") {
+			encoder.clear_error();
+			encoder.output_span_init(out_buff);
+			format = "{:x^10}";
+
+			encoder.encode(char{ 'A' }, format);
+			encoder.encode(char{ 0 }, format);
+			encoder.encode(char16_t{ 'B' }, format);
+			encoder.encode(char16_t{ 0xFFFD }, format);
+			encoder.encode(char32_t{ 'C' }, format);
+			encoder.encode(char32_t{ 0xD800 }, format);
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"xxxxAxxxxxxx\\u0000xxxxxxBxxxxxxx\\uFFFDxxxxxxCxxxxxxx\\uFFFDxx");
+		}
+
+		SECTION("fill_align_precision") {
+			encoder.clear_error();
+			encoder.output_span_init(out_buff);
+			format = "{:x>4.5}";
+
+			encoder.encode(char{ 'A' }, format);
+			encoder.encode(char{ 0 }, format);
+			encoder.encode(char16_t{ u'q' }, format);
+			encoder.encode(char16_t{ 0xFFFD }, format);
+			encoder.encode(char32_t{ U'w' }, format);
+			encoder.encode(char32_t{ 0xD800 }, format);
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"xxxA\\u000xxxq\\uFFFxxxw\\uFFF");
+		}
+		
+	}
+
+	SECTION("string") {
+		buffer.resize(128, '!');
+		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		auto format = "{:}";
+		
+
+		SECTION("default_format") {
+			encoder.clear_error();
+			encoder.output_span_init(out_buff);
+
+			encoder.encode(std::basic_string_view("ASCII string\n"), format);
+			encoder.encode(std::basic_string_view(u8"UTF-8 string§©"), format);
+			encoder.encode(std::basic_string_view(u"UTF-16 string§©"), format);
+			encoder.encode(std::basic_string_view(U"UTF-32 string§©"), format);
+
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"ASCII string\\u000AUTF-8 string§©UTF-16 string§©UTF-32 string§©");
+		}
+
+		if (stdformat_utf_fill_char) {
+			SECTION("fill_align_utf") {
+				encoder.clear_error();
+				encoder.output_span_init(out_buff);
+				format = "{:©<20}";
+
+				encoder.encode(std::basic_string_view("ASCII string\n"), format);
+				encoder.encode(std::basic_string_view(u8"UTF-8 string§©"), format);
+				encoder.encode(std::basic_string_view(u"UTF-16 string§©"), format);
+				encoder.encode(std::basic_string_view(U"UTF-32 string§©"), format);
+
+				auto res = std::basic_string_view(
+					reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+					encoder.output_ptr() - encoder.output_begin());
+				CHECK(!encoder.has_error());
+				CHECK(res == u8"ASCII string\\u000A©©UTF-8 string§©©©©©©©UTF-16 string§©©©©©©UTF-32 string§©©©©©©");
+			}
+		
+			SECTION("fill_align_precision_utf") {
+				encoder.clear_error();
+				encoder.output_span_init(out_buff);
+				format = "{:.^10.6}";
+			
+				encoder.encode(std::basic_string_view("ASCII string\n"), format);
+				encoder.encode(std::basic_string_view(u8"§©UTF-8 string§©"), format);
+				encoder.encode(std::basic_string_view(u"§©UTF-16 string§©"), format);
+				encoder.encode(std::basic_string_view(U"§©UTF-32 string§©"), format);
+
+				auto res = std::basic_string_view(
+					reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+					encoder.output_ptr() - encoder.output_begin());
+				CHECK(!encoder.has_error());
+				CHECK(res == u8"..ASCII ....§©UTF-....§©UTF-....§©UTF-..");
+			}
+		}
+		
+		SECTION("fill_align") {
+			encoder.clear_error();
+			encoder.output_span_init(out_buff);
+			format = "{:x<20}";
+
+			encoder.encode(std::basic_string_view("ASCII string\n"), format);
+			encoder.encode(std::basic_string_view(u8"UTF-8 stringqw"), format);
+			encoder.encode(std::basic_string_view(u"UTF-16 stringqw"), format);
+			encoder.encode(std::basic_string_view(U"UTF-32 stringqw"), format);
+
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"ASCII string\\u000AxxUTF-8 stringqwxxxxxxUTF-16 stringqwxxxxxUTF-32 stringqwxxxxx");
+		}
+
+		SECTION("fill_align_precision") {
+			encoder.clear_error();
+			encoder.output_span_init(out_buff);
+			format = "{:.^10.6}";
+
+			encoder.encode(std::basic_string_view("ASCII string\n"), format);
+			encoder.encode(std::basic_string_view(u8"qwUTF-8 stringqw"), format);
+			encoder.encode(std::basic_string_view(u"qwUTF-16 stringqw"), format);
+			encoder.encode(std::basic_string_view(U"qwUTF-32 stringqw"), format);
+
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"..ASCII ....qwUTF-....qwUTF-....qwUTF-..");
+		}
+	}
+
+	SECTION("nanosec_epoch") {
+		buffer.resize(128, '!');
+		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		std::string_view time_fmt = ".2U%Y-%m-%d %H:%M:%S";
+		fstlog::buff_span_const time_format(reinterpret_cast<const unsigned char*>(time_fmt.data()), time_fmt.size());
+		encoder.init_time_to_str_converter(time_format);
+		auto format = "{:}";
+		
+
+		SECTION("default_format") {
+			encoder.clear_error();
+			encoder.output_span_init(out_buff);
+
+			encoder.encode(std::chrono::system_clock::time_point{}, format);
+			encoder.encode(std::chrono::system_clock::time_point{ std::chrono::system_clock::duration{std::chrono::seconds{60}} }, format);
+			encoder.encode(std::chrono::system_clock::time_point{ std::chrono::system_clock::duration{std::chrono::milliseconds{1751021567230}} }, format);
+
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"1970-01-01 00:00:00.001970-01-01 00:01:00.002025-06-27 10:52:47.23");
+
+			encoder.encode(std::chrono::system_clock::time_point{ std::chrono::system_clock::duration{std::chrono::seconds{-60}} }, format);
+			CHECK(encoder.get_error().code() == fstlog::error_code::input_bad);
+		}
+
+		SECTION("fill_align_precision") {
+			encoder.clear_error();
+			encoder.output_span_init(out_buff);
+			format = "{:.<26.19}";
+			
+			encoder.encode(std::chrono::system_clock::time_point{ std::chrono::system_clock::duration{std::chrono::milliseconds{1751021567230}} }, format);
+
+			auto res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(!encoder.has_error());
+			CHECK(res == u8"2025-06-27 10:52:47.......");
+		}
+	}
+
+	SECTION("reencode_tail_string") {
+		buffer.resize(128, '!');
+		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		auto format = "{:}";
+		encoder.clear_error();
+		encoder.output_span_init(out_buff);
+
+		encoder.encode(std::string_view("String left untouched."), format);
+		auto str_begin = encoder.output_ptr();
+		encoder.encode(std::string_view("String to \"shift fill\"."), format);
+		auto res = std::basic_string_view(
+			reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+			encoder.output_ptr() - encoder.output_begin());
+		CHECK(res == u8"String left untouched.String to \"shift fill\".");
+		
+		format = "{:x>10.6}";
+		encoder.reencode_tail_string(str_begin, format);
+		res = std::basic_string_view(
+			reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+			encoder.output_ptr() - encoder.output_begin());
+		CHECK(res == u8"String left untouched.xxxxString");
+		
+		if (stdformat_utf_fill_char) {
+			format = "{:¤>10.6}";
+			encoder.reencode_tail_string(str_begin, format);
+			res = std::basic_string_view(
+				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CHECK(res == u8"String left untouched.¤¤¤¤xxxxSt");
+		}
+	}
 }
 #endif

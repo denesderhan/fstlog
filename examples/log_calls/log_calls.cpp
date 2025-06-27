@@ -94,8 +94,8 @@ int main()
 		// number formatting
 		LOG_INFO(my_logger, "Number formatting: hex: {:#X}, binary: {:+#b}, precision: {:.2}, scientific: {:.3e}", -10, (signed char)10, 1.23456f, 100000.5f);
 	
-		// control characters are replaced with '_' in the formatted log message
-		LOG_INFO(my_logger, "\tPreventing log\a\b\r injection attack!: {} ", "\nThis should be in the same line!");
+		// Unsafe unicode code points are escaped in the formatted log message.
+		LOG_INFO(my_logger, "Escaping unsafe characters:\t\a {} ", "\b\r\nThis should be in the same line!");
 	}
 	catch (const std::exception& ex) {
 		std::cout << ex.what() << '\n';

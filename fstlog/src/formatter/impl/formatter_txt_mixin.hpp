@@ -9,7 +9,6 @@
 #include <detail/byte_span.hpp>
 #include <detail/error.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
-#include <detail/utf8_helper.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 #include <formatter/impl/detail/policy_txt.hpp>
@@ -71,10 +70,7 @@ namespace fstlog {
 			const auto out_end = out_pos + formatting_buffer_.size();
 			bool has_message_field = false;
 			while (true) {
-				const auto text_beg = out_pos;
 				auto error = parse_fmt_text(in_pos, in_end, out_pos, out_end);
-				if (error != error_code::none) return error;
-				error = sanitize_utf8_str(text_beg, out_pos);
 				if (error != error_code::none) return error;
 				if (in_pos == in_end) break;
 				buff_span_const field_name;
@@ -175,7 +171,6 @@ namespace fstlog {
 			else if (field_id == logfield::Message) {
 				const auto str_begin = this->output_ptr();
 				write_message_field();
-				sanitize_utf8_str(str_begin, this->output_ptr());
 				this->reencode_tail_string(
 					str_begin,
 					this->get_format(logfield::Message));

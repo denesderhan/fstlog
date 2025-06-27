@@ -40,7 +40,6 @@ set(src/unit_tests
 	"unit_tests/this_thread_id.cpp"
 	"unit_tests/time_to_str_converter.cpp"
 	"unit_tests/utf_conv.cpp"
-	"unit_tests/utf8_helper.cpp"
 	"unit_tests/valid_strftime_string.cpp"
 )
 

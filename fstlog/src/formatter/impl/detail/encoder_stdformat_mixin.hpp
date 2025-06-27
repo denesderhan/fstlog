@@ -63,11 +63,9 @@ namespace fstlog {
         
         ~encoder_stdformat_mixin() = default;
         
-        //char, bool, string_view, void*, integral, float
+        //bool, void*, integral, float
         template<typename T, std::enable_if_t<
-            std::is_same_v<rm_cvref_t<T>, char>
-            || std::is_same_v<rm_cvref_t<T>, bool>
-            || std::is_same_v<rm_cvref_t<T>, std::string_view>
+            std::is_same_v<rm_cvref_t<T>, bool>
             || std::is_same_v<rm_cvref_t<T>, void*>
             || std::is_same_v<rm_cvref_t<T>, const void*>
             || std::is_same_v<rm_cvref_t<T>, const volatile void*>
@@ -91,24 +89,17 @@ namespace fstlog {
             }
         }
 
-        //char8
+        // character
         template<typename T, std::enable_if_t<
             is_char_type_v<T>
-            && sizeof(T) == 1
-            && !std::is_same_v<rm_cvref_t<T>, char>
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
-            char c = *safe_reinterpret_cast<const char*>(&data);
-            encode(c, format);
-        }
+            encode(byte_span<const T>{ &data, 1 }, format);
+		}
 
-        //utf16 utf32 character
-        template<typename T, std::enable_if_t<
-            is_char_type_v<T>
-            && sizeof(T) != 1
-            >* = nullptr>
-        void encode(T data, format_type format) noexcept {
-            encode(byte_span<T>{ &data, 1 }, format);
+		template<typename T>
+		void encode(std::basic_string_view<T> strv, format_type format) noexcept {
+			encode(byte_span<const T>{ strv.data(), strv.size() }, format);
 		}
 
         //string in buffer
@@ -118,41 +109,40 @@ namespace fstlog {
         >* = nullptr>
         void encode(byte_span<T> data, format_type format) noexcept {
 			FSTLOG_ASSERT(data.data() != nullptr);
-			std::string_view str;
-            if constexpr (sizeof(T) == 1) {
-                str = std::string_view { 
-                    safe_reinterpret_cast<const char*>(data.data()),
-                    data.size_bytes() };
+			
+            auto out_begin = safe_reinterpret_cast<unsigned char*>(&encoder_fmt_buffer_[0]);
+            auto out_end = out_begin + encoder_fmt_buffer_.size();
+            static_assert(std::numeric_limits<unsigned char>::digits == 8);
+            constexpr int bit_size{ sizeof(T) * std::numeric_limits<unsigned char>::digits };
+            std::size_t char_num{ (std::numeric_limits<std::size_t>::max)() };
+			const unsigned char* in_ptr{ data.data() };
+			const auto result = detail::utf8conv<bit_size, T>(
+				in_ptr,
+                in_ptr + data.size_bytes(),
+                out_begin,
+                out_end,
+                char_num);
+            if (result.ec != error_code::none) {
+                this->set_error(__FILE__, __LINE__, result.ec);
+                return;
             }
-            else {
-                auto out_begin = safe_reinterpret_cast<unsigned char*>(&encoder_fmt_buffer_[0]);
-                auto out_end = out_begin + encoder_fmt_buffer_.size();
-                static_assert(std::numeric_limits<unsigned char>::digits == 8);
-                constexpr int bit_size{ sizeof(T) * std::numeric_limits<unsigned char>::digits };
-                std::size_t char_num{ (std::numeric_limits<std::size_t>::max)() };
-				const unsigned char* in_ptr{ data.data() };
-				const auto result = detail::utf8conv<bit_size, T, unsigned char>(
-					in_ptr,
-                    in_ptr + data.size_bytes(),
-                    out_begin,
-                    out_end,
-                    char_num);
-                if (result.ec != error_code::none) {
-                    this->set_error(__FILE__, __LINE__, result.ec);
-                    return;
-                }
 
-                std::size_t str_byte_size = static_cast<std::size_t>(result.ptr - out_begin);
-                str = std::string_view { &encoder_fmt_buffer_[0], str_byte_size };
-            }
-            encode(str, format);
-        }
-
-        template<typename T, std::enable_if_t<
-            !std::is_same_v<rm_cvref_t<T>, char>
-        >* = nullptr>
-        void encode(std::basic_string_view<T> strv, format_type format) noexcept {
-			encode(byte_span<const T>{ strv.data(), strv.size() }, format);
+            std::size_t str_byte_size = static_cast<std::size_t>(result.ptr - out_begin);
+			std::string_view str = std::string_view { encoder_fmt_buffer_.data(), str_byte_size};
+			try {
+				detail::checked_iterator it(
+					safe_reinterpret_cast<char*>(this->output_ptr()),
+					safe_reinterpret_cast<char*>(this->output_end()));
+				auto result_fmt = std::vformat_to(
+					it,
+					format,
+					std::make_format_args(str));
+				this->set_output_ptr_unchecked(
+					safe_reinterpret_cast<unsigned char*>(result_fmt.get_ptr()));
+			}
+			catch (...) {
+				this->set_error(__FILE__, __LINE__, error_code::extern_err);
+			}
         }
 
         //pointer

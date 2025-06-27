@@ -3,9 +3,6 @@
 #pragma once
 #include <array>
 #include <cstddef>
-#include <cstring>
-#pragma intrinsic(memcpy)
-
 
 #include <detail/safe_reinterpret_cast.hpp>
 #include <detail/byte_span.hpp>
@@ -13,7 +10,6 @@
 #include <formatter/impl/detail/logfield.hpp>
 #include <formatter/impl/detail/format_setting_txt.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
-#include <detail/utf8_helper.hpp>
 
 namespace fstlog {
     template<typename L>
@@ -73,15 +69,13 @@ namespace fstlog {
             format_type out;
             if (form_spec.empty()) return out;
 
-			const auto begin_pos{ form_spec.data() };
-            auto pos = begin_pos;
-            const auto end = pos + form_spec.size_bytes();
-
-            const auto align_end = skip_fill_align(pos, end);
-            const std::size_t align_size = static_cast<std::size_t>(align_end - pos);
-
-            pos = align_end;
-            
+			auto pos = form_spec.data();
+			const auto end = pos + form_spec.size_bytes();
+			
+			auto align_pos = pos;
+            auto align_end = skip_fill_align(align_pos, end);
+			pos = align_end;
+			            
             if (pos < end) {
                 unsigned char sign_or_alt{ *pos };
                 if (sign_or_alt == ' ' || sign_or_alt == '-' || sign_or_alt == '+') {
@@ -102,16 +96,14 @@ namespace fstlog {
 
             out.width = static_cast<std::uint16_t>(get_width(pos, end));
             if (out.width != 0) {
-				if (align_size == 1) {
-                    out.align = *begin_pos;
-                }
-                else if (align_size >= 2) {
-					const auto utf_byte_num = valid_utf8(begin_pos, begin_pos + align_size - 1);
-                    if (utf_byte_num != 0)
-						memcpy(out.fill_char, begin_pos, utf_byte_num);
-                    out.align = *(begin_pos + align_size - 1);
-                }
-                //if align_size == 0 use default align and fill char
+				if (align_pos < align_end) {
+					out.align = *--align_end;
+				}
+				auto out_ptr = out.fill_char;
+				while (align_pos < align_end) {
+					*out_ptr++ = *align_pos++;
+				}
+				//if align_size == 0 use default align and fill char
             }
             int precision = static_cast<int>(out.precision);
             get_precision(precision, pos, end);
@@ -129,7 +121,10 @@ namespace fstlog {
 		{
 			format_type out{};
 			out.align = format.align;
-			memcpy(out.fill_char, format.fill_char, sizeof(out.fill_char));
+			out.fill_char[0] = format.fill_char[0];
+			out.fill_char[1] = format.fill_char[1];
+			out.fill_char[2] = format.fill_char[2];
+			out.fill_char[3] = format.fill_char[3];
 			out.width = format.width;
 			return out;
 		}

@@ -2,13 +2,13 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstdio>
+#include <cstring>
 
 #include <detail/nothrow_allocate.hpp>
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
-#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
 #include <detail/utf_conv.hpp>
-#endif
+
 namespace fstlog {
 	template<class Allocator>
     class out_file_posix {
@@ -35,17 +35,20 @@ namespace fstlog {
         {
 			if (file_path == nullptr) return error_code::obj_null;
 			if (handle_ != nullptr) return error_code::double_init;
-
+			const unsigned char* utf8_pos{ safe_reinterpret_cast<const unsigned char*>(file_path) };
+			const auto utf8_end{ utf8_pos + std::strlen(file_path) };
 #if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
-			const unsigned char* path_begin{ safe_reinterpret_cast<const unsigned char*>(file_path) };
-			const auto p_end{ path_begin + strlen(file_path) };
 			wchar_t path[512]{ 0 };
-			std::size_t char_num{ 1000 };
-			//511 (last char must be '/0')
-			const auto result = detail::utf8_to_utf16<char, wchar_t>(path_begin, p_end, path, path + 511, char_num);
-			//Path was too long!
+			const auto result = detail::safe_utf8_to_utf16(utf8_pos, utf8_end, path, path + 511); // 511 last char must be '/0'
 			if (result.ec != error_code::none) {
 				return error_code::path_bad;
+			}
+#else
+			while (utf8_pos < utf8_end) {
+				auto code_point = detail::decode_utf8_char(utf8_pos, utf8_end);
+				if (!detail::safe_utf_code_point(code_point)) {
+					return error_code::path_bad;
+				}
 			}
 #endif
 			//Win32 api: Allowable range : 2 <= size <= INT_MAX(2147483647) 
@@ -99,16 +102,22 @@ namespace fstlog {
 			FSTLOG_ASSERT(handle_ != nullptr);
 			
 			FILE* temp{ nullptr };
+			const unsigned char* utf8_pos{ safe_reinterpret_cast<const unsigned char*>(file_path) };
+			const auto utf8_end{ utf8_pos + strlen(file_path) };
 #if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
-			const auto p_end{ file_path + strlen(file_path) };
 			wchar_t path[512]{ 0 };
-			std::size_t char_num{ 1000 };
-			//511 (last char must be '/0')
-			const auto result = detail::utf8_to_utf16(file_path, p_end, path, path + 511, char_num);
-			//Path was too long!
-			if (result.ec != error_code::none) return;
+			const auto result = detail::safe_utf8_to_utf16(utf8_pos, utf8_end, path, path + 511); //511 (last char must be '/0')
+			if (result.ec != error_code::none) {
+				return; //Path was bad or too long!
+			}
 			_wfopen_s(&temp, path, L"ab");
 #else
+			while (utf8_pos < utf8_end) {
+				auto code_point = detail::decode_utf8_char(utf8_pos, utf8_end);
+				if (!detail::safe_utf_code_point(code_point)) {
+					return; //Path was bad or too long!
+				}
+			}
 			temp = fopen(file_path, "ab");
 #endif
 			if (temp == nullptr) return;
@@ -120,7 +129,7 @@ namespace fstlog {
 			if (setvbuf(temp, buffer_, buffer_mode, buffer_size_)) {
 				deallocate_buffer();
 				//if fails trying to set unbuffered mode
-				//if fails buffering will be default on the system
+				//if fails buffering will be system default 
 				setvbuf(temp, nullptr, _IONBF, 0);
 			}
 	
