@@ -502,7 +502,21 @@ namespace fstlog {
 				return detail::buffer_operation_result<unsigned char>{ dest, error_code::none };
 			}
 			static_assert(sizeof(I) == 1);
-			std::size_t char_count{ 0 };
+			
+			auto ascii_end = input;
+			while (ascii_end < input_end
+				&& ((*ascii_end >= 0x20) & (*ascii_end < 0x7F)) != 0)
+			{
+				ascii_end++;
+			}
+			auto ascii_len = static_cast<std::size_t>(ascii_end - input);
+			if (ascii_len > char_num) ascii_len = char_num;
+			if (ascii_len > dest_end - dest) ascii_len = static_cast<std::size_t>(dest_end - dest);
+			memcpy(dest, input, ascii_len);
+			std::size_t char_count = ascii_len;
+			input += ascii_len;
+			dest += ascii_len;
+			
 			while (input < input_end && char_count < char_num) {
 				auto next_input = input;
 				auto next_dest = dest;

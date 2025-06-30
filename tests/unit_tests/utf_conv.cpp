@@ -398,7 +398,7 @@ TEST_CASE("utfX_to_utfY") {
 	constexpr auto text_char_num{ u32_text.size() };
 
 	SECTION("utf32_to_utf8") {
-		std::size_t char_num = GENERATE(0, 530, 1071, (std::numeric_limits<std::size_t>::max)());
+		std::size_t char_num = GENERATE(0, 1, 10, 530, 1071, (std::numeric_limits<std::size_t>::max)());
 		CAPTURE(char_num);
 		{
 			std::vector<utf8_char_lib> out_buff(4096, 0);
@@ -438,7 +438,7 @@ TEST_CASE("utfX_to_utfY") {
 		std::vector<utf8_char_lib> out_buff(4096, 0);
 		unsigned char* out_data = reinterpret_cast<unsigned char*>(out_buff.data());
 		unsigned char const* out_end = out_data + out_buff.size();
-		std::size_t char_num = GENERATE(0, 530, 1071, (std::numeric_limits<std::size_t>::max)());
+		std::size_t char_num = GENERATE(0, 1, 10, 530, 1071, (std::numeric_limits<std::size_t>::max)());
 		CAPTURE(char_num);
 		{
 			const auto wanted_charnum{ char_num };
@@ -475,7 +475,7 @@ TEST_CASE("utfX_to_utfY") {
 		std::vector<utf8_char_lib> out_buff(4096, 0);
 		unsigned char* out_data = reinterpret_cast<unsigned char*>(out_buff.data());
 		unsigned char const* out_end = out_data + out_buff.size();
-		std::size_t char_num = GENERATE(0, 530, 1071, (std::numeric_limits<std::size_t>::max)());
+		std::size_t char_num = GENERATE(0, 1, 10, 530, 1071, (std::numeric_limits<std::size_t>::max)());
 		CAPTURE(char_num);
 		{
 			const auto wanted_charnum{ char_num };
