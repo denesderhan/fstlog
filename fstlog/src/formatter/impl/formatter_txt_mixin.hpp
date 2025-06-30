@@ -196,7 +196,7 @@ namespace fstlog {
 			const auto end = this->output_end();
 
 			while (!this->has_error() && ch < ch_end) {
-				if ((*ch & 0b11100000) != 0) {
+				if ((*ch & 0b1110'0000) != 0) {
 					if (pos < end) *pos++ = *ch;
 					else  this->set_error(__FILE__, __LINE__, error_code::buff_full);
 				}

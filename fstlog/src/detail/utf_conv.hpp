@@ -511,7 +511,7 @@ namespace fstlog {
 			}
 			auto ascii_len = static_cast<std::size_t>(ascii_end - input);
 			if (ascii_len > char_num) ascii_len = char_num;
-			if (ascii_len > dest_end - dest) ascii_len = static_cast<std::size_t>(dest_end - dest);
+			if (ascii_len > static_cast<std::size_t>(dest_end - dest)) ascii_len = static_cast<std::size_t>(dest_end - dest);
 			memcpy(dest, input, ascii_len);
 			std::size_t char_count = ascii_len;
 			input += ascii_len;

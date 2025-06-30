@@ -38,6 +38,20 @@ namespace fstlog {
 			unsigned char*& out_pos, unsigned char const* out_end) noexcept
 		{
 			FSTLOG_ASSERT(in_pos != nullptr && out_pos != nullptr);
+			// fast path (ASCII + no special {, })
+			auto fast_end = in_pos;
+			while (fast_end < in_end
+				&& ((*fast_end >= 0x20) & (*fast_end < 0x7F)
+					& (*fast_end != '}') & (*fast_end != '{')) != 0)
+			{
+				fast_end++;
+			}
+			auto fast_len = static_cast<std::size_t>(fast_end - in_pos);
+			if (fast_len > static_cast<std::size_t>(out_end - out_pos)) fast_len = static_cast<std::size_t>(out_end - out_pos);
+			memcpy(out_pos, in_pos, fast_len);
+			in_pos += fast_len;
+			out_pos += fast_len;
+
 			error_code error = error_code::none;
 			while (in_pos < in_end) {
 				bool skip = false;
@@ -159,7 +173,11 @@ namespace fstlog {
 			const unsigned char* end) noexcept
 		{
 			auto out = begin;
-			if (out < end && ((*out == '+') | (*out == '-') | (*out == ' '))) out++;
+			if (out < end
+				&& ((*out == '+') | (*out == '-') | (*out == ' ')) == 1) 
+			{
+				out++;
+			}
 			if (out < end && *out == '#') out++;
 			if (out < end && *out == '0') out++;
 			return out;
