@@ -3,8 +3,10 @@
 #pragma once
 #include <array>
 #include <cstddef>
-#include <string_view>
+#include <cstring>
 #include <limits>
+#include <string_view>
+#pragma intrinsic(memcpy)
 
 #include <detail/byte_span.hpp>
 #include <detail/error.hpp>
@@ -189,28 +191,26 @@ namespace fstlog {
 		}
 
 		void write_log_line() noexcept {
-			const auto fb{ log_format_string() };
-			auto ch = fb.data();
-			const auto ch_end = ch + fb.size_bytes();
-			auto pos = this->output_ptr();
-			const auto end = this->output_end();
-
-			while (!this->has_error() && ch < ch_end) {
-				if ((*ch & 0b1110'0000) != 0) {
-					if (pos < end) *pos++ = *ch;
-					else  this->set_error(__FILE__, __LINE__, error_code::buff_full);
-				}
-				else if (*ch < ut_cast(logfield::Args)) {
-					this->set_output_ptr_unchecked(pos);
-					write_field(logfield(*ch));
-					pos = this->output_ptr();
+			const auto str{ log_format_string() };
+			auto str_pos = str.data();
+			const auto str_end = str_pos + str.size_bytes();
+			while (str_pos < str_end) {
+				// if *str_pos <= 0x1F (0b0001'1111) then it is an encoded logfield id, all else is a char
+				if ((*str_pos & 0b1110'0000) == 0) {
+					write_field(logfield(*str_pos++));
+					if (this->has_error()) return;
 				}
 				else {
-					this->set_error(__FILE__, __LINE__, error_code::input_bad);
+					if (this->output_has_space()) {
+						*this->output_ptr() = *str_pos++;
+						this->advance_output_unchecked(1);
+					}
+					else {
+						this->set_error(__FILE__, __LINE__, error_code::buff_full);
+						return;
+					}
 				}
-				ch++;
 			}
-			this->set_output_ptr_unchecked(pos);
 		}
 
 		void write_message_field() noexcept {
