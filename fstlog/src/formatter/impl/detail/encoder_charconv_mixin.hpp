@@ -333,11 +333,8 @@ namespace fstlog {
 
 			// fill align
             if (format.width != 0) {
-                const std::size_t byte_size{ static_cast<std::size_t>(str_end - str_begin) };            
-				if (byte_size / 4 < format.width) { // minimal char number (all 4 byte utf8)
-					std::size_t char_num = (std::numeric_limits<std::size_t>::max)();
-					// compute utf8 char number
-					[[maybe_unused]] auto b = detail::utf8_str_trim(str_begin, str_end, char_num);
+				const auto [byte_size, char_num] = detail::utf8_str_trim(str_begin, str_end);
+                if (char_num < format.width) { 
 					auto sf_result = shift_fill(
 						str_begin,
 						buffer_end,
@@ -356,8 +353,7 @@ namespace fstlog {
         void reencode_tail_string(unsigned char* str_begin, format_type format) {
             unsigned char *str_end{ this->output_ptr() };
            	FSTLOG_ASSERT(str_begin >= this->output_begin() && str_begin <= str_end);
-			std::size_t char_num{ format.precision };
-			std::size_t str_byte_size = detail::utf8_str_trim(str_begin, str_end, char_num);
+			const auto [str_byte_size, char_num] = detail::utf8_str_trim(str_begin, str_end, format.precision);
 			str_end = str_begin + str_byte_size;
             FSTLOG_ASSERT(str_begin <= str_end);                        
             if (format.width > char_num) {

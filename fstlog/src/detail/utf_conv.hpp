@@ -649,25 +649,49 @@ namespace fstlog {
 			return utf8_to_utf8<I>(in, input_end, dest, dest_end, char_num);
         }
 
+
+		struct utf8_str_len {
+			std::size_t byte_count;   // Number of bytes.
+			std::size_t char_count;   // Number of unicode characters.
+		};
+
+		/*
+		* @brief Calculates the length of a UTF-8 string (byte and char) trimmed to the desired char length.
+		* If the string is shorter than the trim length, the full lengths are returned.
+		*
+		* @param begin/end Pointers defining the input UTF-8 buffer [begin, end).
+		* @param trim_length The desired trimmed length (in utf characters). 
+		* @return {byte_count, char_count} where:
+		*         - byte_count: byte length of the trimmed string
+		*         - char_count: character length of the trimmed string
+		* @tparam T Must satisfy sizeof(T) == 1 (e.g., char, unsigned char, char8_t).
+		*/
 		template<typename T>
-		inline std::size_t utf8_str_trim(
-			T* begin, 
-			T* end, 
-			std::size_t& wanted_char_num) noexcept 
+		inline utf8_str_len utf8_str_trim(
+			T const* begin,
+			T const* end,
+			std::size_t trim_length = (std::numeric_limits<std::size_t>::max)()) noexcept 
 		{
 			static_assert(sizeof(T) == 1, "Invalid type!");
 			FSTLOG_ASSERT(begin != nullptr);
-			auto begin_pos = safe_reinterpret_cast<const unsigned char*>(begin);
-			auto pos = begin_pos;
-			auto str_end = safe_reinterpret_cast<const unsigned char*>(end);
-			std::size_t char_num{ 0 };
-			while (pos < str_end && char_num != wanted_char_num) {
+			const auto str_begin = safe_reinterpret_cast<const unsigned char*>(begin);
+			const auto str_end = safe_reinterpret_cast<const unsigned char*>(end);
+			auto pos = str_begin;
+			
+			// ASCII fast path
+			while (pos < str_end && *pos < 0x80) pos++;
+			std::size_t char_num{ static_cast<std::size_t>(pos - str_begin) };
+			if (char_num >= trim_length) {
+				return { trim_length, trim_length };
+			}
+
+			while (pos < str_end && char_num != trim_length) {
 				[[maybe_unused]] auto code_point = 
 					detail::decode_utf8_char(pos, str_end);
 				char_num++;
 			}
-			wanted_char_num = char_num;
-			return static_cast<std::size_t>(pos - begin_pos);
+
+			return { static_cast<std::size_t>(pos - str_begin), char_num };
 		}
     }
 }

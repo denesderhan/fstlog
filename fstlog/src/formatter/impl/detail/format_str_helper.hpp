@@ -3,7 +3,9 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <string_view>
+#pragma intrinsic(memcpy)
 
 #include <detail/byte_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>

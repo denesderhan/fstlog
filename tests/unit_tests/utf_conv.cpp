@@ -413,13 +413,11 @@ TEST_CASE("utfX_to_utfY") {
 			CHECK(result.ec == fstlog::error_code::none);
 			CHECK(char_num == wanted_char_num);
 
-			const auto wanted_trim{ char_num };
-			auto trimmed_num{ wanted_trim };
-			const auto trimmed_len = fstlog::detail::utf8_str_trim(
+			const auto [trimmed_len, trimmed_num]= fstlog::detail::utf8_str_trim(
 				u8_text.data(),
 				u8_text.data() + u8_text.size(),
-				trimmed_num);
-			CHECK(wanted_trim == trimmed_num);
+				char_num);
+			CHECK(char_num == trimmed_num);
 
 			const std::basic_string_view<utf8_char_std> trimmed_control{
 				u8_text.data(),
@@ -452,13 +450,11 @@ TEST_CASE("utfX_to_utfY") {
 				CHECK(char_num == text_char_num);
 			else CHECK(char_num == wanted_charnum);
 
-			const auto wanted_trim{ char_num };
-			auto trimmed_num{ wanted_trim };
-			const auto trimmed_len = fstlog::detail::utf8_str_trim(
+			const auto [trimmed_len, trimmed_num] = fstlog::detail::utf8_str_trim(
 					u8_text.data(),
 					u8_text.data() + u8_text.size(),
-					trimmed_num);
-			CHECK(wanted_trim == trimmed_num);
+					char_num);
+			CHECK(char_num == trimmed_num);
 
 			const std::basic_string_view<utf8_char_std> trimmed_control{
 				u8_text.data(),
@@ -489,13 +485,11 @@ TEST_CASE("utfX_to_utfY") {
 				CHECK(char_num == text_char_num);
 			else CHECK(char_num == wanted_charnum);
 
-			const auto wanted_trim{ char_num };
-			auto trimmed_num{ wanted_trim };
-			const auto trimmed_len = fstlog::detail::utf8_str_trim(
+			const auto [trimmed_len, trimmed_num] = fstlog::detail::utf8_str_trim(
 				u8_text.data(),
 				u8_text.data() + u8_text.size(),
-				trimmed_num);
-			CHECK(wanted_trim == trimmed_num);
+				char_num);
+			CHECK(char_num == trimmed_num);
 
 			const std::basic_string_view<utf8_char_std> trimmed_control{
 				u8_text.data(),
@@ -945,6 +939,14 @@ TEST_CASE("utf8_str_trim") {
 	SECTION("good_data") {
 		auto data = GENERATE(
 			// good data
+			std::make_tuple(std::basic_string_view(u8""), 0, 0, 0),
+			std::make_tuple(std::basic_string_view(u8""), 10, 0, 0),
+			std::make_tuple(std::basic_string_view(u8"a"), 0, 0, 0),
+			std::make_tuple(std::basic_string_view(u8"a"), 1, 1, 1),
+			std::make_tuple(std::basic_string_view(u8"a"), 10, 1, 1),
+			std::make_tuple(std::basic_string_view(u8"UTF string"), 10, 10, 10),
+			std::make_tuple(std::basic_string_view(u8"UTF string"), 10, 10, 10),
+			std::make_tuple(std::basic_string_view(u8"UTF string"), 11, 10, 10),
 			std::make_tuple(std::basic_string_view(u8"UTF 编码者"), 0, 0, 0),
 			std::make_tuple(std::basic_string_view(u8"UTF 编码者"), 1, 1, 1),
 			std::make_tuple(std::basic_string_view(u8"UTF 编码者"), 5, 5, 7),
@@ -957,15 +959,14 @@ TEST_CASE("utf8_str_trim") {
 		);
 
 		auto input = std::get<0>(data);
-		CAPTURE(reinterpret_cast<const char*>(input.data()));
 		std::size_t wanted_char_num = std::get<1>(data);
 		std::size_t control_char_num = std::get<2>(data);
 		std::size_t control_byte_num = std::get<3>(data);
-		std::size_t result_bytes = fstlog::detail::utf8_str_trim(
+		const auto [result_bytes, result_chars] = fstlog::detail::utf8_str_trim(
 			input.data(),
 			input.data() + input.size(),
 			wanted_char_num);
-		CHECK(wanted_char_num == control_char_num);
+		CHECK(result_chars == control_char_num);
 		CHECK(result_bytes == control_byte_num);
 	}
 
@@ -989,11 +990,11 @@ TEST_CASE("utf8_str_trim") {
 		std::size_t wanted_char_num = std::get<1>(data);
 		std::size_t control_char_num = std::get<2>(data);
 		std::size_t control_byte_num = std::get<3>(data);
-		std::size_t result_bytes = fstlog::detail::utf8_str_trim(
+		const auto [result_bytes, result_chars] = fstlog::detail::utf8_str_trim(
 			input.data(),
 			input.data() + input.size(),
 			wanted_char_num);
-		CHECK(wanted_char_num == control_char_num);
+		CHECK(result_chars == control_char_num);
 		CHECK(result_bytes == control_byte_num);
 	}
 }
