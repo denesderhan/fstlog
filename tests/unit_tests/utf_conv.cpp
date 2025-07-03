@@ -476,7 +476,7 @@ TEST_CASE("utfX_to_utfY") {
 		{
 			const auto wanted_charnum{ char_num };
 			const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(u8_text.data()) };
-			const auto result = fstlog::detail::utf8_to_utf8<utf8_char_lib>(
+			const auto result = fstlog::detail::utf8_to_utf8(
 				in_begin, in_begin + (u8_text.size()),
 				out_data, out_end,
 				char_num);
@@ -575,7 +575,7 @@ TEST_CASE("utfX_to_utfY") {
 		const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(input.data()) };
 		auto in_end = in_begin + input.size();
 		std::size_t char_num = (std::numeric_limits<std::size_t>::max)();
-		const auto result = fstlog::detail::utf8_to_utf8<utf8_char_lib>(
+		const auto result = fstlog::detail::utf8_to_utf8(
 			in_begin, in_end,
 			out_data, out_end,
 			char_num);
@@ -641,7 +641,7 @@ TEST_CASE("utfX_to_utfY") {
 		auto in_ptr = in_begin;
 		auto in_end = in_begin + input.size();
 		std::size_t char_num = (std::numeric_limits<std::size_t>::max)();
-		const auto result = fstlog::detail::utf8_to_utf8<utf8_char_lib>(
+		const auto result = fstlog::detail::utf8_to_utf8(
 			in_ptr, in_end,
 			out_data, out_end,
 			char_num);

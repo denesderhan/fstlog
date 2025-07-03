@@ -431,17 +431,19 @@ namespace fstlog {
 
 		template <typename I>
 		inline buffer_operation_result<unsigned char> utf32_to_utf8(
-			unsigned char const*& in,
+			unsigned char const*& input,
 			unsigned char const* input_end,
 			unsigned char* dest,
 			unsigned char const* dest_end,
 			std::size_t& char_num) noexcept
 		{
-			FSTLOG_ASSERT(in != nullptr);
+			FSTLOG_ASSERT(input != nullptr && input <= input_end);
+			FSTLOG_ASSERT(dest != nullptr && dest <= dest_end);
+			error_code error = error_code::none;
 			std::size_t char_count{ 0 };
-			while (in + sizeof(I) <= input_end && char_count != char_num) {
+			while (input + sizeof(I) <= input_end && char_count < char_num) {
 				rm_cvref_t<I> char_utf32{ 0 };
-				memcpy(&char_utf32, in, sizeof(I));
+				memcpy(&char_utf32, input, sizeof(I));
 				std::uint32_t code_point = static_cast<std::uint32_t>(char_utf32);
 				if (!valid_utf32_char(char_utf32)) code_point = utf_const::replacement_char;
 				if (!valid_utf_code_point(code_point)) code_point = utf_const::replacement_char;
@@ -449,48 +451,47 @@ namespace fstlog {
 				const auto next_dest = encode_safe_utf8_char(code_point, dest, dest_end);
 				// encoding failed (no space)
 				if (next_dest == nullptr) {
-					char_num = char_count;
-					return buffer_operation_result<unsigned char>{ dest, error_code::buff_full };
+					error = error_code::buff_full;
+					break;
 				}
 
-				in += sizeof(I);
+				input += sizeof(I);
 				dest = next_dest;
 				char_count++;
 			}
 			char_num = char_count;
-			return buffer_operation_result<unsigned char>{ dest, error_code::none };
+			return buffer_operation_result<unsigned char>{ dest, error };
 		}
 
 		template <typename I>
 		inline buffer_operation_result<unsigned char> utf16_to_utf8(
-			unsigned char const* &in,
+			unsigned char const* &input,
 			unsigned char const* input_end,
 			unsigned char* dest,
 			unsigned char const* dest_end,
 			std::size_t& char_num) noexcept
 		{
-			FSTLOG_ASSERT(in != nullptr);
-			static_assert(std::is_integral_v<I>, "Invalid type!");
+			FSTLOG_ASSERT(input != nullptr && input <= input_end);
+			FSTLOG_ASSERT(dest != nullptr && dest <= dest_end);
+			error_code error = error_code::none;
 			std::size_t char_count{ 0 };
-			while (in < input_end && sizeof(I) <= input_end - in && char_count != char_num) {
-				auto in_next = in;
-				std::uint32_t code_p = decode_utf16_char<I>(in_next, input_end);
+			while (input < input_end && sizeof(I) <= input_end - input && char_count < char_num) {
+				auto next_input = input;
+				std::uint32_t code_p = decode_utf16_char<I>(next_input, input_end);
 				const auto next_dest = encode_safe_utf8_char(code_p, dest, dest_end);
 				// encoding failed, no space
 				if (next_dest == nullptr) {
-					char_num = char_count;
-					return buffer_operation_result<unsigned char>{ 
-						dest, error_code::buff_full };
+					error = error_code::buff_full;
+					break;
 				}
-				in = in_next;
+				input = next_input;
 				dest = next_dest;
 				char_count++;
 			}
 			char_num = char_count;
-			return buffer_operation_result<unsigned char>{ dest, error_code::none };
+			return buffer_operation_result<unsigned char>{ dest, error };
 		}
 
-		template<typename I>
 		inline detail::buffer_operation_result<unsigned char> utf8_to_utf8(
 			const unsigned char*& input,
 			const unsigned char* input_end,
@@ -498,25 +499,27 @@ namespace fstlog {
 			const unsigned char* dest_end,
 			std::size_t& char_num) noexcept
 		{
-			if (input == nullptr) {
-				return detail::buffer_operation_result<unsigned char>{ dest, error_code::none };
-			}
-			static_assert(sizeof(I) == 1);
+			FSTLOG_ASSERT(input != nullptr && input <= input_end);
+			FSTLOG_ASSERT(dest != nullptr && dest <= dest_end);
+			error_code error = error_code::none;
 			
-			auto ascii_end = input;
-			while (ascii_end < input_end
-				&& ((*ascii_end >= 0x20) & (*ascii_end < 0x7F)) != 0)
+			// fast path safe ASCII
+			std::size_t max_ascii = static_cast<std::size_t>(input_end - input);
+			if (max_ascii > char_num) max_ascii = char_num;
+			const std::size_t dest_bytes = static_cast<std::size_t>(dest_end - dest);
+			if (max_ascii > dest_bytes) max_ascii = dest_bytes;
+
+			std::size_t char_count = 0;
+			while (char_count < max_ascii
+				&& ((*(input + char_count) >= 0x20) & (*(input + char_count) < 0x7F)) != 0)
 			{
-				ascii_end++;
+				char_count++;
 			}
-			auto ascii_len = static_cast<std::size_t>(ascii_end - input);
-			if (ascii_len > char_num) ascii_len = char_num;
-			if (ascii_len > static_cast<std::size_t>(dest_end - dest)) ascii_len = static_cast<std::size_t>(dest_end - dest);
-			memcpy(dest, input, ascii_len);
-			std::size_t char_count = ascii_len;
-			input += ascii_len;
-			dest += ascii_len;
-			
+			memcpy(dest, input, char_count);
+			input += char_count;
+			dest += char_count;
+
+			// slow path multi byte utf8 + escaped ASCII
 			while (input < input_end && char_count < char_num) {
 				auto next_input = input;
 				auto next_dest = dest;
@@ -525,8 +528,8 @@ namespace fstlog {
 					// 1 byte sequence (0xxxxxxx)
 					if (code_point < utf_const::min_2_byte_code_p) {
 						if (dest == dest_end) {
-							char_num = char_count;
-							return buffer_operation_result<unsigned char>{ dest, error_code::buff_full };
+							error = error_code::buff_full;
+							break;
 						}
 						*dest = static_cast<unsigned char>(code_point);
 						next_dest = dest + 1;
@@ -534,8 +537,8 @@ namespace fstlog {
 					// 2 byte sequence (110xxxxx 10xxxxxx)
 					else if (code_point < utf_const::min_3_byte_code_p) {
 						if (dest_end - dest < 2) {
-							char_num = char_count;
-							return buffer_operation_result<unsigned char>{ dest, error_code::buff_full };
+							error = error_code::buff_full;
+							break;
 						}
 						*dest = *input;
 						*(dest + 1) = *(input + 1);
@@ -544,8 +547,8 @@ namespace fstlog {
 					// 3 byte sequence (1110xxxx 10xxxxxx 10xxxxxx)
 					else if (code_point < utf_const::min_4_byte_code_p) {
 						if (dest_end - dest < 3) {
-							char_num = char_count;
-							return buffer_operation_result<unsigned char>{ dest, error_code::buff_full };
+							error = error_code::buff_full;
+							break;
 						}
 						*dest = *input;
 						*(dest + 1) = *(input + 1);
@@ -555,8 +558,8 @@ namespace fstlog {
 					// 4 byte sequence (11110xxx 10xxxxxx 10xxxxxx 10xxxxxx)
 					else {
 						if (dest_end - dest < 4) {
-							char_num = char_count;
-							return buffer_operation_result<unsigned char>{ dest, error_code::buff_full };
+							error = error_code::buff_full;
+							break;
 						}
 						*dest = *input;
 						*(dest + 1) = *(input + 1);
@@ -568,8 +571,8 @@ namespace fstlog {
 				else {
 					auto res = encode_escaped(code_point, dest, dest_end);
 					if (res.ec != error_code::none) {
-						char_num = char_count;
-						return res;
+						error = res.ec;
+						break;
 					}
 					next_dest = res.ptr;
 				}
@@ -578,7 +581,7 @@ namespace fstlog {
 				char_count++;
 			}
 			char_num = char_count;
-			return buffer_operation_result<unsigned char>{ dest, error_code::none };
+			return buffer_operation_result<unsigned char>{ dest, error };
 		}
 		
 		template<typename O>
@@ -646,7 +649,8 @@ namespace fstlog {
 			unsigned char const* dest_end,
             std::size_t& char_num) noexcept
         {
-			return utf8_to_utf8<I>(in, input_end, dest, dest_end, char_num);
+			static_assert(sizeof(I) == 1, "Invalid type!");
+			return utf8_to_utf8(in, input_end, dest, dest_end, char_num);
         }
 
 
@@ -685,7 +689,7 @@ namespace fstlog {
 				return { trim_length, trim_length };
 			}
 
-			while (pos < str_end && char_num != trim_length) {
+			while (pos < str_end && char_num < trim_length) {
 				[[maybe_unused]] auto code_point = 
 					detail::decode_utf8_char(pos, str_end);
 				char_num++;
