@@ -120,7 +120,7 @@ namespace fstlog {
 					byte_size,
 					format.width,
 					format.align,
-					format.fill_char);
+					format.fill_char.data());
 				str_end = sf_result.ptr;
 			}
 			// update buffer pointer to the first free byte
@@ -202,7 +202,7 @@ namespace fstlog {
                     byte_size,
                     format.width,
                     format.align,
-                    format.fill_char);
+                    format.fill_char.data());
 				str_end = sf_result.ptr;
             }
 			// update buffer pointer to the first free byte
@@ -253,7 +253,7 @@ namespace fstlog {
                     char_num,
                     format.width,
                     format.align,
-                    format.fill_char);
+                    format.fill_char.data());
                 this->set_output_ptr_unchecked(sf_result.ptr);
             }
 			// no fill align
@@ -283,8 +283,7 @@ namespace fstlog {
             std::is_same_v<rm_cvref_t<T>, bool>
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
-            char fmt_type{ static_cast<char>(format.type) };
-			if (fmt_type == 0 || fmt_type == 's') {
+            if (format.type == 0 || format.type == 's') {
 				if (data) {
 					encode(std::string_view{ "true" }, format);
 				}
@@ -342,7 +341,7 @@ namespace fstlog {
 						char_num,
 						format.width,
 						format.align,
-						format.fill_char);
+						format.fill_char.data());
 					str_end = sf_result.ptr;
 				}
             }
@@ -364,7 +363,7 @@ namespace fstlog {
                     char_num,
                     format.width,
                     format.align,
-                    format.fill_char);
+                    format.fill_char.data());
                 str_end = result.ptr;
             }
             this->set_output_ptr_unchecked(str_end);

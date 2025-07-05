@@ -149,7 +149,7 @@ namespace fstlog {
 						&& detail::safe_utf_code_point(first_char))
 					{
 						// skip align char (and fill char)
-						return ++pos;
+						return pos + 1;
 					}
 					else {
 						// do not skip invalid/unsafe fill char (+ align char)

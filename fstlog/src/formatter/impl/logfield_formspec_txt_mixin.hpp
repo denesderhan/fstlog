@@ -50,12 +50,12 @@ namespace fstlog {
 			logfield field, 
 			buff_span_const form_spec) noexcept 
 		{
-			FSTLOG_ASSERT(field <= logfield_last);
+			FSTLOG_ASSERT(field < logfield_last);
 			field_formattings_[ut_cast(field)] = get_format(form_spec);
         }
 
         format_type get_format(logfield field) const noexcept {
-			FSTLOG_ASSERT(field <= logfield_last);
+			FSTLOG_ASSERT(field < logfield_last);
 			return field_formattings_[ut_cast(field)];
         }
 
@@ -68,51 +68,48 @@ namespace fstlog {
 		{
             format_type out;
             if (form_spec.empty()) return out;
-
 			auto pos = form_spec.data();
 			const auto end = pos + form_spec.size_bytes();
-			
+			// fill align
 			auto align_pos = pos;
-            auto align_end = skip_fill_align(align_pos, end);
-			pos = align_end;
-			            
-            if (pos < end) {
-                unsigned char sign_or_alt{ *pos };
-                if (sign_or_alt == ' ' || sign_or_alt == '-' || sign_or_alt == '+') {
-                    out.sign = sign_or_alt;
-                    pos++;
-                    if (pos < end) {
-                        sign_or_alt = *pos;
-                    }
-                }
-                if (sign_or_alt == '#') {
-                    out.alternate = true;
-                    pos++;
-                }
-            }
-
-            //skip ["0"]
-            if (*pos == '0') pos++;
-
+			pos = skip_fill_align(pos, end);
+			auto align_end = pos;
+			if (pos == end) return out;
+			// sign
+			if (*pos == '-' || *pos == ' ' || *pos == '+') {
+				out.sign = *pos++;
+				if (pos == end) return out;
+			}
+			// alternate
+			if (*pos == '#') {
+				out.alternate = true;
+				pos++;
+				if (pos == end) return out;
+			}
+			//skip ["0"]
+			if (*pos == '0') {
+				pos++;
+				if (pos == end) return out;
+			}
+			// get width
             out.width = static_cast<std::uint16_t>(get_width(pos, end));
-            if (out.width != 0) {
-				if (align_pos < align_end) {
-					out.align = *--align_end;
-				}
-				auto out_ptr = out.fill_char;
-				while (align_pos < align_end) {
-					*out_ptr++ = *align_pos++;
-				}
-				//if align_size == 0 use default align and fill char
+			// set fill align
+			if (out.width != 0 && align_pos < align_end) {
+				out.align = *--align_end;
+				FSTLOG_ASSERT(align_end - align_pos <= 4);
+				memcpy(out.fill_char.data(), align_pos, static_cast<std::size_t>(align_end - align_pos));
             }
+			if (pos == end) return out;
+			
+			// precision
             int precision = static_cast<int>(out.precision);
             get_precision(precision, pos, end);
             out.precision = static_cast<std::uint16_t>(precision);
-            
-            if (pos < end && *(end - 1) != 'L') {
-                out.type = *(end - 1);
-            }
-
+			if (pos == end) return out;
+			
+			// type
+			out.type = *(end - 1);
+			
             return out;
         }
 
@@ -121,15 +118,12 @@ namespace fstlog {
 		{
 			format_type out{};
 			out.align = format.align;
-			out.fill_char[0] = format.fill_char[0];
-			out.fill_char[1] = format.fill_char[1];
-			out.fill_char[2] = format.fill_char[2];
-			out.fill_char[3] = format.fill_char[3];
+			out.fill_char = format.fill_char;
 			out.width = format.width;
 			return out;
 		}
 
     private:
-        std::array<format_type, ut_cast(logfield_last) + 1> field_formattings_;
+        std::array<format_type, ut_cast(logfield_last)> field_formattings_;
     };
 }

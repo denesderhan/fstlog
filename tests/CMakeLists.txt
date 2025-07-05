@@ -26,6 +26,8 @@ set(src/unit_tests
 	"unit_tests/log_noexcept.cpp"
 	"unit_tests/log2_size.cpp"
 	"unit_tests/logfield_formspec_fmt_mixin.cpp"
+	"unit_tests/logfield_formspec_txt_mixin.cpp"
+	"unit_tests/logfield_formspec_txt_fast_mixin.cpp"
 	"unit_tests/logger.cpp"
 	"unit_tests/logger_dropcount_mixin.cpp"
 	"unit_tests/logger_dropcount_st_mixin.cpp"

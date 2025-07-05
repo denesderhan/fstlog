@@ -55,26 +55,25 @@ namespace fstlog {
 			buff_span_const form_spec) noexcept
 		{
             format_type form;
-            auto pos{ form_spec.data() };
-            const auto end{ form_spec.data() + form_spec.size_bytes() };
-            if (pos == end) return form;
-
-            auto last_char = *(end - 1);
-            if ((last_char >= 'A') && (last_char != 'L') && (last_char != '^'))
-                form.type = last_char;
-            
-            //skip '.' if part of fill-align
-            if (end - pos >= 2){
-                const auto mb_al{ *(pos + 1) };
-                if ((mb_al == '<') || (mb_al == '>') || (mb_al == '^'))
-                    pos += 2;
-            }
-                        
-            while (pos < end && *pos != '.') pos++;
-            pos++;
-			int precision = static_cast<int>(form.precision);
-			uint_fromchars_4digit(precision, pos, end);
-			form.precision = static_cast<std::uint16_t>(precision);
+			if (form_spec.empty()) return form;
+			if (form_spec.size_bytes() == 1) {
+				if (form_spec[0] >= 'A') form.type = form_spec[0];
+				return form;
+			}
+			const auto begin = form_spec.data();
+			const auto end = begin + form_spec.size_bytes();
+			auto pos = end - 1;
+			if(*pos >= 'A') form.type = *pos--;
+			auto num_end = pos + 1;
+			while (*pos >= '0' && *pos <= '9' && pos > begin) pos--; // precision is second last in format str
+			if (*pos != '.') return form; // no precision
+			pos++;
+			std::uint16_t precision = 0;
+			while (pos < num_end && precision <= 999) {
+				precision *= 10;
+				precision += *pos++ - '0';
+			}
+			form.precision = precision;
 			return form;
         }
 

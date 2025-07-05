@@ -53,12 +53,12 @@ namespace fstlog {
 			logfield field, 
 			buff_span_const form_spec) noexcept
 		{
-			FSTLOG_ASSERT(field <= logfield_last);
+			FSTLOG_ASSERT(field < logfield_last);
 			field_formattings_[ut_cast(field)] = get_format(form_spec);
         }
 
         format_type get_format(logfield field) const noexcept {
-			FSTLOG_ASSERT(field <= logfield_last);
+			FSTLOG_ASSERT(field < logfield_last);
 			return field_formattings_[ut_cast(field)];
         }
 
@@ -100,6 +100,6 @@ namespace fstlog {
 		}
 
     private:
-		std::array<format_type, ut_cast(logfield_last) + 1> field_formattings_;
+		std::array<format_type, ut_cast(logfield_last)> field_formattings_;
     };
 }

@@ -1,6 +1,7 @@
 //Copyright © 2023, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <array>
 #include <cstdint>
 #include <cstring>
 #pragma intrinsic(memcmp)
@@ -13,7 +14,7 @@ namespace fstlog {
 		std::uint16_t precision{ 0xffff };
         unsigned char sign{ '-' };
         unsigned char align{ 0 };
-        unsigned char fill_char[4]{' ', 0, 0, 0 };
+        std::array<unsigned char, 4> fill_char{' ', 0, 0, 0 };
     };
 
     inline bool operator==(

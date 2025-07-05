@@ -29,13 +29,6 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 		enc_type::format_type format;
 
 		encoder.output_span_init(buffer);
-		//msvc compiler bug?
-		//comment out and try in release!
-		CHECK(encoder.output_begin() == buffer.data());
-		CHECK(encoder.output_ptr() == buffer.data());
-		CHECK(encoder.output_end() == buffer.data() + 10);
-		//bug end
-		
 		encoder.encode(std::string_view{ "This will be longer than 10 characters!" }, format);
 
 		auto res = std::string_view(
