@@ -40,6 +40,8 @@ TEST_CASE("encoder_charconv_mixin") {
 	};
 	
 	SECTION("bool") {
+		enc_type encoder;
+		std::array<unsigned char, 128> buffer{ '!' };
 		auto extent = GENERATE(table<bool, char, bool, std::string_view>({
 			std::tuple<bool, char, bool, std::string_view>{true, 's', false, "true"},
 			std::tuple<bool, char, bool, std::string_view>{false, 's', true, "false"},
@@ -69,8 +71,6 @@ TEST_CASE("encoder_charconv_mixin") {
 		
 		CAPTURE(to_encode, char(format.type), format.alternate);
 
-		enc_type encoder;
-		std::array<unsigned char, 128> buffer{ '!' };
 		buffer.fill('!');
 		encoder.output_span_init(buffer);
 		encoder.encode(to_encode, format);
@@ -80,6 +80,28 @@ TEST_CASE("encoder_charconv_mixin") {
 		CAPTURE(res);
 		CHECK(!encoder.has_error());
 		CHECK(res == control);
+	};
+
+	SECTION("bool_bad_format_type") {
+		enc_type encoder;
+		std::array<unsigned char, 8> buffer{ '!' };
+		fstlog::format_setting_txt format{};
+		for (int i = 1; i < 256; i++) {
+			const char* good = "sxXbBdo";
+			while (*good != 0 && *good != i) good++;
+			if (*good != 0) continue;
+			format.type = static_cast<unsigned char>(i);
+			buffer.fill('!');
+			encoder.output_span_init(buffer);
+			encoder.encode(true, format);
+			encoder.encode(false, format);
+			auto res = std::string_view(
+				reinterpret_cast<char*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CAPTURE(res);
+			CHECK(!encoder.has_error());
+			CHECK(res == "10");
+		}
 	};
 
 	SECTION("void*") {
@@ -108,12 +130,36 @@ TEST_CASE("encoder_charconv_mixin") {
 		CHECK(!encoder.has_error());
 		CHECK(res == control);
 	};
+
+	SECTION("void*_bad_format_type") {
+		enc_type encoder;
+		std::array<unsigned char, 8> buffer{ '!' };
+		fstlog::format_setting_txt format{};
+		for (int i = 1; i < 256; i++) {
+			if (i == 'p') continue;
+			format.type = static_cast<unsigned char>(i);
+			buffer.fill('!');
+			encoder.output_span_init(buffer);
+			encoder.encode(reinterpret_cast<void*>(std::uintptr_t{ 0x12345 }), format);
+			auto res = std::string_view(
+				reinterpret_cast<char*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CAPTURE(res);
+			CHECK(!encoder.has_error());
+			CHECK(res == "0x12345");
+		}
+	};
+
 	SECTION("integer") {
 		auto extent = GENERATE(table<int, char,  char, bool, std::string_view>({
 			std::tuple<int, char,  char, bool, std::string_view>{(std::numeric_limits<std::int32_t>::min)(), '\x00', '+', false, "-2147483648"},
 			std::tuple<int, char,  char, bool, std::string_view>{0, '\x00', '+', false, "+0"},
 			std::tuple<int, char,  char, bool, std::string_view>{0, '\x00', '-', false, "0"},
 			std::tuple<int, char,  char, bool, std::string_view>{1234, '\x00', '+', false, "+1234"},
+			std::tuple<int, char,  char, bool, std::string_view>{(std::numeric_limits<std::int32_t>::min)(), 'd', '+', false, "-2147483648"},
+			std::tuple<int, char,  char, bool, std::string_view>{0, 'd', '+', false, "+0"},
+			std::tuple<int, char,  char, bool, std::string_view>{0, 'd', '-', false, "0"},
+			std::tuple<int, char,  char, bool, std::string_view>{1234, 'd', '+', false, "+1234"},
 			std::tuple<int, char,  char, bool, std::string_view>{-15, 'x', ' ', false, "-f"},
 			std::tuple<int, char,  char, bool, std::string_view>{15, 'x', ' ', true, " 0xf"},
 			std::tuple<int, char,  char, bool, std::string_view>{15, 'X', '-', true, "0XF"},
@@ -147,6 +193,27 @@ TEST_CASE("encoder_charconv_mixin") {
 		CAPTURE(res);
 		CHECK(!encoder.has_error());
 		CHECK(res == control);
+	};
+
+	SECTION("integer_bad_format_type") {
+		enc_type encoder;
+		std::array<unsigned char, 8> buffer{ '!' };
+		fstlog::format_setting_txt format{};
+		for (int i = 1; i < 256; i++) {
+			const char* good = "xXbBdo";
+			while (*good != 0 && *good != i) good++;
+			if (*good != 0) continue;
+			format.type = static_cast<unsigned char>(i);
+			buffer.fill('!');
+			encoder.output_span_init(buffer);
+			encoder.encode(99999, format);
+			auto res = std::string_view(
+				reinterpret_cast<char*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CAPTURE(i, res);
+			CHECK(!encoder.has_error());
+			CHECK(res == "99999");
+		}
 	};
 
 	SECTION("floating_point") {
@@ -194,6 +261,27 @@ TEST_CASE("encoder_charconv_mixin") {
 		CAPTURE(res);
 		CHECK(!encoder.has_error());
 		CHECK(res == control);
+	};
+
+	SECTION("floating_point_bad_format_type") {
+		enc_type encoder;
+		std::array<unsigned char, 8> buffer{ '!' };
+		fstlog::format_setting_txt format{};
+		for (int i = 1; i < 256; i++) {
+			const char* good = "aAeEfFgG";
+			while (*good != 0 && *good != i) good++;
+			if (*good != 0) continue;
+			format.type = static_cast<unsigned char>(i);
+			buffer.fill('!');
+			encoder.output_span_init(buffer);
+			encoder.encode(9.123, format);
+			auto res = std::string_view(
+				reinterpret_cast<char*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CAPTURE(i, res);
+			CHECK(!encoder.has_error());
+			CHECK(res == "9.123");
+		}
 	};
 
 	SECTION("char") {
@@ -266,6 +354,24 @@ TEST_CASE("encoder_charconv_mixin") {
 		}
 	}
 
+	SECTION("char_format_type") {
+		enc_type encoder;
+		std::array<unsigned char, 8> buffer{ '!' };
+		fstlog::format_setting_txt format{};
+		for (int i = 1; i < 256; i++) {
+			format.type = static_cast<unsigned char>(i);
+			buffer.fill('!');
+			encoder.output_span_init(buffer);
+			encoder.encode('A', format);
+			auto res = std::string_view(
+				reinterpret_cast<char*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CAPTURE(res);
+			CHECK(!encoder.has_error());
+			CHECK(res == "A");
+		}
+	};
+
 	SECTION("string") {
 		enc_type encoder;
 		auto format = enc_type::format_type{};
@@ -332,6 +438,24 @@ TEST_CASE("encoder_charconv_mixin") {
 			CHECK(res == u8"..ASCII ....§©UTF-....§©UTF-....§©UTF-..");
 		}
 	}
+
+	SECTION("string_format_type") {
+		enc_type encoder;
+		std::array<unsigned char, 8> buffer{ '!' };
+		fstlog::format_setting_txt format{};
+		for (int i = 1; i < 256; i++) {
+			format.type = static_cast<unsigned char>(i);
+			buffer.fill('!');
+			encoder.output_span_init(buffer);
+			encoder.encode(std::string_view("Hello"), format);
+			auto res = std::string_view(
+				reinterpret_cast<char*>(encoder.output_begin()),
+				encoder.output_ptr() - encoder.output_begin());
+			CAPTURE(res);
+			CHECK(!encoder.has_error());
+			CHECK(res == "Hello");
+		}
+	};
 
 	SECTION("nanosec_epoch") {
 		enc_type encoder;

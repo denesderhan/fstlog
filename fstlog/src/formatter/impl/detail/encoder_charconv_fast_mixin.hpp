@@ -77,13 +77,16 @@ namespace fstlog {
 			// write sign
 			if (data < 0) *buffer_pos++ = '-';
 			
+			// format type
+			const unsigned char type_char = detail::sanitize_int_type_char(format.type);
+
 			// set base
-			const int base = detail::get_int_base(format.type);
+			const int base = detail::get_int_base(type_char);
 			
 			// write the prefix 
 			// do not write prefix if data is octal 0 (write 0 not 00)
-			if (!(format.type == 'o' && data == 0)) {
-				detail::write_prefix(base, format.type, buffer_pos);
+			if (!(type_char == 'o' && data == 0)) {
+				detail::int_write_prefix(base, type_char, buffer_pos);
 			}
 			// convert data to unsigned absolute value
 			const std::make_unsigned_t<T> abs_data = detail::abs_unsigned(data);
@@ -102,8 +105,8 @@ namespace fstlog {
 			auto str_end = safe_reinterpret_cast<unsigned char*>(result.ptr);
 
 			// convert digits to upper case (if format type is X, binary B can't have chars )
-			if (format.type == 'X') {
-				detail::to_upper_case(digits_start, result.ptr);
+			if (type_char == 'X') {
+				detail::num_to_upper_case(digits_start, result.ptr);
 			}
 
 			// update buffer pointer to the first free byte
@@ -117,18 +120,10 @@ namespace fstlog {
             auto str_beg = safe_reinterpret_cast<char*>(this->output_ptr());
             auto buffer_end = safe_reinterpret_cast<char*>(this->output_end());
 
-            alignas(constants::cache_ls_nosharing)
-                const std::array<std::chars_format, 8> ch_form_table{
-                std::chars_format::general,
-                std::chars_format::hex,
-                std::chars_format::general,
-                std::chars_format::general,
-                std::chars_format::general,
-                std::chars_format::scientific,
-                std::chars_format::fixed,
-                std::chars_format::general
-            };
-            const auto fmt = ch_form_table[ format.type & 0b111 ];
+			// format type
+			const unsigned char type_char = detail::sanitize_float_type_char(format.type);
+
+			const auto fmt = std::chars_format(detail::charconv_float_format(type_char));
               
             std::to_chars_result result;
             if (format.precision == 0xffff) {

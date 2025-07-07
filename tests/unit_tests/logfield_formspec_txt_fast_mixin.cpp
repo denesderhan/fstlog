@@ -35,7 +35,5 @@ TEST_CASE("logfield_formspec_txt_fast_mixin") {
 		fstlog::format_setting_txt_fast control = std::get<1>(data);
 
 		CHECK(instance.get_format(form_spec) == control);
-
-
 	};
 }
