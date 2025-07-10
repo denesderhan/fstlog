@@ -51,7 +51,6 @@ namespace fstlog {
 			"Invalid class size!");
 	};
 #ifdef FSTLOG_DEBUG
-	static_assert(sizeof(time_string<32>) == 32 && sizeof(time_string<64>) == 64
-		&& sizeof(time_string<128>) == 128 && sizeof(time_string<256>) == 256);
+	static_assert(sizeof(time_string<64>) == 64, "Bad size!");
 #endif
 }

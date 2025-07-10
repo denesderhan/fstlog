@@ -13,6 +13,8 @@
 #include <detail/buffer_operation_result.hpp>
 #include <detail/byte_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
+#include <detail/utf_conv.hpp>
+#include <detail/utf8_len.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
 #include <formatter/impl/detail/nano_to_seconds_txt.hpp>
 #include <formatter/impl/detail/time_string_cache.hpp>
@@ -49,7 +51,18 @@ namespace fstlog {
 						
 			if (!detail::valid_strftime_string(strftime_str, tzone_)) return error_code::fmt_bad;
 			tstr_cache_.clear();
-			return set_time_format(strftime_str, second_char_num_);
+			auto error = set_time_format(strftime_str, second_char_num_);
+			if (error != error_code::none) return error;
+
+			// compute formatted lengths
+			// the formatted string size does not change, all timestamp size will be the same
+			// the formatted string size has to fit 
+			// into the capacity of the cache's time_string<64>::capacity() 62 bytes
+			std::array<unsigned char, time_string<64>::capacity()> temp{ 0 };
+			auto result = timestamp_to_chars(stamp_type{}, temp.data(), temp.data() + temp.size());
+			if (result.ec != error_code::none) return error_code::str_long;
+			length_ = detail::utf8_str_trim(temp.data(), result.ptr);
+			return error_code::none;
 		}
 
 		detail::buffer_operation_result<unsigned char> timestamp_to_chars(
@@ -90,6 +103,10 @@ namespace fstlog {
 			else {
 				return detail::buffer_operation_result<unsigned char>{ buffer_ptr, error_code::buff_full };
 			}
+		}
+
+		detail::utf8_len time_str_len() const noexcept {
+			return length_;
 		}
 
 	private:
@@ -213,7 +230,8 @@ namespace fstlog {
 					sizeof("Formatted timestamp was too long!") - 1 } };
 			}
 		}
-								
+		
+		detail::utf8_len length_{0, 0};
 		time_string_cache<7> tstr_cache_;
 		time_string<64> time_format_;
 		int second_char_num_{ 9 };			

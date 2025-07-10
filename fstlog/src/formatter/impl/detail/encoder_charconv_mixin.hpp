@@ -317,10 +317,9 @@ namespace fstlog {
 			// fill align
 			if (format.width != 0) {
 				// precision is not used, do not trim timestamp
-				const auto str_len = detail::utf8_str_trim(str_begin, str_end);
 				auto result_len = detail::shift_fill(
 					{ str_begin, static_cast<std::size_t>(buffer_end - str_begin) },
-					str_len,
+					time_str_len(),
 					format);
 				str_end = str_begin + result_len.byte_len;
             }
