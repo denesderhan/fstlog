@@ -71,7 +71,7 @@ TEST_CASE("time_to_str_converter") {
 	SECTION("seconds_prec_0") {
 		std::string form_temp{ ".0" + tz + "%S"};
 		fstlog::buff_span_const time_format{
-			fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+			reinterpret_cast<const unsigned char*>(form_temp.data()),
 			form_temp.size() };
 		
 		auto success = time_conv.init_time_to_str_converter(time_format);
@@ -100,14 +100,14 @@ TEST_CASE("time_to_str_converter") {
 		auto result = time_conv.timestamp_to_chars(
 			std::chrono::system_clock::time_point{ std::chrono::microseconds{ microsec } }, buffer.data(), buffer.data() + buffer.size());
 		CHECK(result.ec == fstlog::error_code::none);
-		CHECK(std::string_view(fstlog::safe_reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data())
+		CHECK(std::string_view(reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data())
 			== control);
 	};
 
 	SECTION("minute_rounding") {
 		std::string_view form_temp{ ".0%M:%S" };
 		fstlog::buff_span_const time_format{
-			fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+			reinterpret_cast<const unsigned char*>(form_temp.data()),
 			form_temp.size() };
 		
 		auto success = time_conv.init_time_to_str_converter(time_format);
@@ -119,7 +119,7 @@ TEST_CASE("time_to_str_converter") {
 			buffer.data(), 
 			buffer.data() + buffer.size());
 		CHECK(result.ec == fstlog::error_code::none);
-		CHECK(std::string_view(fstlog::safe_reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data() )
+		CHECK(std::string_view(reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data() )
 			== std::string_view{ "01:00" });
 	};
 }
@@ -131,7 +131,7 @@ TEST_CASE("time_to_str_converter_common") {
 	SECTION("misc"){
 		std::string_view form_temp{ ".4%S" };
 		fstlog::buff_span_const time_format{
-			fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+			reinterpret_cast<const unsigned char*>(form_temp.data()),
 			form_temp.size() };
 		
 		//int prec = 4;
@@ -157,7 +157,7 @@ TEST_CASE("time_to_str_converter_common") {
 			buffer.data(),
 			buffer.data() + buffer.size());
 		CHECK(result.ec == fstlog::error_code::none);
-		CHECK(std::string_view(fstlog::safe_reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data() )
+		CHECK(std::string_view(reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data() )
 			== control);
 	};
 
@@ -175,7 +175,7 @@ TEST_CASE("time_to_str_converter_common") {
 		std::string_view input = std::get<0>(extent);
 		CAPTURE(input);
 		fstlog::buff_span_const time_format{
-			fstlog::safe_reinterpret_cast<const unsigned char*>(input.data()),
+			reinterpret_cast<const unsigned char*>(input.data()),
 			input.size() };
 		bool result = std::get<1>(extent);
 
@@ -214,7 +214,7 @@ TEST_CASE("time_to_str_converter_common") {
 
 		std::string_view input = std::get<0>(extent);
 		fstlog::buff_span_const time_format{ 
-			fstlog::safe_reinterpret_cast<const unsigned char*>(input.data()),
+			reinterpret_cast<const unsigned char*>(input.data()),
 			input.size() };
 		std::string_view control = std::get<1>(extent);
 
@@ -224,7 +224,7 @@ TEST_CASE("time_to_str_converter_common") {
 		auto result = time_conv.timestamp_to_chars(std::chrono::system_clock::time_point{}, buffer.data(), buffer.data() + buffer.size());
 		CHECK(result.ec == fstlog::error_code::none);
 		CHECK(std::string_view{
-			fstlog::safe_reinterpret_cast<const char*>(buffer.data()),
+			reinterpret_cast<const char*>(buffer.data()),
 			static_cast<std::size_t>(result.ptr - buffer.data()) }
 			== control);
 	};
@@ -235,7 +235,7 @@ TEST_CASE("time_to_str_converter_common") {
 		
 		std::string_view form_temp{ ".2L%Y-%m-%d %H:%M:%S %z" };
 		fstlog::buff_span_const time_format{
-			fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+			reinterpret_cast<const unsigned char*>(form_temp.data()),
 				form_temp.size() };
 
 		auto success = time_conv.init_time_to_str_converter(time_format);
@@ -264,7 +264,7 @@ TEST_CASE("time_to_str_converter_common") {
 			&time);
 		control.resize(str_size);
 
-		CHECK(std::string_view(fstlog::safe_reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data())
+		CHECK(std::string_view(reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data())
 			== control);
 	};
 
@@ -274,7 +274,7 @@ TEST_CASE("time_to_str_converter_common") {
 
 		std::string_view form_temp{ ".2U%Y-%m-%d %H:%M:%S +0000" };
 		fstlog::buff_span_const time_format{
-			fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+			reinterpret_cast<const unsigned char*>(form_temp.data()),
 				form_temp.size() };
 
 		auto success = time_conv.init_time_to_str_converter(time_format);
@@ -282,7 +282,7 @@ TEST_CASE("time_to_str_converter_common") {
 		buffer.fill(0);
 		auto result = time_conv.timestamp_to_chars(time_p, buffer.data(), buffer.data() + buffer.size());
 		CHECK(result.ec == fstlog::error_code::none);
-		CHECK(std::string_view(fstlog::safe_reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data())
+		CHECK(std::string_view(reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data())
 			== control);
 	};
 }
@@ -295,7 +295,7 @@ TEST_CASE("time_to_str_converter_brute_force", "[.][brute]") {
 		int prec = GENERATE(Catch::Generators::range(0, 6));
 		std::string form_temp{ "." + std::to_string(prec) + "abc%Sdefghijkl"};
 		fstlog::buff_span_const time_format{
-			fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+			reinterpret_cast<const unsigned char*>(form_temp.data()),
 				form_temp.size() };
 
 		auto success = time_conv.init_time_to_str_converter(time_format);
@@ -310,7 +310,7 @@ TEST_CASE("time_to_str_converter_brute_force", "[.][brute]") {
 			buffer.data(), 
 			buffer.data() + buffer.size());
 		CHECK(result.ec == fstlog::error_code::none);
-		CHECK(std::string_view(fstlog::safe_reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data() )
+		CHECK(std::string_view(reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data() )
 			== std::string{ "abc" } + nano_2_time_seconds_part(microsec * 1000, prec) + "defghijkl");
 	};
 
@@ -318,7 +318,7 @@ TEST_CASE("time_to_str_converter_brute_force", "[.][brute]") {
 		int prec = GENERATE(Catch::Generators::range(0, 6));
 		std::string form_temp{ "." + std::to_string(prec) + "%S"};
 		fstlog::buff_span_const time_format{
-			fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+			reinterpret_cast<const unsigned char*>(form_temp.data()),
 				form_temp.size() };
 		auto success = time_conv.init_time_to_str_converter(time_format);
 		CHECK(success == fstlog::error_code::none);
@@ -331,7 +331,7 @@ TEST_CASE("time_to_str_converter_brute_force", "[.][brute]") {
 			buffer.data(), 
 			buffer.data() + buffer.size());
 		CHECK(result.ec == fstlog::error_code::none);
-		CHECK(std::string_view(fstlog::safe_reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data() )
+		CHECK(std::string_view(reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data() )
 			== nano_2_time_seconds_part(microsec * 1000, prec));
 	}
 }
@@ -342,7 +342,7 @@ TEST_CASE("time_to_str_converter_benchmark_seconds", "[.][benchmark]") {
 	int prec = GENERATE(0, 4, 9);
 	std::string form_temp{ "." + std::to_string(prec) + "%S" };
 	fstlog::buff_span_const time_format{
-		fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+		reinterpret_cast<const unsigned char*>(form_temp.data()),
 		form_temp.size() };
 
 	auto success = time_conv.init_time_to_str_converter(time_format);
@@ -367,7 +367,7 @@ TEST_CASE("time_to_str_converter_create_timestring", "[.][benchmark]") {
 	fstlog::time_to_str_converter time_conv;
 	std::string_view form_temp{ "%Y-%m-%d %H:%M:%S %z" };
 	fstlog::buff_span_const time_format{
-		fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+		reinterpret_cast<const unsigned char*>(form_temp.data()),
 		form_temp.size() };
 	auto success = time_conv.init_time_to_str_converter(time_format);
 	CHECK(success == fstlog::error_code::none);
@@ -388,7 +388,7 @@ TEST_CASE("time_to_str_converter_benchmark_sec2", "[.][benchmark]") {
 	int prec = GENERATE(range(0, 9));
 	std::string form_temp{ "." + std::to_string(prec) + "%S" };
 	fstlog::buff_span_const time_format{
-		fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+		reinterpret_cast<const unsigned char*>(form_temp.data()),
 		form_temp.size() };
 	
 	long long microsec = 10000000;
@@ -413,7 +413,7 @@ TEST_CASE("time_to_str_converter_pre_epoch") {
 
 	std::string_view form_temp{ ".7U%Y-%m-%d %H:%M:%S" };
 	fstlog::buff_span_const time_format{
-		fstlog::safe_reinterpret_cast<const unsigned char*>(form_temp.data()),
+		reinterpret_cast<const unsigned char*>(form_temp.data()),
 		form_temp.size() };
 
 	auto success = time_conv.init_time_to_str_converter(time_format);
@@ -427,6 +427,6 @@ TEST_CASE("time_to_str_converter_pre_epoch") {
 			std::chrono::system_clock::time_point{ std::chrono::microseconds{ microsecond } }, 
 			buffer.data(), buffer.data() + buffer.size());
 		CHECK(result.ec == fstlog::error_code::input_bad);
-		CHECK(std::string_view(fstlog::safe_reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data())
+		CHECK(std::string_view(reinterpret_cast<const char*>(buffer.data()), result.ptr - buffer.data())
 			== "");
 }

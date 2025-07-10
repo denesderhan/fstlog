@@ -10,30 +10,20 @@
 
 namespace fstlog {
 	namespace detail{
-		// validate a limited set of conversion specifiers
+		// validate a limited set of strftime conversion specifiers
 		inline constexpr bool valid_strft_conv_spec(unsigned char spec) noexcept {
-			// LUT for chars 'A' - 'z' range in a single 64 bit uint
 			constexpr std::uint64_t valid_conv_spec_lut =
-				  (1ULL << ('A' - 'A')) | (1ULL << ('a' - 'A'))
-				| (1ULL << ('B' - 'A')) | (1ULL << ('b' - 'A'))
-				| (1ULL << ('C' - 'A')) 
-				| (1ULL << ('d' - 'A'))	| (1ULL << ('e' - 'A'))
-				| (1ULL << ('G' - 'A')) | (1ULL << ('g' - 'A'))
-				| (1ULL << ('H' - 'A')) | (1ULL << ('I' - 'A'))
-				| (1ULL << ('j' - 'A')) 
-				| (1ULL << ('M' - 'A')) | (1ULL << ('m' - 'A'))
-				| (1ULL << ('p' - 'A')) | (1ULL << ('S' - 'A'))
-				| (1ULL << ('U' - 'A')) | (1ULL << ('u' - 'A'))
-				| (1ULL << ('V' - 'A'))
-				| (1ULL << ('W' - 'A')) | (1ULL << ('w' - 'A'))
-				| (1ULL << ('Y' - 'A')) | (1ULL << ('y' - 'A'))
-				| (1ULL << ('Z' - 'A')) | (1ULL << ('z' - 'A'));
+				  (1ULL << ('H' - 64)) | (1ULL << ('I' - 64)) | (1ULL << ('M' - 64))	
+				| (1ULL << ('S' - 64)) | (1ULL << ('U' - 64)) | (1ULL << ('W' - 64))
+				| (1ULL << ('Y' - 64)) | (1ULL << ('d' - 64)) | (1ULL << ('j' - 64))
+				| (1ULL << ('m' - 64)) | (1ULL << ('w' - 64)) | (1ULL << ('y' - 64)) 
+				| (1ULL << ('z' - 64));
 
 			// bounds check
-			if (spec < 'A' || spec > 'z') return false;
+			if (spec < 64 || spec > 127) return false;
 
 			// calculate the bit position
-			const auto bit_pos = spec - 'A';
+			const auto bit_pos = spec - 64;
 
 			// shift the LUT bit to the least significant place and check if it is set.
 			return (valid_conv_spec_lut >> bit_pos) & 1;

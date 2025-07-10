@@ -5,6 +5,19 @@
  
 #include <detail/safe_reinterpret_cast.hpp>
 #include <formatter/impl/detail/valid_strftime_string.hpp>
+TEST_CASE("valid_strft_conv_spec") {
+	for (int i = 0; i < 256; i++) {
+		unsigned char conv_spec = static_cast<unsigned char>(i);
+		auto pos = "HIMSUWYdjmwyz";
+		while (*pos != 0 && *pos != conv_spec) pos++;
+		if (*pos == 0) {
+			CHECK(fstlog::detail::valid_strft_conv_spec(conv_spec) == false);
+		}
+		else {
+			CHECK(fstlog::detail::valid_strft_conv_spec(conv_spec) == true);
+		}
+	}
+};
 
 TEST_CASE("valid_strftime_string") {
 	SECTION("valid") {
@@ -17,11 +30,10 @@ TEST_CASE("valid_strftime_string") {
 			"%%%%%%",
 			"%%!%%%%!!",
 			"!%S%m",
-			"%S%z%Z",
+			"%S%z",
 			"%z",
-			"%Z",
 			"Y%Y%%YOE",
-			"%H:%M:%S %z %Z");
+			"%H:%M:%S %z");
 
 		CAPTURE(str);
 		fstlog::buff_span_const buff_sp(
