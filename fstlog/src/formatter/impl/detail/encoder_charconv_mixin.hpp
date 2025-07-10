@@ -115,16 +115,12 @@ namespace fstlog {
 			if (format.width != 0) {
 				//setting default alignment for integrals
 				if (format.align == 0) format.align = '>';
-				const auto byte_size{ str_end - str_begin };
-				auto sf_result = shift_fill(
-					str_begin,
-					buffer_end,
-					byte_size,
-					byte_size,
-					format.width,
-					format.align,
-					format.fill_char.data());
-				str_end = sf_result.ptr;
+				const auto str_len{ static_cast<std::size_t>(str_end - str_begin) };
+				auto result_len = detail::shift_fill(
+					{ str_begin, static_cast<std::size_t>(buffer_end - str_begin) },
+					{ str_len, str_len },
+					format);
+				str_end = str_begin + result_len.byte_len;
 			}
 			// update buffer pointer to the first free byte
 			this->set_output_ptr_unchecked(str_end);
@@ -189,16 +185,12 @@ namespace fstlog {
             if (format.width != 0) {
                 //setting default alignment for floats
                 if (format.align == 0) format.align = '>';
-                const auto byte_size{ str_end - str_begin };
-                auto sf_result = shift_fill(
-					str_begin,
-                    buffer_end,
-                    byte_size,
-                    byte_size,
-                    format.width,
-                    format.align,
-                    format.fill_char.data());
-				str_end = sf_result.ptr;
+				const auto str_len{ static_cast<std::size_t>(str_end - str_begin) };
+				auto result_len = detail::shift_fill(
+					{ str_begin, static_cast<std::size_t>(buffer_end - str_begin) },
+					{ str_len, str_len },
+					format);
+				str_end = str_begin + result_len.byte_len;
             }
 			// update buffer pointer to the first free byte
 			this->set_output_ptr_unchecked(str_end);
@@ -226,7 +218,8 @@ namespace fstlog {
 
             static_assert(std::numeric_limits<unsigned char>::digits == 8);
             constexpr int bit_size{ sizeof(T) * std::numeric_limits<unsigned char>::digits };
-            std::size_t char_num{ format.precision };
+            // convert and trim in one step
+			std::size_t char_num{ format.precision };
             const auto result = detail::utf8conv<bit_size, T>(
                 str_begin,
                 str_begin + data_byte_size,
@@ -241,15 +234,11 @@ namespace fstlog {
             // fill align
 			if (format.width != 0) {
 				const auto byte_size = static_cast<std::size_t>(result.ptr - out_begin);
-				auto sf_result = shift_fill(
-                    out_begin,
-                    out_end,
-                    byte_size,
-                    char_num,
-                    format.width,
-                    format.align,
-                    format.fill_char.data());
-                this->set_output_ptr_unchecked(sf_result.ptr);
+				auto result_len = detail::shift_fill(
+					{ out_begin, static_cast<std::size_t>(out_end - out_begin) },
+					{byte_size, char_num},
+					format);
+                this->set_output_ptr_unchecked(out_begin + result_len.byte_len);
             }
 			// no fill align
             else {
@@ -326,42 +315,27 @@ namespace fstlog {
 			auto str_end = result.ptr;
 
 			// fill align
-            if (format.width != 0) {
-				const auto [byte_size, char_num] = detail::utf8_str_trim(str_begin, str_end);
-                if (char_num < format.width) { 
-					auto sf_result = shift_fill(
-						str_begin,
-						buffer_end,
-						byte_size,
-						char_num,
-						format.width,
-						format.align,
-						format.fill_char.data());
-					str_end = sf_result.ptr;
-				}
+			if (format.width != 0) {
+				// precision is not used, do not trim timestamp
+				const auto str_len = detail::utf8_str_trim(str_begin, str_end);
+				auto result_len = detail::shift_fill(
+					{ str_begin, static_cast<std::size_t>(buffer_end - str_begin) },
+					str_len,
+					format);
+				str_end = str_begin + result_len.byte_len;
             }
 			// update first free pos in buffer
             this->set_output_ptr_unchecked(str_end);
         }
 
         void reencode_tail_string(unsigned char* str_begin, format_type format) {
-            unsigned char *str_end{ this->output_ptr() };
-           	FSTLOG_ASSERT(str_begin >= this->output_begin() && str_begin <= str_end);
-			const auto [str_byte_size, char_num] = detail::utf8_str_trim(str_begin, str_end, format.precision);
-			str_end = str_begin + str_byte_size;
-            FSTLOG_ASSERT(str_begin <= str_end);                        
-            if (format.width > char_num) {
-                auto result = shift_fill(
-                    str_begin,
-                    this->output_end(),
-                    str_byte_size,
-                    char_num,
-                    format.width,
-                    format.align,
-                    format.fill_char.data());
-                str_end = result.ptr;
-            }
-            this->set_output_ptr_unchecked(str_end);
+           	FSTLOG_ASSERT(str_begin >= this->output_begin() && str_begin <= this->output_ptr());
+			const auto str_len = detail::utf8_str_trim(str_begin, this->output_ptr(), format.precision);
+			auto result_len = detail::shift_fill(
+				{ str_begin, static_cast<std::size_t>(this->output_end() - str_begin) },
+                str_len,
+                format);
+            this->set_output_ptr_unchecked(str_begin + result_len.byte_len);
         }
     };
 }
