@@ -12,6 +12,7 @@
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/rm_cvref_t.hpp>
+#include <detail/utf8_len.hpp>
 
 namespace fstlog {
 	namespace detail {
@@ -654,11 +655,6 @@ namespace fstlog {
         }
 
 
-		struct utf8_str_len {
-			std::size_t byte_count;   // Number of bytes.
-			std::size_t char_count;   // Number of unicode characters.
-		};
-
 		/*
 		* @brief Calculates the length of a UTF-8 string (byte and char) trimmed to the desired char length.
 		* If the string is shorter than the trim length, the full lengths are returned.
@@ -671,7 +667,7 @@ namespace fstlog {
 		* @tparam T Must satisfy sizeof(T) == 1 (e.g., char, unsigned char, char8_t).
 		*/
 		template<typename T>
-		inline utf8_str_len utf8_str_trim(
+		inline utf8_len utf8_str_trim(
 			T const* begin,
 			T const* end,
 			std::size_t trim_length = (std::numeric_limits<std::size_t>::max)()) noexcept 

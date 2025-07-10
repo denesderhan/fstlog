@@ -167,6 +167,7 @@ set(src_detail
     "src/detail/nothrow_allocate.hpp"
     "src/detail/safe_reinterpret_cast.hpp"
     "src/detail/utf_conv.hpp"
+    "src/detail/utf8_len.hpp"
 )
 
 set(src_detail_mixin
