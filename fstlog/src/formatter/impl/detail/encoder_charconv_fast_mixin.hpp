@@ -15,7 +15,6 @@
 #include <detail/utf_conv.hpp>
 #include <formatter/impl/detail/encoder_helper.hpp>
 #include <formatter/impl/detail/format_setting_txt_fast.hpp>
-#include <formatter/impl/detail/time_to_str_converter.hpp>
 #include <fstlog/detail/convert_to_basic_string_view.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/is_char_type.hpp>
@@ -26,9 +25,7 @@
 
 namespace fstlog {
     template<typename L>
-    class encoder_charconv_fast_mixin : public L,
-        public time_to_str_converter
-    {
+    class encoder_charconv_fast_mixin : public L {
     public:
         using allocator_type = typename L::allocator_type;
         typedef format_setting_txt_fast format_type;
@@ -46,11 +43,8 @@ namespace fstlog {
 			&& noexcept(encoder_charconv_fast_mixin(encoder_charconv_fast_mixin{}, allocator_type{})))
             : encoder_charconv_fast_mixin(other, other.get_allocator()) {}
         encoder_charconv_fast_mixin(const encoder_charconv_fast_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(encoder_charconv_fast_mixin{}, allocator_type{}))
-			&& noexcept(time_to_str_converter(encoder_charconv_fast_mixin{})))
-            : L(other, allocator),
-            time_to_str_converter(other) {
-        }
+			noexcept(L(encoder_charconv_fast_mixin{}, allocator_type{})))
+            : L(other, allocator) {}
 
         encoder_charconv_fast_mixin(encoder_charconv_fast_mixin&& other) = delete;
         encoder_charconv_fast_mixin& operator=(const encoder_charconv_fast_mixin& rhs) = delete;
@@ -225,23 +219,6 @@ namespace fstlog {
                     format.type = 'x';
                 }
                 encode(data.hash_, format);
-            }
-        }
-
-        // nanosec_epoch
-        template<typename T, std::enable_if_t<
-            std::is_same_v<rm_cvref_t<T>, stamp_type>
-            >* = nullptr>
-        void encode(T data, [[maybe_unused]] format_type format) noexcept {
-            const auto result = timestamp_to_chars(
-                data,
-				this->output_ptr(),
-				this->output_end());
-            if (result.ec == error_code::none) {
-                this->set_output_ptr_unchecked(result.ptr);
-            }
-            else {
-                this->set_error(__FILE__, __LINE__, result.ec);
             }
         }
 

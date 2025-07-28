@@ -217,6 +217,7 @@ set(src_formatter_impl_detail
     "src/formatter/impl/detail/encoder_charconv_mixin.hpp"
     "src/formatter/impl/detail/encoder_helper.hpp"
     "src/formatter/impl/detail/encoder_stdformat_mixin.hpp"
+    "src/formatter/impl/detail/encoder_timestamp_mixin.hpp"
     "src/formatter/impl/detail/format_setting_txt.hpp"
     "src/formatter/impl/detail/format_setting_txt_fast.hpp"
     "src/formatter/impl/detail/format_str_helper.hpp"
@@ -228,7 +229,6 @@ set(src_formatter_impl_detail
     "src/formatter/impl/detail/shift_fill.hpp"
     "src/formatter/impl/detail/time_string.hpp"
     "src/formatter/impl/detail/time_string_cache.hpp"
-    "src/formatter/impl/detail/time_to_str_converter.hpp"
     "src/formatter/impl/detail/tz_format.hpp"
     "src/formatter/impl/detail/valid_strftime_string.hpp"
 )

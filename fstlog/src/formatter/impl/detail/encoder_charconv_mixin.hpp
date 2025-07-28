@@ -15,7 +15,6 @@
 #include <formatter/impl/detail/encoder_helper.hpp>
 #include <formatter/impl/detail/format_setting_txt.hpp>
 #include <formatter/impl/detail/shift_fill.hpp>
-#include <formatter/impl/detail/time_to_str_converter.hpp>
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/convert_to_basic_string_view.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -27,9 +26,7 @@
 
 namespace fstlog {
     template<typename L>
-    class encoder_charconv_mixin : public L,
-        public time_to_str_converter
-    {
+    class encoder_charconv_mixin : public L {
     public:
         using allocator_type = typename L::allocator_type;
         typedef format_setting_txt format_type;
@@ -47,10 +44,8 @@ namespace fstlog {
 			&& noexcept(encoder_charconv_mixin(encoder_charconv_mixin{}, allocator_type{})))
             : encoder_charconv_mixin(other, other.get_allocator()) {}
         encoder_charconv_mixin(const encoder_charconv_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(encoder_charconv_mixin{}, allocator_type{}))
-			&& noexcept(time_to_str_converter(encoder_charconv_mixin{})))
-            : L(other, allocator),
-            time_to_str_converter(other) {}
+			noexcept(L(encoder_charconv_mixin{}, allocator_type{})))
+            : L(other, allocator) {}
 
         encoder_charconv_mixin(encoder_charconv_mixin&& other) = delete;
         encoder_charconv_mixin& operator=(const encoder_charconv_mixin& rhs) = delete;
@@ -297,34 +292,6 @@ namespace fstlog {
                 }
                 encode(data.hash_, format);
             }
-        }
-
-        // nanosec_epoch
-        template<typename T, std::enable_if_t<
-            std::is_same_v<rm_cvref_t<T>, stamp_type>
-            >* = nullptr>
-        void encode(T data, format_type format) noexcept {
-            const auto str_begin{ this->output_ptr() };
-            const auto buffer_end{ this->output_end() };
-            // convert timestamp to string
-			const auto result = timestamp_to_chars(data, str_begin, buffer_end);
-            if (result.ec != error_code::none) {
-				this->set_error(__FILE__, __LINE__, result.ec);
-				return;
-			}
-			auto str_end = result.ptr;
-
-			// fill align
-			if (format.width != 0) {
-				// precision is not used, do not trim timestamp
-				auto result_len = detail::shift_fill(
-					{ str_begin, static_cast<std::size_t>(buffer_end - str_begin) },
-					time_str_len(),
-					format);
-				str_end = str_begin + result_len.byte_len;
-            }
-			// update first free pos in buffer
-            this->set_output_ptr_unchecked(str_end);
         }
 
         void reencode_tail_string(unsigned char* str_begin, format_type format) {

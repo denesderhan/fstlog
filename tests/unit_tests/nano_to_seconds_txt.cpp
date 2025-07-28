@@ -2,9 +2,9 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <catch2/catch_all.hpp>
 
-#include <cstddef> // __cpp_lib_chrono is defined here in windows
+#include <cstddef> // __cpp_lib_format is defined here in windows
 #if not defined(__cpp_lib_format) && (defined(__cplusplus) && __cplusplus >= 202000L)
-#include <format> // __cpp_lib_chrono is defined here in gcc if __cplusplus >= 202000L
+#include <format> // __cpp_lib_format is defined here in gcc if __cplusplus >= 202000L
 #endif
 
 #include <array>

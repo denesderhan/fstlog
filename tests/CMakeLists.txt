@@ -13,6 +13,7 @@ set(src/unit_tests
 	"unit_tests/encoder_charconv_mixin.cpp"
 	"unit_tests/encoder_helper.cpp"
 	"unit_tests/encoder_stdformat_mixin.cpp"
+	"unit_tests/encoder_timestamp_mixin.cpp"
 	"unit_tests/error.cpp"
 	"unit_tests/filter_internal.cpp"
 	"unit_tests/format_str_helper.cpp"
@@ -41,7 +42,6 @@ set(src/unit_tests
 	"unit_tests/shift_fill.cpp"
 	"unit_tests/small_string.cpp"
 	"unit_tests/this_thread_id.cpp"
-	"unit_tests/time_to_str_converter.cpp"
 	"unit_tests/utf_conv.cpp"
 	"unit_tests/valid_strftime_string.cpp"
 )

@@ -73,6 +73,36 @@ TEST_CASE("shift_fill_single_byte_pattern") {
 		CHECK(!memcmp(control.data(), buffer.data(), buffer.size()));
 	}
 
+	SECTION("empty_string") {
+		std::array<unsigned char, 30> control{ 0 };
+		format.width = 6;
+		format.align = '<';
+		const auto control_txt = "xxxxxx";
+		memcpy(control.data(), control_txt, strlen(reinterpret_cast<const char*>(control_txt)));
+		buffer.fill(0);
+		fstlog::detail::shift_fill(
+			{ buffer.data(), 30 },
+			{ 0, 0 },
+			format);
+		CHECK(!memcmp(control.data(), buffer.data(), buffer.size()));
+
+		format.align = '>';
+		buffer.fill(0);
+		fstlog::detail::shift_fill(
+			{ buffer.data(), 30 },
+			{ 0, 0 },
+			format);
+		CHECK(!memcmp(control.data(), buffer.data(), buffer.size()));
+
+		format.align = '^';
+		buffer.fill(0);
+		fstlog::detail::shift_fill(
+			{ buffer.data(), 30 },
+			{ 0, 0 },
+			format);
+		CHECK(!memcmp(control.data(), buffer.data(), buffer.size()));
+	}
+
 	SECTION("1 char shift_fill left") {
 		std::array<unsigned char, 30> control{ 0 };
 		format.width = 6;

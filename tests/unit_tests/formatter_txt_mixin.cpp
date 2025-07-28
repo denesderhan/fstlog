@@ -103,10 +103,10 @@ TEST_CASE("formatter_txt_mixin") {
 			std::make_tuple(std::string_view{ "{timestamp:*<30.2%Y-%m-%d %H:%M:%S%:} {message}" }, fstlog::error_code::fmt_bad)
 		);
 		
+		auto fmt_str = std::get<0>(test_dat);
+		CAPTURE(fmt_str);
 		fstlog::formatter f;
-		auto error = fstlog::formatter_txt(f, std::get<0>(test_dat));
-		std::string_view str = std::get<0>(test_dat);
-		CAPTURE(str);
+		auto error = fstlog::formatter_txt(f, fmt_str);
 		CHECK(error == std::get<1>(test_dat));
 	}
 

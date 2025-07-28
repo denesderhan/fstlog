@@ -24,7 +24,6 @@
 #include <fstlog/detail/types.hpp>
 #include <fstlog/detail/noexceptions.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
-#include <formatter/impl/detail/time_to_str_converter.hpp>
 
 #ifdef FSTLOG_NOEXCEPTIONS
 #error encoder_stdformat_mixin must use exceptions, but exceptions are disabled!
@@ -32,9 +31,7 @@
 
 namespace fstlog {
 	template<typename L>
-    class encoder_stdformat_mixin : public L,
-        public time_to_str_converter
-    {
+    class encoder_stdformat_mixin : public L {
     public:
         typedef std::string_view format_type;
         using allocator_type = typename L::allocator_type;
@@ -52,10 +49,8 @@ namespace fstlog {
 			&& noexcept(encoder_stdformat_mixin(encoder_stdformat_mixin{}, allocator_type{})))
             : encoder_stdformat_mixin(other, other.get_allocator()) {}
 		encoder_stdformat_mixin(const encoder_stdformat_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(encoder_stdformat_mixin{}, allocator_type{}))
-			&& noexcept(time_to_str_converter(encoder_stdformat_mixin{})))
-            : L(other, allocator),
-              time_to_str_converter(other) {}
+			noexcept(L(encoder_stdformat_mixin{}, allocator_type{})))
+            : L(other, allocator) {}
 
         encoder_stdformat_mixin(encoder_stdformat_mixin&& other) = delete;
         encoder_stdformat_mixin& operator=(const encoder_stdformat_mixin& rhs) = delete;
@@ -165,26 +160,6 @@ namespace fstlog {
             }
             else {
                 encode(data.hash_, "{:#x}");
-            }
-        }
-
-        //nanosec_epoch
-        template<typename T, std::enable_if_t<
-            std::is_same_v<rm_cvref_t<T>, stamp_type>
-            >* = nullptr>
-        void encode(T data, format_type format) noexcept {
-            auto out_begin = safe_reinterpret_cast<unsigned char*>(&encoder_fmt_buffer_[0]);
-            auto out_end = out_begin + encoder_fmt_buffer_.size();
-            auto result = timestamp_to_chars(data, out_begin, out_end);
-            if (result.ec == error_code::none) {
-                encode(
-                    std::string_view{ 
-						&encoder_fmt_buffer_[0],
-						static_cast<std::size_t>(result.ptr - out_begin) },
-                    format);
-            }
-            else {
-                this->set_error(__FILE__, __LINE__, result.ec);
             }
         }
 

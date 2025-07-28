@@ -357,32 +357,4 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 			CHECK(res == "Hello");
 		}
 	};
-
-	SECTION("nanosec_epoch") {
-		enc_type encoder;
-		std::string_view time_fmt = ".2U%Y-%m-%d %H:%M:%S";
-		fstlog::buff_span_const time_format(reinterpret_cast<const unsigned char*>(time_fmt.data()), time_fmt.size());
-		encoder.init_time_to_str_converter(time_format);
-		auto format = enc_type::format_type{};
-		std::array<unsigned char, 1024> buffer;
-
-		SECTION("default_format") {
-			buffer.fill('!');
-			encoder.output_span_init(buffer);
-
-			encoder.encode(std::chrono::system_clock::time_point{}, format);
-			encoder.encode(std::chrono::system_clock::time_point{ std::chrono::system_clock::duration{std::chrono::seconds{60}} }, format);
-			encoder.encode(std::chrono::system_clock::time_point{ std::chrono::system_clock::duration{std::chrono::milliseconds{1751021567230}} }, format);
-
-			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
-				encoder.output_ptr() - encoder.output_begin());
-			CHECK(!encoder.has_error());
-			CHECK(res == u8"1970-01-01 00:00:00.001970-01-01 00:01:00.002025-06-27 10:52:47.23");
-
-			encoder.encode(std::chrono::system_clock::time_point{ std::chrono::system_clock::duration{std::chrono::seconds{-60}} }, format);
-			CHECK(encoder.get_error().code() == fstlog::error_code::input_bad);
-			encoder.clear_error();
-		}
-	}
 }

@@ -18,6 +18,7 @@
 #include <formatter/impl/detail/decoder_internal_mixin.hpp>
 #include <formatter/impl/detail/encoder_aggregate_separator_txt_mixin.hpp>
 #include <formatter/impl/detail/encoder_charconv_mixin.hpp>
+#include <formatter/impl/detail/encoder_timestamp_mixin.hpp>
 #include <formatter/impl/detail/hash_converter_null_mixin.hpp>
 #include <formatter/impl/formatter_txt_mixin.hpp>
 #include <formatter/impl/header_internal_mixin.hpp>
@@ -32,6 +33,7 @@ namespace fstlog {
 		formatter_txt_mixin<
 		arg_parser_mixin<
 		encoder_charconv_mixin<
+		encoder_timestamp_mixin<true,
 		encoder_aggregate_separator_txt_mixin<
 		hash_converter_null_mixin<
 		output_span_mixin<
@@ -43,7 +45,7 @@ namespace fstlog {
 		error_state_mixin<
 		exclusive_use_mixin<
 		reference_counter_mixin<
-		allocator_mixin>>>>>>>>>>>>>>>;
+		allocator_mixin>>>>>>>>>>>>>>>>;
 	
 	static error_code formatter_txt(
 		formatter& out,

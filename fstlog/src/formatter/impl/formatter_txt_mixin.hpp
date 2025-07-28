@@ -84,16 +84,15 @@ namespace fstlog {
 				else if (field_id == logfield::Message) has_message_field = true;
 				if (out_pos == out_end) return error_code::buff_full;
 				*out_pos++ = ut_cast(field_id);
-				
+
 				if (field_id == logfield::Timestamp) {
-					buff_span_const time_format_spec;
-					error = time_format(format_spec, time_format_spec);
-					if (error != error_code::none) return error;
-					error = this->init_time_to_str_converter(time_format_spec);
+					error = this->init_encoder_timestamp(format_spec);
 					if (error != error_code::none) return error;
 				}
-				if (!valid_format_spec(format_spec)) return error_code::fmt_bad;
-				this->set_format(field_id, format_spec);
+				else {
+					if (!valid_format_spec(format_spec)) return error_code::fmt_bad;
+					this->set_format(field_id, format_spec);
+				}
 			}
 			
 			if (!has_message_field) return error_code::fmt_bad;
@@ -156,9 +155,7 @@ namespace fstlog {
 					this->get_format(logfield::Severity));
 			}
 			else if (field_id == logfield::Timestamp) {
-				this->encode(
-					this->timestamp(),
-					this->get_format(logfield::Timestamp));
+				this->encode_timestamp(	this->timestamp());
 			}
 			else if (field_id == logfield::Channel) {
 				this->encode(
