@@ -22,6 +22,43 @@ using enc_type_align = fstlog::encoder_timestamp_mixin<true,
 	fstlog::error_state_mixin<
 	fstlog::allocator_mixin>>>;
 
+static bool encode_timestamp(
+	fstlog::stamp_type timestamp, 
+	const char* format_str, 
+	unsigned char* pos, 
+	std::size_t buff_size, 
+	bool local = false)
+{
+	if (timestamp < std::chrono::system_clock::time_point{}) {
+		return false;
+	}
+	// forcing floor rounding to seconds
+	time_t const t{ std::chrono::system_clock::to_time_t(std::chrono::floor<std::chrono::seconds>(timestamp)) };
+	tm time;
+#ifdef _WIN32
+	if (local) {
+		if (localtime_s(&time, &t) != 0) return false;
+	}
+	else {
+		if (gmtime_s(&time, &t) != 0) return false;
+	}
+#else
+	if (local) {
+		if (localtime_r(&t, &time) == NULL) return false;
+	}
+	else {
+		if (gmtime_r(&t, &time) == NULL) return false;
+	}
+#endif
+	std::size_t str_size = strftime(
+		reinterpret_cast<char*>(pos),
+		buff_size,
+		format_str,
+		&time);
+	if (str_size == 0) return false;
+	else return true;
+}
+
 TEST_CASE("encoder_timestamp_mixin") {
 	std::array<unsigned char, 128> buffer;
 	
@@ -31,8 +68,8 @@ TEST_CASE("encoder_timestamp_mixin") {
 			std::tuple<std::string_view, fstlog::error_code>{"HEAD_%S_TAIL", fstlog::error_code::none},
 			std::tuple<std::string_view, fstlog::error_code>{"wrong%?", fstlog::error_code::fmt_bad},
 			std::tuple<std::string_view, fstlog::error_code>{"",fstlog::error_code::none},
-			std::tuple<std::string_view, fstlog::error_code>{"x62character long time_string 62 character long time_string 62", fstlog::error_code::none},
-			std::tuple<std::string_view, fstlog::error_code>{"x63 character long time_string 63 character long time_string 63", fstlog::error_code::str_long},
+			std::tuple<std::string_view, fstlog::error_code>{"x63 character long time_string 63 character long time_string 63", fstlog::error_code::none},
+			std::tuple<std::string_view, fstlog::error_code>{"x64 character long time_string, 64 character long time_string 64", fstlog::error_code::str_long},
 			std::tuple<std::string_view, fstlog::error_code>{"x61 chars long time_string but with seconds %S it is too long", fstlog::error_code::str_long}
 			}));
 
@@ -66,15 +103,14 @@ TEST_CASE("encoder_timestamp_mixin") {
 				else if (buffer[ind] > '0' && buffer[ind] <= '9') buffer[ind] = '0';
 			}
 
-			auto time_offs = std::string_view(reinterpret_cast<const char*>(buffer.data()), length);
-			bool good = time_offs == "+0000" || time_offs == "+00:00";
-			CHECK(good);
+			const auto time_offs = std::string_view(reinterpret_cast<const char*>(buffer.data()), length);
+			CHECK(time_offs == "+0000");
 		}
 
 		SECTION("all_format") {
 			buffer.fill('!');
 			// all format spec (UTC)
-			auto format = std::string_view{ ".0U%H %I %M %S %U %W %Y %d %j %m %w %y" };
+			auto format = std::string_view{ ".0U%H %M %S %Y %a %d %m %y" };
 			fstlog::buff_span_const time_format(reinterpret_cast<const unsigned char*>(format.data()), format.size());
 			auto error = encoder.init_encoder_timestamp(time_format);
 			CHECK(error == fstlog::error_code::none);
@@ -82,7 +118,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 			encoder.encode_timestamp(fstlog::stamp_type{});
 			auto length = encoder.output_ptr() - encoder.output_begin();
 			auto time_str = std::string_view(reinterpret_cast<const char*>(buffer.data()), length);
-			CHECK(time_str == "00 12 00 00 00 00 1970 01 001 01 4 70");
+			CHECK(time_str == "00 00 00 1970 Thu 01 01 70");
 		}
 	}
 
@@ -91,7 +127,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 		SECTION("all_format") {
 			buffer.fill('!');
 			// all format spec (UTC)
-			auto format = std::string_view{ "*^43.0U%H %I %M %S %U %W %Y %d %j %m %w %y" };
+			auto format = std::string_view{ "*^43.0U%H %M %S %Y %a %d %m %y" };
 			fstlog::buff_span_const time_format(reinterpret_cast<const unsigned char*>(format.data()), format.size());
 			auto error = encoder.init_encoder_timestamp(time_format);
 			CHECK(error == fstlog::error_code::none);
@@ -99,7 +135,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 			encoder.encode_timestamp(fstlog::stamp_type{});
 			auto length = encoder.output_ptr() - encoder.output_begin();
 			auto time_str = std::string_view(reinterpret_cast<const char*>(buffer.data()), length);
-			CHECK(time_str == "***00 12 00 00 00 00 1970 01 001 01 4 70***");
+			CHECK(time_str == "********00 00 00 1970 Thu 01 01 70*********");
 		}
 	}
 
@@ -121,31 +157,194 @@ TEST_CASE("encoder_timestamp_mixin") {
 			std::chrono::system_clock::time_point{ std::chrono::microseconds{ microsecond } });
 		CHECK(encoder.get_error().code() == fstlog::error_code::input_bad);
 	}
+
+	SECTION("buffer_size") {
+		enc_type_noalign encoder;
+		buffer.fill(0);
+		encoder.output_span_init(buffer);
+		std::string_view form_temp{ "L%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%zX" };
+		fstlog::buff_span_const time_format{
+			reinterpret_cast<const unsigned char*>(form_temp.data()),
+			form_temp.size() };
+
+		auto success = encoder.init_encoder_timestamp(time_format);
+		CHECK(success == fstlog::error_code::str_long);
+	}
+
+	SECTION("compare_to_strftime") {
+		std::array<unsigned char, 32> buff1{ 0 };
+		std::array<unsigned char, 32> buff2{ 0 };
+
+		const auto time_epoch = std::chrono::system_clock::time_point{};
+		const auto time_now = std::chrono::system_clock::now();
+		std::vector<std::chrono::system_clock::time_point> times{
+			time_epoch,
+			time_now,
+			// second interval (rounding)
+			time_epoch + std::chrono::milliseconds{500},
+			time_epoch + std::chrono::milliseconds{1500},
+			time_epoch + std::chrono::milliseconds{2500},
+			time_epoch + std::chrono::milliseconds{15500},
+			time_epoch + std::chrono::milliseconds{30500},
+			time_epoch + std::chrono::milliseconds{45500},
+			time_epoch + std::chrono::milliseconds{55500},
+			time_now + std::chrono::milliseconds{500},
+			time_now + std::chrono::milliseconds{1500},
+			time_now + std::chrono::milliseconds{2500},
+			time_now + std::chrono::milliseconds{15500},
+			time_now + std::chrono::milliseconds{30500},
+			time_now + std::chrono::milliseconds{45500},
+			time_now + std::chrono::milliseconds{55500},
+			// minute
+			time_now + std::chrono::minutes{1},
+			time_now + std::chrono::minutes{15},
+			time_now + std::chrono::minutes{30},
+			time_now + std::chrono::minutes{34},
+			time_now + std::chrono::minutes{45},
+			time_now + std::chrono::minutes{55},
+			// hour
+			time_now + std::chrono::hours{1},
+			time_now + std::chrono::hours{5},
+			time_now + std::chrono::hours{12},
+			time_now + std::chrono::hours{20},
+			time_now + std::chrono::hours{22},
+			time_now + std::chrono::hours{24},
+			// day
+			time_now + std::chrono::days{ 1 },
+			time_now + std::chrono::days{ 2 },
+			time_now + std::chrono::days{ 3 },
+			time_now + std::chrono::days{ 4 },
+			time_now + std::chrono::days{ 5 },
+			time_now + std::chrono::days{ 6 },
+			// month (daylight saving if used)
+			time_now + std::chrono::days{ 30 },
+			time_now + std::chrono::days{ 30 * 2 },
+			time_now + std::chrono::days{ 30 * 3},
+			time_now + std::chrono::days{ 30 * 4},
+			time_now + std::chrono::days{ 30 * 5},
+			time_now + std::chrono::days{ 30 * 6},
+			time_now + std::chrono::days{ 30 * 7},
+			time_now + std::chrono::days{ 30 * 8},
+			time_now + std::chrono::days{ 30 * 9},
+			time_now + std::chrono::days{ 30 * 10},
+			time_now + std::chrono::days{ 30 * 11}
+		};
+
+		SECTION("local") {
+			auto strft_string = GENERATE(
+				std::string_view("%Y-%m-%d %H:%M:%S %z"),
+				std::string_view("%Y-%m-%d %H:%M %z"),
+				std::string_view("%y.%m.%d %a %H:%M:%S %z!")
+			);
+
+			std::string encoder_string(".0L"); // 0 second precision, local
+			encoder_string += strft_string;
+			enc_type_noalign encoder; // do not use fill align
+			fstlog::buff_span_const init_string(
+				reinterpret_cast<const unsigned char*>(encoder_string.data()),
+				encoder_string.size());
+						
+			encoder.output_span_init(buff2);
+			encoder.init_encoder_timestamp(init_string);
+			
+			for (auto timestamp : times) {
+				CAPTURE(timestamp);
+				buff1.fill(0);
+				buff2.fill(0);
+				encoder.output_span_init(buff2);
+				encoder.clear_error();
+
+				bool success0 = encode_timestamp(timestamp, strft_string.data(), buff1.data(), buff1.size(), true);
+				encoder.encode_timestamp(timestamp);
+				bool success1 = !encoder.has_error();
+				CHECK(success0 == success1);
+				CHECK(buff1 == buff2);
+			}
+		}
+
+		SECTION("UTC") {
+			auto strft_string = GENERATE(
+				std::string_view("%Y-%m-%d %H:%M:%S +0000"),
+				std::string_view("%Y-%m-%d %H:%M +0000"),
+				std::string_view("%y.%m.%d %a %H:%M:%S +0000!")
+			);
+
+			std::string encoder_string(".0U"); // 0 second precision, utc
+			encoder_string += strft_string;
+			enc_type_noalign encoder; // do not use fill align
+			fstlog::buff_span_const init_string(
+				reinterpret_cast<const unsigned char*>(encoder_string.data()),
+				encoder_string.size());
+
+			encoder.output_span_init(buff2);
+			encoder.init_encoder_timestamp(init_string);
+
+			for (auto timestamp : times) {
+				CAPTURE(timestamp);
+				buff1.fill(0);
+				buff2.fill(0);
+				encoder.output_span_init(buff2);
+				encoder.clear_error();
+
+				bool success0 = encode_timestamp(timestamp, strft_string.data(), buff1.data(), buff1.size(), false);
+				encoder.encode_timestamp(timestamp);
+				bool success1 = !encoder.has_error();
+				CHECK(success0 == success1);
+				CHECK(buff1 == buff2);
+			}
+		}
+	}
 };
 
 TEST_CASE("encoder_timestamp_mixin_benchmark", "[.][benchmark]") {
 	std::array<unsigned char, 1024> buffer{ 0 };
-	enc_type_noalign encoder;
-	std::string_view form_temp{ "%Y-%m-%d %H:%M:%S %z" };
+
+	enc_type_noalign encoder_loc;
+	std::string_view form_loc{ ".6L%Y-%m-%d %H:%M:%S %z" };
 	fstlog::buff_span_const time_format{
-		reinterpret_cast<const unsigned char*>(form_temp.data()),
-		form_temp.size() };
-	auto success = encoder.init_encoder_timestamp(time_format);
-	CHECK(success == fstlog::error_code::none);
-	long long microseconds = 0;
-	BENCHMARK_ADVANCED("non_cached")(Catch::Benchmark::Chronometer meter) {
-		meter.measure([&buffer, &encoder, &microseconds] {
-				encoder.output_span_init(buffer);
-				microseconds += 61000002233; 
-				encoder.encode_timestamp(
-					std::chrono::system_clock::time_point{ std::chrono::microseconds{ microseconds } });
+			reinterpret_cast<const unsigned char*>(form_loc.data()),
+			form_loc.size() };
+	auto error = encoder_loc.init_encoder_timestamp(time_format);
+	CHECK(error == fstlog::error_code::none);
+	
+	enc_type_noalign encoder_utc;
+	std::string_view form_utc{ ".6U%Y-%m-%d %H:%M:%S +0000" };
+	time_format = {
+			reinterpret_cast<const unsigned char*>(form_utc.data()),
+			form_utc.size() };
+	error = encoder_utc.init_encoder_timestamp(time_format);
+	CHECK(error == fstlog::error_code::none);
+		
+	long long seconds = 42;
+	BENCHMARK_ADVANCED("local_non_cached")(Catch::Benchmark::Chronometer meter) {
+		meter.measure([&buffer, &encoder_loc, &seconds] {
+				encoder_loc.output_span_init(buffer);
+				seconds += 60;
+				encoder_loc.encode_timestamp(
+					std::chrono::system_clock::time_point{ std::chrono::seconds{ seconds } });
 			});
 	};
-	BENCHMARK_ADVANCED("cached")(Catch::Benchmark::Chronometer meter) {
-		meter.measure([&buffer, &encoder, &microseconds] {
-				encoder.output_span_init(buffer);
-				encoder.encode_timestamp(
-					std::chrono::system_clock::time_point{ std::chrono::microseconds{ microseconds } });
+	BENCHMARK_ADVANCED("local_cached")(Catch::Benchmark::Chronometer meter) {
+		meter.measure([&buffer, &encoder_loc, &seconds] {
+				encoder_loc.output_span_init(buffer);
+				encoder_loc.encode_timestamp(
+					std::chrono::system_clock::time_point{ std::chrono::seconds{ seconds } });
+			});
+	};
+	seconds = 42;
+	BENCHMARK_ADVANCED("utc_non_cached")(Catch::Benchmark::Chronometer meter) {
+		meter.measure([&buffer, &encoder_utc, &seconds] {
+			encoder_utc.output_span_init(buffer);
+			seconds += 60;
+			encoder_utc.encode_timestamp(
+				std::chrono::system_clock::time_point{ std::chrono::seconds{ seconds } });
+			});
+	};
+	BENCHMARK_ADVANCED("utc_cached")(Catch::Benchmark::Chronometer meter) {
+		meter.measure([&buffer, &encoder_utc, &seconds] {
+			encoder_utc.output_span_init(buffer);
+			encoder_utc.encode_timestamp(
+				std::chrono::system_clock::time_point{ std::chrono::seconds{ seconds } });
 			});
 	};
 }

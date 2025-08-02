@@ -13,11 +13,12 @@ namespace fstlog {
 		// validate a limited set of strftime conversion specifiers
 		inline constexpr bool valid_strft_conv_spec(unsigned char spec) noexcept {
 			constexpr std::uint64_t valid_conv_spec_lut =
-				  (1ULL << ('H' - 64)) | (1ULL << ('I' - 64)) | (1ULL << ('M' - 64))	
-				| (1ULL << ('S' - 64)) | (1ULL << ('U' - 64)) | (1ULL << ('W' - 64))
-				| (1ULL << ('Y' - 64)) | (1ULL << ('d' - 64)) | (1ULL << ('j' - 64))
-				| (1ULL << ('m' - 64)) | (1ULL << ('w' - 64)) | (1ULL << ('y' - 64)) 
-				| (1ULL << ('z' - 64));
+				//    hour 00-23            minute 00-59       second 00-60 
+				(1ULL << ('H' - 64)) | (1ULL << ('M' - 64))	| (1ULL << ('S' - 64)) 
+				//    year 2025             day abbreviated      day of month
+				| (1ULL << ('Y' - 64)) | (1ULL << ('a' - 64)) | (1ULL << ('d' - 64))
+				//     month 01-12          year 00-99          utc offset +0130
+				| (1ULL << ('m' - 64)) | (1ULL << ('y' - 64)) | (1ULL << ('z' - 64));
 
 			// bounds check
 			if (spec < 64 || spec > 127) return false;

@@ -8,7 +8,7 @@
 TEST_CASE("valid_strft_conv_spec") {
 	for (int i = 0; i < 256; i++) {
 		unsigned char conv_spec = static_cast<unsigned char>(i);
-		auto pos = "HIMSUWYdjmwyz";
+		auto pos = "HMSYadmyz";
 		while (*pos != 0 && *pos != conv_spec) pos++;
 		if (*pos == 0) {
 			CHECK(fstlog::detail::valid_strft_conv_spec(conv_spec) == false);

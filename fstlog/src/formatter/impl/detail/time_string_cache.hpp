@@ -5,37 +5,32 @@
 #include <chrono>
 #include <limits>
 
-#include <formatter/impl/detail/time_string.hpp>
+#include <fstlog/detail/small_string.hpp>
 
 namespace fstlog {
 	template<int size_>
 	class time_string_cache {
-		using min_rep_type = std::chrono::minutes::rep;
+		using min_type = std::chrono::minutes::rep;
 	public:
 		time_string_cache() noexcept {
 			clear();
 		}
 
-		time_string<64>* find(min_rep_type key) noexcept {
-			time_string<64>* out_ptr{ cached_strings_.data()};
-			for (auto k : keys_) {
-				if (k == key) {
-					return out_ptr;
+		small_string<64> find(min_type key) noexcept {
+			for (auto const &p : cache_) {
+				if (p.second == key) {
+					return p.first;
 				}
-				out_ptr++;
 			}
-			return nullptr;
+			return small_string<64>{};
 		}
-		time_string<64>& replace_last(
-			time_string<64> time_str, 
-			min_rep_type new_key) noexcept
+		
+		void replace_oldest(
+			small_string<64> const &time_str, 
+			min_type new_key) noexcept
 		{
-			time_string<64>& t_str{ cached_strings_[insert_index_] };
-			t_str = time_str;
-			keys_[insert_index_++] = new_key;
-			if (insert_index_ == size_) 
-				insert_index_ = 0;
-			return t_str;
+			cache_[insert_index_++] = { time_str, new_key };
+			if (insert_index_ == size_) insert_index_ = 0;
 		}
 
 		static constexpr int size() noexcept {
@@ -43,13 +38,11 @@ namespace fstlog {
 		}
 
 		void clear() noexcept {
-			keys_.fill((std::numeric_limits<min_rep_type>::min)());
-			cached_strings_.fill(time_string<64>{});
+			cache_.fill({ small_string<64>{}, (std::numeric_limits<min_type>::min)() });
 			insert_index_ = 0;
 		}
 	private:
-		std::array <min_rep_type, size_> keys_;
 		int insert_index_;
-		std::array<time_string<64>, size_> cached_strings_;
+		std::array<std::pair<small_string<64>, min_type>, size_> cache_;
 	};
 }
