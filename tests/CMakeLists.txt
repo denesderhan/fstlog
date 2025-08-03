@@ -36,7 +36,6 @@ set(src/unit_tests
 	"unit_tests/logger_level_atomic_mixin.cpp"
 	"unit_tests/logger_mt.cpp"
 	"unit_tests/logger_st.cpp"
-	"unit_tests/nano_to_seconds_txt.cpp"
 	"unit_tests/nearest_pow2.cpp"
 	"unit_tests/padded_size.cpp"
 	"unit_tests/shift_fill.cpp"

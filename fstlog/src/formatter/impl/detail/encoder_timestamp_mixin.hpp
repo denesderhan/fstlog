@@ -17,7 +17,6 @@
 #include <formatter/impl/detail/format_setting_txt.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
 #include <formatter/impl/detail/local_utc_offset.hpp>
-#include <formatter/impl/detail/nano_to_seconds_txt.hpp>
 #include <formatter/impl/detail/shift_fill.hpp>
 #include <formatter/impl/detail/time_string_cache.hpp>
 #include <formatter/impl/detail/tz_format.hpp>
@@ -52,7 +51,7 @@ namespace fstlog {
 			time_format_{ other.time_format_ },
 			tzone_{ other.tzone_ },
 			formatted_length_{ other.formatted_length_ },
-			second_char_num_{ other.second_char_num_ },
+			second_precision_{ other.second_precision_ },
 			second_pos_{ other.second_pos_ } {}
 
 		encoder_timestamp_mixin(encoder_timestamp_mixin&& other) = delete;
@@ -69,8 +68,6 @@ namespace fstlog {
 			format_setting_txt format{};
 			auto error = decompose_format(time_format, format);
 			if (error != error_code::none) return error;
-			// format.precision is the precision of seconds (precision 0: "30" precision 2: "30.44")
-			second_char_num_ = format.precision == 0 ? 2 : static_cast<unsigned char>(format.precision + 3);
 			// try to set time_format_
 			error = set_time_format(time_format);
 			if (error != error_code::none) return error;
@@ -80,7 +77,7 @@ namespace fstlog {
 			error = apply_fill_align(format);
 			if (error != error_code::none) return error;
 			
-			set_second_pos();
+			prepare_seconds_placeholder();
 
 			return error_code::none;
 		}
@@ -95,37 +92,32 @@ namespace fstlog {
 				return;
 			}
 
-			// separate the seconds from the timestamp and store it as a string
-			detail::nano_to_seconds_txt minute_second(timestamp, second_char_num_);
-
-			// the remaining timstamp is in minutes
-			const auto min{ std::chrono::duration_cast<std::chrono::minutes>(minute_second.minutes().time_since_epoch()).count() };
+			const auto minutes{ std::chrono::floor<std::chrono::minutes>(timestamp) };
+			const auto nanoseconds{ std::chrono::duration_cast<std::chrono::nanoseconds>(
+				timestamp - minutes) };
+			
+			const auto key{ minutes.time_since_epoch().count() };
 			// search the minute in the cache
-			auto time_string{ time_string_cache_.find(min) };
+			auto time_string{ time_string_cache_.find(key) };
 			// if not found create and store
 			if (time_string.empty()) {
-				time_string = create_time_string(minute_second.minutes());
+				time_string = create_time_string(minutes);
 				FSTLOG_ASSERT(time_string.size() == formatted_length_);
-				time_string_cache_.replace_oldest(time_string, min);
+				time_string_cache_.replace_oldest(time_string, key);
 			}
 
 			const auto out_begin = this->output_ptr();
 			memcpy(out_begin, time_string.data(), formatted_length_);
-
 			// replacing the second placeholder with the second string
-			if (second_pos_ != 255) {
-				memcpy(
-					out_begin + second_pos_,
-					minute_second.second_str().data(),
-					minute_second.second_str().size());
-			}
+			write_second(nanoseconds, out_begin);
+			
 			this->advance_output(formatted_length_);
 		}
 
 	private:
 
 		// decompose fill-align, precision and time_format string
-		inline static error_code decompose_format(
+		error_code decompose_format(
 			buff_span_const& time_format,
 			format_setting_txt& format) noexcept
 		{
@@ -149,10 +141,12 @@ namespace fstlog {
 			}
 
 			format.width = static_cast<std::uint16_t>(get_width(pos, end));
+			// precision is the precision of seconds (precision 0: "30" precision 2 : "30.44")
 			int precision = 6;
 			get_precision(precision, pos, end);
 			if (precision > 9) precision = 9;
-			format.precision = static_cast<decltype(format.precision)>(precision);
+			second_precision_ = static_cast<unsigned char>(precision);
+			
 			time_format = buff_span_const(pos, static_cast<std::size_t>(end - pos));
 			return error_code::none;
 		}
@@ -200,14 +194,19 @@ namespace fstlog {
 			return error_code::none;
 		}
 
-		// determining the position of the second string inside the cached time string
-		// the position and length can not change, only the value
-		void set_second_pos() noexcept {
+		// compute second offset and fill it with '0'-s
+		void prepare_seconds_placeholder() noexcept {
 			auto stamp_str = create_time_string(stamp_type{});
 			std::size_t sec_pos = 0;
 			while (sec_pos < stamp_str.size() && *(stamp_str.data() + sec_pos) != 1) sec_pos++;
 			if (sec_pos == stamp_str.size()) sec_pos = 255;
 			second_pos_ = static_cast<unsigned char>(sec_pos);
+			
+			// replace 0x1-s with '0'-s
+			std::array<char, 64> temp{ 0 };
+			memcpy(temp.data(), time_format_.data(), time_format_.size());
+			for (auto& c : temp) if (c == 1) c = '0';
+			time_format_ = small_string<64>(temp.data(), time_format_.size());
 		}
 
 		// pre formatting the format string with fill-align
@@ -242,7 +241,7 @@ namespace fstlog {
 			return error_code::none;
 		}
 
-		// in time_format_ replaces %S with second_char_num_ 0x1-s
+		// in time_format_ replaces %S with 0x1-s
 		error_code add_second_placeholder() noexcept {
 			auto str_len = time_format_.size();
 			std::size_t sec_pos = 0;
@@ -253,13 +252,13 @@ namespace fstlog {
 				sec_pos++;
 			}
 
-			//no second in string
-			if (sec_pos == str_len - 1) {
-				second_char_num_ = 0;
-			}
-			// replace %S with placeholder 1-s
-			else {
-				str_len += static_cast<std::size_t>(second_char_num_) - 2;
+			// if format string has %S 
+			if (sec_pos + 1 < str_len) {
+				if (second_precision_ != 0) {
+					// %S (length 2) -> "ss" or "ss.fffff"
+					// length grow of string: 1('.') + fraqtional digits
+					str_len += 1ULL + second_precision_;
+				}
 				if (str_len > static_cast<int>(small_string<64>::capacity())) {
 					return error_code::str_long;
 				}
@@ -268,8 +267,9 @@ namespace fstlog {
 				auto src_ptr{ time_format_.data() };
 				memcpy(dest_ptr, src_ptr, sec_pos);
 				dest_ptr += sec_pos;
-				memset(dest_ptr, 1, second_char_num_);
-				dest_ptr += second_char_num_;
+				std::size_t second_char_num = second_precision_ == 0 ? 2 : 3ULL + second_precision_;
+				memset(dest_ptr, 1, second_char_num);
+				dest_ptr += second_char_num;
 				const auto post_sec_pos{ sec_pos + 2 };
 				src_ptr += post_sec_pos;
 				memcpy(dest_ptr, src_ptr, time_format_.size() - post_sec_pos);
@@ -404,12 +404,56 @@ namespace fstlog {
 			}
 		}
 
+		inline void write_second(
+			std::chrono::nanoseconds nanoseconds, 
+			unsigned char* timestring_begin)
+		{
+			if (second_pos_ == 255) return; // no second in format string
+			
+			auto nano_ticks = nanoseconds.count();
+			FSTLOG_ASSERT(nano_ticks < 60'000'000'000LL);
+
+			const long long pow10[10] { 1, 10, 100, 1'000, 10'000, 100'000,
+				 1'000'000, 10'000'000, 100'000'000, 1'000'000'000 };
+
+			const int digits_cut = 9 - second_precision_;
+			nano_ticks /= pow10[digits_cut];
+
+			const char digits2[]{
+				"0001020304050607080910111213141516171819"
+				"2021222324252627282930313233343536373839"
+				"4041424344454647484950515253545556575859"
+				"6061626364656667686970717273747576777879"
+				"8081828384858687888990919293949596979899" };
+			const auto second_begin = timestring_begin + second_pos_;
+			unsigned char* pos = second_precision_ == 0 ? 
+				second_begin + 2
+				: second_begin + 3 + second_precision_;
+			// converting digits, two at a time
+			while (nano_ticks != 0) {
+				pos -= 2;
+				const auto next_nano = nano_ticks / 100;
+				const auto fraq = nano_ticks - next_nano * 100;
+				const int digit_ind = static_cast<int>(fraq * 2);
+				*pos = digits2[digit_ind];
+				*(pos + 1) = digits2[digit_ind + 1];
+				nano_ticks = next_nano;
+			}
+
+			// inserting decimal point
+			if (second_precision_ != 0) {
+				*second_begin = *(second_begin + 1);
+				*(second_begin + 1) = *(second_begin + 2);
+				*(second_begin + 2) = '.';
+			}
+		}
+
 		time_string_cache<7> time_string_cache_;
 		small_string<64> time_format_;
 		detail::utc_offset utc_offset_{ detail::get_utc_offset() };
 		tz_format tzone_{ tz_format::Local };
 		unsigned char formatted_length_{ 0 };
-		unsigned char second_char_num_{ 9 };
+		unsigned char second_precision_{ 6 };
 		unsigned char second_pos_{ 255 };
     };
 }

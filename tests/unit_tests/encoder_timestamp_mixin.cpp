@@ -294,6 +294,77 @@ TEST_CASE("encoder_timestamp_mixin") {
 			}
 		}
 	}
+
+	SECTION("second_formatting") {
+		auto test_data = std::chrono::nanoseconds(59'999'999'999LL);
+		auto floored_data = std::chrono::duration_cast<std::chrono::nanoseconds>(
+			std::chrono::duration_cast<std::chrono::system_clock::duration>(test_data));
+		std::intmax_t dat = test_data.count();
+		std::intmax_t f_dat = floored_data.count();
+		int zeroed_digits = 0;
+		while (dat % 10 != f_dat % 10) {
+			zeroed_digits++;
+			dat /= 10;
+			f_dat /= 10;
+		}
+		CHECK(zeroed_digits <= 6); // millisecond precision
+
+		auto data = GENERATE(
+			std::make_tuple(0, std::string_view(".0AAA%SBBB"), 0LL, std::string_view("AAA00BBB"), 4),
+			std::make_tuple(1, ".1%S", 0, "00.0", 3),
+			std::make_tuple(3, ".3%S", 0, "00.000", 5),
+			std::make_tuple(9, ".9%S", 0, "00.000000000", 11),
+			std::make_tuple(9, ".12AAA%SBBB", 0, "AAA00.000000000BBB", 14),
+			std::make_tuple(9, ".12%S", 1000, "00.000001000", 11),
+			std::make_tuple(0, ".0AAA%SBBB", 1'999'000'000, "AAA01BBB", 4),
+			std::make_tuple(1, ".1%S", 1'000'000'000, "01.0", 3),
+			std::make_tuple(2, ".2%S", 1'000'000'000, "01.00", 4),
+			std::make_tuple(6, ".6%S", 1'000'000'000, "01.000000", 8),
+			std::make_tuple(7, ".7%S", 1'000'000'000, "01.0000000", 9),
+			std::make_tuple(0, ".0%S", 30'000'000'000, "30", 1),
+			std::make_tuple(6, ".6%S", 2'456'129'999, "02.456129", 8),
+			std::make_tuple(5, ".5%S", 40'432'015'000, "40.43201", 7),
+			std::make_tuple(4, ".4%S", 40'123'470'000, "40.1234", 6),
+			std::make_tuple(3, ".3%S", 49'791'654'000, "49.791", 5),
+			std::make_tuple(2, ".2%S", 32'456'004'000, "32.45", 4),
+			std::make_tuple(1, ".1%S", 40'678'004'000, "40.6", 3),
+			std::make_tuple(7, ".7ABCDE%SFGHIJ", 123'456'789, "ABCDE00.1234567FGHIJ", 14),
+			std::make_tuple(8, ".8%S", 23'364'635'251, "23.36463525", 10),
+			std::make_tuple(9, ".9%S", 57'456'785'123, "57.456785123", 11),
+			std::make_tuple(1, ".1%S", 40'900'004'000, "40.9", 3),
+			std::make_tuple(0, ".0%S", 40'900'005'000, "40", 1),
+			std::make_tuple(4, ".4%S", 59'995'450'000, "59.9954", 6),
+			std::make_tuple(3, ".3%S", 59'995'450'000, "59.995", 5),
+			std::make_tuple(1, ".1%S", 59'995'450'000, "59.9", 3),
+			std::make_tuple(0, ".0%S", 59'995'450'000, "59", 1),
+			std::make_tuple(9, ".12%S", 59'999'999'999LL, "59.999999999", 11),
+			std::make_tuple(9, ".12FOO%SBAR", 56'789'123'689LL, "FOO56.789123689BAR", 14)
+		);
+
+		auto precision = std::get<0>(data);
+		auto format = std::get<1>(data);
+		auto nanosec = std::chrono::system_clock::time_point(
+			std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::nanoseconds(std::get<2>(data))));
+		std::array<unsigned char, 64> control{ 0 };
+		memcpy(control.data(), std::get<3>(data).data(), std::get<3>(data).size());
+		
+		// zeroing out digits (chrono resolution precision loss)
+		int digits_to_zero = zeroed_digits - (9 - precision);
+		auto digit_pos = control.data() + std::get<4>(data);
+		while (digits_to_zero-- > 0) {
+			*digit_pos-- = '0';
+		}
+
+		enc_type_noalign encoder;
+		std::array<unsigned char, 64> result{ 0 };
+		encoder.output_span_init(result);
+		encoder.init_encoder_timestamp(
+			fstlog::buff_span_const(reinterpret_cast<const unsigned char*>(format.data()), format.size()));
+
+		encoder.encode_timestamp(nanosec);
+		CHECK(!encoder.has_error());
+		CHECK(result == control);
+	};
 };
 
 TEST_CASE("encoder_timestamp_mixin_benchmark", "[.][benchmark]") {

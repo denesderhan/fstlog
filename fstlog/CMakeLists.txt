@@ -224,7 +224,6 @@ set(src_formatter_impl_detail
     "src/formatter/impl/detail/hash_converter_null_mixin.hpp"
     "src/formatter/impl/detail/local_utc_offset.hpp"
     "src/formatter/impl/detail/logfield.hpp"
-    "src/formatter/impl/detail/nano_to_seconds_txt.hpp"
     "src/formatter/impl/detail/policy_txt.hpp"
     "src/formatter/impl/detail/severity_txt.hpp"
     "src/formatter/impl/detail/shift_fill.hpp"
