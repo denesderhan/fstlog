@@ -210,24 +210,24 @@ TEST_CASE("encoder_timestamp_mixin") {
 			time_now + std::chrono::hours{22},
 			time_now + std::chrono::hours{24},
 			// day
-			time_now + std::chrono::days{ 1 },
-			time_now + std::chrono::days{ 2 },
-			time_now + std::chrono::days{ 3 },
-			time_now + std::chrono::days{ 4 },
-			time_now + std::chrono::days{ 5 },
-			time_now + std::chrono::days{ 6 },
+			time_now + std::chrono::hours{ 24 },
+			time_now + std::chrono::hours{ 24 * 2 },
+			time_now + std::chrono::hours{ 24 * 3 },
+			time_now + std::chrono::hours{ 24 * 4 },
+			time_now + std::chrono::hours{ 24 * 5 },
+			time_now + std::chrono::hours{ 24 * 6 },
 			// month (daylight saving if used)
-			time_now + std::chrono::days{ 30 },
-			time_now + std::chrono::days{ 30 * 2 },
-			time_now + std::chrono::days{ 30 * 3},
-			time_now + std::chrono::days{ 30 * 4},
-			time_now + std::chrono::days{ 30 * 5},
-			time_now + std::chrono::days{ 30 * 6},
-			time_now + std::chrono::days{ 30 * 7},
-			time_now + std::chrono::days{ 30 * 8},
-			time_now + std::chrono::days{ 30 * 9},
-			time_now + std::chrono::days{ 30 * 10},
-			time_now + std::chrono::days{ 30 * 11}
+			time_now + std::chrono::hours{ 24 * 30 },
+			time_now + std::chrono::hours{ 24 * 30 * 2 },
+			time_now + std::chrono::hours{ 24 * 30 * 3 },
+			time_now + std::chrono::hours{ 24 * 30 * 4 },
+			time_now + std::chrono::hours{ 24 * 30 * 5 },
+			time_now + std::chrono::hours{ 24 * 30 * 6 },
+			time_now + std::chrono::hours{ 24 * 30 * 7 },
+			time_now + std::chrono::hours{ 24 * 30 * 8 },
+			time_now + std::chrono::hours{ 24 * 30 * 9 },
+			time_now + std::chrono::hours{ 24 * 30 * 10 },
+			time_now + std::chrono::hours{ 24 * 30 * 11 }
 		};
 
 		SECTION("local") {

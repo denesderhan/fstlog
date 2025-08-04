@@ -401,14 +401,12 @@ TEST_CASE("utfX_to_utfY") {
 		std::size_t char_num = GENERATE(0, 1, 10, 530, 1071, (std::numeric_limits<std::size_t>::max)());
 		CAPTURE(char_num);
 		{
-			std::vector<utf8_char_lib> out_buff(4096, 0);
+			std::vector<unsigned char> out_buff(4096, 0);
 			const auto wanted_char_num{ std::min(char_num, text_char_num) };
-			unsigned char* out_data = reinterpret_cast<unsigned char*>(out_buff.data());
-			unsigned char const* out_end = out_data + out_buff.size();
 			const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(u32_text.data()) };
 			const auto result = fstlog::detail::utf32_to_utf8<char32_t>(
 				in_begin, in_begin + (u32_text.size() * sizeof(char32_t)),
-				out_data, out_end,
+				out_buff.data(), out_buff.data() + out_buff.size(),
 				char_num);
 			CHECK(result.ec == fstlog::error_code::none);
 			CHECK(char_num == wanted_char_num);
@@ -426,16 +424,14 @@ TEST_CASE("utfX_to_utfY") {
 
 			CHECK(trimmed_control ==
 				std::basic_string_view<utf8_char_std>{
-				out_buff.data(),
-					static_cast<std::size_t>(reinterpret_cast<utf8_char_std*>(result.ptr) - out_buff.data())
+					reinterpret_cast<utf8_char_std*>(out_buff.data()),
+					static_cast<std::size_t>(result.ptr - out_buff.data())
 			});
 		}
 	};
 
 	SECTION("utf16_to_utf8") {
-		std::vector<utf8_char_lib> out_buff(4096, 0);
-		unsigned char* out_data = reinterpret_cast<unsigned char*>(out_buff.data());
-		unsigned char const* out_end = out_data + out_buff.size();
+		std::vector<unsigned char> out_buff(4096, 0);
 		std::size_t char_num = GENERATE(0, 1, 10, 530, 1071, (std::numeric_limits<std::size_t>::max)());
 		CAPTURE(char_num);
 		{
@@ -443,7 +439,7 @@ TEST_CASE("utfX_to_utfY") {
 			const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(u16_text.data()) };
 			const auto result = fstlog::detail::utf16_to_utf8<char16_t>(
 				in_begin, in_begin + (u16_text.size() * sizeof(char16_t)),
-				out_data, out_end,
+				out_buff.data(), out_buff.data() + out_buff.size(),
 				char_num);
 			CHECK(result.ec == fstlog::error_code::none);
 			if(wanted_charnum == (std::numeric_limits<std::size_t>::max)())
@@ -462,8 +458,8 @@ TEST_CASE("utfX_to_utfY") {
 
 			CHECK(trimmed_control ==
 				std::basic_string_view<utf8_char_std>{
-					reinterpret_cast<utf8_char_std*>(out_data),
-					static_cast<std::size_t>(result.ptr - out_data)});
+					reinterpret_cast<utf8_char_std*>(out_buff.data()),
+					static_cast<std::size_t>(result.ptr - out_buff.data())});
 		}
 	};
 
@@ -504,86 +500,79 @@ TEST_CASE("utfX_to_utfY") {
 
 	SECTION("utf32_to_utf8_irregular") {
 		auto test_data = GENERATE(
-			std::make_tuple(std::vector<char32_t>{'S', 'u', 'r', 'r', 'o', 'g', 'a', 't', 'e', ':', 0xD800, 0xDA00, 0xDFFF}, std::basic_string_view<utf8_char_lib>{u8"Surrogate:\\uFFFD\\uFFFD\\uFFFD"}),
-			std::make_tuple(std::vector<char32_t>{'O', 'u', 't', ':', 0x00110000, 0x001FFFFF, 0xFFFFFFFF}, std::basic_string_view<utf8_char_lib>{u8"Out:\\uFFFD\\uFFFD\\uFFFD"}),
-			std::make_tuple(std::vector<char32_t>{'C', '0', ':', 0x0000, 0x000A, 0x000C, 0x001F, 0x007F}, std::basic_string_view<utf8_char_lib>{u8"C0:\\u0000\\u000A\\u000C\\u001F\\u007F"}),
-			std::make_tuple(std::vector<char32_t>{'C', '1', ':', 0x0080, 0x008C, 0x009F}, std::basic_string_view<utf8_char_lib>{u8"C1:\\u0080\\u008C\\u009F"}),
-			std::make_tuple(std::vector<char32_t>{'U', 'n', 's', 'a', 'f', 'e', ':', 0x02B0, 0x20D0, 0x0001F600, 0x000E01EF}, std::basic_string_view<utf8_char_lib>{u8"Unsafe:\\u02B0\\u20D0\\U0001F600\\U000E01EF"})
+			std::make_tuple(std::vector<char32_t>{'S', 'u', 'r', 'r', 'o', 'g', 'a', 't', 'e', ':', 0xD800, 0xDA00, 0xDFFF}, std::basic_string_view<utf8_char_std>{u8"Surrogate:\\uFFFD\\uFFFD\\uFFFD"}),
+			std::make_tuple(std::vector<char32_t>{'O', 'u', 't', ':', 0x00110000, 0x001FFFFF, 0xFFFFFFFF}, std::basic_string_view<utf8_char_std>{u8"Out:\\uFFFD\\uFFFD\\uFFFD"}),
+			std::make_tuple(std::vector<char32_t>{'C', '0', ':', 0x0000, 0x000A, 0x000C, 0x001F, 0x007F}, std::basic_string_view<utf8_char_std>{u8"C0:\\u0000\\u000A\\u000C\\u001F\\u007F"}),
+			std::make_tuple(std::vector<char32_t>{'C', '1', ':', 0x0080, 0x008C, 0x009F}, std::basic_string_view<utf8_char_std>{u8"C1:\\u0080\\u008C\\u009F"}),
+			std::make_tuple(std::vector<char32_t>{'U', 'n', 's', 'a', 'f', 'e', ':', 0x02B0, 0x20D0, 0x0001F600, 0x000E01EF}, std::basic_string_view<utf8_char_std>{u8"Unsafe:\\u02B0\\u20D0\\U0001F600\\U000E01EF"})
 		);
 		
 		auto control_txt = std::get<1>(test_data);
 		auto input = std::get<0>(test_data);
-		std::vector<utf8_char_lib> out_buff(2048, 0);
-		unsigned char* out_data = reinterpret_cast<unsigned char*>(out_buff.data());
-		unsigned char const* out_end = out_data + out_buff.size();
+		std::vector<unsigned char> out_buff(2048, 0);
 		const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(input.data()) };
 		auto in_end = in_begin + sizeof(char32_t) * input.size();
 		std::size_t char_num = (std::numeric_limits<std::size_t>::max)();
 		const auto result = fstlog::detail::utf32_to_utf8<char32_t>(
 			in_begin, in_end,
-			out_data, out_end,
+			out_buff.data(), out_buff.data() + out_buff.size(),
 			char_num);
-		CAPTURE(reinterpret_cast<const char*>(out_data));
 		CHECK(result.ec == fstlog::error_code::none);
-		std::basic_string_view < utf8_char_lib> str_out{ 
-			out_buff.data(), 
-			static_cast<std::size_t>(result.ptr - out_data)};
+		std::basic_string_view < utf8_char_std> str_out{ 
+			reinterpret_cast<utf8_char_std*>(out_buff.data()),
+			static_cast<std::size_t>(result.ptr - out_buff.data())};
 		CHECK(control_txt == str_out);
 	};
 
 	SECTION("utf16_to_utf8_irregular") {
 		auto test_data = GENERATE(
-			std::make_tuple(std::vector<char16_t>{'S', 'u', 'r', 'r', 'o', 'g', 'a', 't', 'e', ':', 0xD800, '_', 0xDA00, '_', 0xDFFF}, std::basic_string_view<utf8_char_lib>{u8"Surrogate:\\uFFFD_\\uFFFD_\\uFFFD"}),
-			std::make_tuple(std::vector<char16_t>{'C', '0', ':', 0x0000, 0x000A, 0x000C, 0x001F, 0x007F}, std::basic_string_view<utf8_char_lib>{u8"C0:\\u0000\\u000A\\u000C\\u001F\\u007F"}),
-			std::make_tuple(std::vector<char16_t>{'C', '1', ':', 0x0080, 0x008C, 0x009F}, std::basic_string_view<utf8_char_lib>{u8"C1:\\u0080\\u008C\\u009F"}),
-			std::make_tuple(std::vector<char16_t>{'U', 'n', 's', 'a', 'f', 'e', ':', 0x02B0, 0x20D0, 0xd83d, 0xde00, 0xd884, 0xdf50}, std::basic_string_view<utf8_char_lib>{u8"Unsafe:\\u02B0\\u20D0\\U0001F600\\U00031350"})
+			std::make_tuple(std::vector<char16_t>{'S', 'u', 'r', 'r', 'o', 'g', 'a', 't', 'e', ':', 0xD800, '_', 0xDA00, '_', 0xDFFF}, std::basic_string_view<utf8_char_std>{u8"Surrogate:\\uFFFD_\\uFFFD_\\uFFFD"}),
+			std::make_tuple(std::vector<char16_t>{'C', '0', ':', 0x0000, 0x000A, 0x000C, 0x001F, 0x007F}, std::basic_string_view<utf8_char_std>{u8"C0:\\u0000\\u000A\\u000C\\u001F\\u007F"}),
+			std::make_tuple(std::vector<char16_t>{'C', '1', ':', 0x0080, 0x008C, 0x009F}, std::basic_string_view<utf8_char_std>{u8"C1:\\u0080\\u008C\\u009F"}),
+			std::make_tuple(std::vector<char16_t>{'U', 'n', 's', 'a', 'f', 'e', ':', 0x02B0, 0x20D0, 0xd83d, 0xde00, 0xd884, 0xdf50}, std::basic_string_view<utf8_char_std>{u8"Unsafe:\\u02B0\\u20D0\\U0001F600\\U00031350"})
 		);
 
 		auto control_txt = std::get<1>(test_data);
-		auto input = std::get<0>(test_data);
-		std::vector<utf8_char_lib> out_buff(2048, 0);
-		unsigned char* out_data = reinterpret_cast<unsigned char*>(out_buff.data());
-		unsigned char const* out_end = out_data + out_buff.size();
+		auto &input = std::get<0>(test_data);
+		std::vector<unsigned char> out_buff(2048, 0);
 		const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(input.data()) };
 		auto in_end = in_begin + sizeof(char16_t) * input.size();
 		std::size_t char_num = (std::numeric_limits<std::size_t>::max)();
 		const auto result = fstlog::detail::utf16_to_utf8<char16_t>(
 			in_begin, in_end,
-			out_data, out_end,
+			out_buff.data(), out_buff.data() + out_buff.size(),
 			char_num);
-		CAPTURE(reinterpret_cast<const char*>(out_data));
+		CAPTURE(reinterpret_cast<const char*>(out_buff.data()));
 		CHECK(result.ec == fstlog::error_code::none);
-		std::basic_string_view < utf8_char_lib> str_out{
-			out_buff.data(),
-			static_cast<std::size_t>(result.ptr - out_data) };
+		std::basic_string_view < utf8_char_std> str_out{
+			reinterpret_cast<utf8_char_std*>(out_buff.data()),
+			static_cast<std::size_t>(result.ptr - out_buff.data()) };
 		CHECK(control_txt == str_out);
 	};
 
 	SECTION("utf8_to_utf8_irregular") {
 		auto test_data = GENERATE(
-			std::make_tuple(std::vector<utf8_char_lib>{'S', 'u', 'r', 'r', 'o', 'g', 'a', 't', 'e', ':', 0xED, 0xA0, 0x80, 0xED, 0xA8, 0x80, 0xED, 0xBF, 0xBF}, std::basic_string_view<utf8_char_lib>{u8"Surrogate:\\uFFFD\\uFFFD\\uFFFD"}),
-			std::make_tuple(std::vector<utf8_char_lib>{'C', '0', ':', 0x0000, 0x000A, 0x000C, 0x001F, 0x007F}, std::basic_string_view<utf8_char_lib>{u8"C0:\\u0000\\u000A\\u000C\\u001F\\u007F"}),
-			std::make_tuple(std::vector<utf8_char_lib>{'C', '1', ':', 0xC2, 0x80, 0xC2, 0x8C, 0xC2, 0x9F}, std::basic_string_view<utf8_char_lib>{u8"C1:\\u0080\\u008C\\u009F"}),
-			std::make_tuple(std::vector<utf8_char_lib>{'U', 'n', 's', 'a', 'f', 'e', ':', 0xCA, 0xB0, 0xE2, 0x83, 0x90, 0xF0, 0x9F, 0x98, 0x80, 0xF0, 0xB1, 0x8D, 0x90}, std::basic_string_view<utf8_char_lib>{u8"Unsafe:\\u02B0\\u20D0\\U0001F600\\U00031350"})
+			std::make_tuple(std::vector<utf8_char_lib>{'S', 'u', 'r', 'r', 'o', 'g', 'a', 't', 'e', ':', 0xED, 0xA0, 0x80, 0xED, 0xA8, 0x80, 0xED, 0xBF, 0xBF}, std::basic_string_view<utf8_char_std>{u8"Surrogate:\\uFFFD\\uFFFD\\uFFFD"}),
+			std::make_tuple(std::vector<utf8_char_lib>{'C', '0', ':', 0x0000, 0x000A, 0x000C, 0x001F, 0x007F}, std::basic_string_view<utf8_char_std>{u8"C0:\\u0000\\u000A\\u000C\\u001F\\u007F"}),
+			std::make_tuple(std::vector<utf8_char_lib>{'C', '1', ':', 0xC2, 0x80, 0xC2, 0x8C, 0xC2, 0x9F}, std::basic_string_view<utf8_char_std>{u8"C1:\\u0080\\u008C\\u009F"}),
+			std::make_tuple(std::vector<utf8_char_lib>{'U', 'n', 's', 'a', 'f', 'e', ':', 0xCA, 0xB0, 0xE2, 0x83, 0x90, 0xF0, 0x9F, 0x98, 0x80, 0xF0, 0xB1, 0x8D, 0x90}, std::basic_string_view<utf8_char_std>{u8"Unsafe:\\u02B0\\u20D0\\U0001F600\\U00031350"})
 		);
 
 		auto control_txt = std::get<1>(test_data);
 		auto input = std::get<0>(test_data);
-		std::vector<utf8_char_lib> out_buff(2048, 0);
-		unsigned char* out_data = reinterpret_cast<unsigned char*>(out_buff.data());
-		unsigned char const* out_end = out_data + out_buff.size();
+		std::vector<unsigned char> out_buff(2048, 0);
 		const unsigned char* in_begin{ reinterpret_cast<const unsigned char*>(input.data()) };
 		auto in_end = in_begin + input.size();
 		std::size_t char_num = (std::numeric_limits<std::size_t>::max)();
 		const auto result = fstlog::detail::utf8_to_utf8(
 			in_begin, in_end,
-			out_data, out_end,
+			out_buff.data(), out_buff.data() + out_buff.size(),
 			char_num);
-		CAPTURE(reinterpret_cast<const char*>(out_data));
+		CAPTURE(reinterpret_cast<const char*>(out_buff.data()));
 		CHECK(result.ec == fstlog::error_code::none);
-		std::basic_string_view < utf8_char_lib> str_out{
-			out_buff.data(),
-			static_cast<std::size_t>(result.ptr - out_data) };
+		std::basic_string_view < utf8_char_std> str_out{
+			reinterpret_cast<utf8_char_std*>(out_buff.data()),
+			static_cast<std::size_t>(result.ptr - out_buff.data()) };
 		CHECK(control_txt == str_out);
 	};
 
@@ -606,7 +595,7 @@ TEST_CASE("utfX_to_utfY") {
 		CHECK(char_num == 5);
 		CHECK(result.ptr == out_data + 7);
 		std::basic_string_view control{ u8"UTF 编" };
-		CHECK(std::basic_string_view(reinterpret_cast<utf8_char_lib*>(buffer.data()), 7) == control);
+		CHECK(std::basic_string_view(reinterpret_cast<utf8_char_std*>(buffer.data()), 7) == control);
 	}
 
 	SECTION("utf16_to_utf8_no_space_in_buffer") {
@@ -628,7 +617,7 @@ TEST_CASE("utfX_to_utfY") {
 		CHECK(char_num == 5);
 		CHECK(result.ptr == out_data + 7);
 		std::basic_string_view control{ u8"UTF 编" };
-		CHECK(std::basic_string_view(reinterpret_cast<utf8_char_lib*>(buffer.data()), 7) == control);
+		CHECK(std::basic_string_view(reinterpret_cast<utf8_char_std*>(buffer.data()), 7) == control);
 	}
 
 	SECTION("utf8_to_utf8_no_space_in_buffer") {
@@ -650,7 +639,7 @@ TEST_CASE("utfX_to_utfY") {
 		CHECK(char_num == 5);
 		CHECK(result.ptr == out_data + 7);
 		std::basic_string_view control{ u8"UTF 编" };
-		CHECK(std::basic_string_view(reinterpret_cast<utf8_char_lib*>(buffer.data()), 7) == control);
+		CHECK(std::basic_string_view(reinterpret_cast<utf8_char_std*>(buffer.data()), 7) == control);
 	}
 }
 

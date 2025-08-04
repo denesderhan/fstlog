@@ -293,7 +293,7 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 			encoder.encode(char32_t{ 'C' }, format);
 			encoder.encode(char32_t{ 0xD800 }, format);
 			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				reinterpret_cast<const utf8_char_std*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
 			CHECK(!encoder.has_error());
 			CHECK(res == u8"A\\u0000B\\uFFFDC\\uFFFD");
@@ -333,7 +333,7 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 			encoder.encode(std::basic_string_view(U"UTF-32 string§©"), format);
 
 			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				reinterpret_cast<const utf8_char_std*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
 			CHECK(!encoder.has_error());
 			CHECK(res == u8"ASCII string\\u000AUTF-8 string§©UTF-16 string§©UTF-32 string§©");
