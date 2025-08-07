@@ -8,45 +8,27 @@
 
 TEST_CASE("unaligned_span") {
 	SECTION("01") {
-		std::array<unsigned char, 16> buff0{ 0, 1, 2, 3, 4, 5, 6 };
-		fstlog::unaligned_span test0(buff0.data(), buff0.size());
-		CHECK(test0.data() == buff0.data());
-		CHECK(test0.size_bytes() == buff0.size());
-
-		std::array<int, 16> buff1{ 0 };
-		fstlog::unaligned_span test1(buff1.data(), buff1.size());
-		CHECK(test1.data() == reinterpret_cast<unsigned char*>(buff1.data()));
-		CHECK(test1.size_bytes() == buff1.size() * sizeof(int));
-
-		fstlog::unaligned_span<int> test2(
-			reinterpret_cast<unsigned char*>(buff1.data()),
-			buff1.size() * sizeof(int));
-		CHECK(test2.data() == reinterpret_cast<unsigned char*>(buff1.data()));
-		CHECK(test2.size_bytes() == buff1.size() * sizeof(int));
-
-		fstlog::byte_span test3(buff0);
-		CHECK(test3.data() == buff0.data());
-		CHECK(test3.size_bytes() == buff0.size());
-
-		fstlog::byte_span_const test4(test3);
-		CHECK(test4.data() == buff0.data());
-		CHECK(test4.size_bytes() == buff0.size());
-
-		for (int i = 0; i < 7; i++) {
-			CHECK(test3[i] == i);
-			test3[i] = 0;
+		std::array<double, 4> data{3.14, 42.42, 0.3, std::numeric_limits<double>::infinity()};
+		// +1 to the byte size to make the data unaligned
+		std::array<unsigned char, sizeof(double) * data.size() + 1> buff{ 0 };
+		fstlog::unaligned_span<double> test(buff.data() + 1, buff.size() - 1);
+		
+		// copy data
+		std::size_t ind = 0;
+		for (auto d : data) {
+			test[ind] = d;
+			ind++;
 		}
+		
+		fstlog::unaligned_span<const double> test2(buff.data() + 1, buff.size() - 1);
 
-		for (int i = 0; i < 7; i++) {
-			CHECK(buff0[i] == 0);
-		}
-
-		fstlog::unaligned_span<const int> test5(test1);
-		for (int i = 0; i < 7; i++) {
-			CHECK(test5[i] == 0);
-		}
-		//CHECK(test1[0] == 0); //This should not work!
-
+		// verify
+		ind = 0;
+		for (auto d : data) {
+			CHECK(d == test[ind]);
+			CHECK(d == test2[ind]);
+			ind++;
+		}	
 	};
 
 }
