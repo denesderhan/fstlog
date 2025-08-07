@@ -15,7 +15,7 @@ TEST_CASE("logfield_formspec_fmt_mixin") {
 		CHECK(test_type::get_default_format() == fstlog::small_string<24>("{}"));
 
 		std::string_view form_spec{"?>+#30.12x"};
-		fstlog::buff_span_const f(reinterpret_cast<const unsigned char*>(form_spec.data()), form_spec.size());
+		fstlog::byte_span_const f(reinterpret_cast<const unsigned char*>(form_spec.data()), form_spec.size());
 		instance.set_format(fstlog::logfield::Channel, f);
 		CHECK(std::string_view{instance.get_format(fstlog::logfield::Channel)} == "{:?>+#30.12x}");
 

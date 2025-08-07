@@ -7,7 +7,7 @@
 #include <string_view>
 
 #include <formatter/impl/detail/encoder_timestamp_mixin.hpp>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/mixin/allocator_mixin.hpp>
 #include <detail/mixin/error_state_mixin.hpp>
 #include <formatter/impl/output_span_mixin.hpp>
@@ -75,7 +75,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 
 		std::string_view input = std::get<0>(extent);
 		CAPTURE(input);
-		fstlog::buff_span_const time_format{
+		fstlog::byte_span_const time_format{
 			reinterpret_cast<const unsigned char*>(input.data()),
 			input.size() };
 		auto error = std::get<1>(extent);
@@ -90,7 +90,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 			buffer.fill('!');
 			// length of formatted time zone (local time)
 			auto format = std::string_view{ ".0L%z" };
-			fstlog::buff_span_const time_format(reinterpret_cast<const unsigned char*>(format.data()), format.size());
+			fstlog::byte_span_const time_format(reinterpret_cast<const unsigned char*>(format.data()), format.size());
 			auto error = encoder.init_encoder_timestamp(time_format);
 			CHECK(error == fstlog::error_code::none);
 			encoder.output_span_init(buffer);
@@ -111,7 +111,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 			buffer.fill('!');
 			// all format spec (UTC)
 			auto format = std::string_view{ ".0U%H %M %S %Y %a %d %m %y" };
-			fstlog::buff_span_const time_format(reinterpret_cast<const unsigned char*>(format.data()), format.size());
+			fstlog::byte_span_const time_format(reinterpret_cast<const unsigned char*>(format.data()), format.size());
 			auto error = encoder.init_encoder_timestamp(time_format);
 			CHECK(error == fstlog::error_code::none);
 			encoder.output_span_init(buffer);
@@ -128,7 +128,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 			buffer.fill('!');
 			// all format spec (UTC)
 			auto format = std::string_view{ "*^43.0U%H %M %S %Y %a %d %m %y" };
-			fstlog::buff_span_const time_format(reinterpret_cast<const unsigned char*>(format.data()), format.size());
+			fstlog::byte_span_const time_format(reinterpret_cast<const unsigned char*>(format.data()), format.size());
 			auto error = encoder.init_encoder_timestamp(time_format);
 			CHECK(error == fstlog::error_code::none);
 			encoder.output_span_init(buffer);
@@ -144,7 +144,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 		buffer.fill(0);
 		encoder.output_span_init(buffer);
 		std::string_view form_temp{ ".7U%Y-%m-%d %H:%M:%S" };
-		fstlog::buff_span_const time_format{
+		fstlog::byte_span_const time_format{
 			reinterpret_cast<const unsigned char*>(form_temp.data()),
 			form_temp.size() };
 
@@ -163,7 +163,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 		buffer.fill(0);
 		encoder.output_span_init(buffer);
 		std::string_view form_temp{ "L%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%zX" };
-		fstlog::buff_span_const time_format{
+		fstlog::byte_span_const time_format{
 			reinterpret_cast<const unsigned char*>(form_temp.data()),
 			form_temp.size() };
 
@@ -240,7 +240,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 			std::string encoder_string(".0L"); // 0 second precision, local
 			encoder_string += strft_string;
 			enc_type_noalign encoder; // do not use fill align
-			fstlog::buff_span_const init_string(
+			fstlog::byte_span_const init_string(
 				reinterpret_cast<const unsigned char*>(encoder_string.data()),
 				encoder_string.size());
 						
@@ -272,7 +272,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 			std::string encoder_string(".0U"); // 0 second precision, utc
 			encoder_string += strft_string;
 			enc_type_noalign encoder; // do not use fill align
-			fstlog::buff_span_const init_string(
+			fstlog::byte_span_const init_string(
 				reinterpret_cast<const unsigned char*>(encoder_string.data()),
 				encoder_string.size());
 
@@ -359,7 +359,7 @@ TEST_CASE("encoder_timestamp_mixin") {
 		std::array<unsigned char, 64> result{ 0 };
 		encoder.output_span_init(result);
 		encoder.init_encoder_timestamp(
-			fstlog::buff_span_const(reinterpret_cast<const unsigned char*>(format.data()), format.size()));
+			fstlog::byte_span_const(reinterpret_cast<const unsigned char*>(format.data()), format.size()));
 
 		encoder.encode_timestamp(nanosec);
 		CHECK(!encoder.has_error());
@@ -372,7 +372,7 @@ TEST_CASE("encoder_timestamp_mixin_benchmark", "[.][benchmark]") {
 
 	enc_type_noalign encoder_loc;
 	std::string_view form_loc{ ".6L%Y-%m-%d %H:%M:%S %z" };
-	fstlog::buff_span_const time_format{
+	fstlog::byte_span_const time_format{
 			reinterpret_cast<const unsigned char*>(form_loc.data()),
 			form_loc.size() };
 	auto error = encoder_loc.init_encoder_timestamp(time_format);

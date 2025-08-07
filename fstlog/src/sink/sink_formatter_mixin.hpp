@@ -4,7 +4,7 @@
 #include <array>
 #include <cstddef>
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/formatter/formatter.hpp>
 #include <formatter/formatter_interface.hpp>
@@ -41,7 +41,7 @@ namespace fstlog {
 			return error_code::none;
 		}
 
-        buff_span_const format(buff_span_const message) noexcept {
+        byte_span_const format(byte_span_const message) noexcept {
             FSTLOG_ASSERT(formatter_.pimpl() != nullptr);
             return formatter_.pimpl()->format_message(message, format_buffer_);
         }

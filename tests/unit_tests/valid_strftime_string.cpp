@@ -36,7 +36,7 @@ TEST_CASE("valid_strftime_string") {
 			"%H:%M:%S %z");
 
 		CAPTURE(str);
-		fstlog::buff_span_const buff_sp(
+		fstlog::byte_span_const buff_sp(
 			fstlog::safe_reinterpret_cast<const unsigned char*>(str.data()), 
 			str.size());
 
@@ -69,7 +69,7 @@ TEST_CASE("valid_strftime_string") {
 			"H%:%M:%S %S");
 		
 		CAPTURE(str);
-		fstlog::buff_span_const buff_sp(fstlog::safe_reinterpret_cast<const unsigned char*>(str.data()), str.size());
+		fstlog::byte_span_const buff_sp(fstlog::safe_reinterpret_cast<const unsigned char*>(str.data()), str.size());
 
 		CHECK(!fstlog::detail::valid_strftime_string(buff_sp, fstlog::tz_format::UTC));
 	};

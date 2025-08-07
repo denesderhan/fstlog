@@ -10,7 +10,7 @@
 #pragma intrinsic(memcpy)
 
 #include <fstlog/detail/rm_cvref_t.hpp>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/checked_iterator.hpp>
 #include <detail/utf_conv.hpp>
 #include <fstlog/detail/error_code.hpp>
@@ -89,12 +89,12 @@ namespace fstlog {
             is_char_type_v<T>
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
-            encode(byte_span<const T>{ &data, 1 }, format);
+            encode(unaligned_span<const T>{ &data, 1 }, format);
 		}
 
 		template<typename T>
 		void encode(std::basic_string_view<T> strv, format_type format) noexcept {
-			encode(byte_span<const T>{ strv.data(), strv.size() }, format);
+			encode(unaligned_span<const T>{ strv.data(), strv.size() }, format);
 		}
 
         //string in buffer
@@ -102,7 +102,7 @@ namespace fstlog {
             is_char_type_v<T>
             || std::is_same_v<const T, const unsigned char>
         >* = nullptr>
-        void encode(byte_span<T> data, format_type format) noexcept {
+        void encode(unaligned_span<T> data, format_type format) noexcept {
 			FSTLOG_ASSERT(data.data() != nullptr);
 			
             auto out_begin = safe_reinterpret_cast<unsigned char*>(&encoder_fmt_buffer_[0]);

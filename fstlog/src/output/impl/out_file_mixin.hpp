@@ -3,7 +3,7 @@
 #pragma once
 #include <cstdint>
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <output/impl/out_file_posix.hpp>
@@ -40,7 +40,7 @@ namespace fstlog {
             return file_.open(file_path, truncate, buffer_size);
         }
 
-        void write_message(buff_span_const msg) noexcept {
+        void write_message(byte_span_const msg) noexcept {
 			FSTLOG_ASSERT(msg.data() != nullptr);
 			file_.write(safe_reinterpret_cast<const char*>(msg.data()), msg.size_bytes());
         }

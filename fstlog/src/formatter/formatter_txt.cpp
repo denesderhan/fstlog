@@ -6,7 +6,7 @@
 #include <new>
 
 #include <config_formatter_txt.hpp>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/make_allocated.hpp>
 #include <detail/mixin/allocator_mixin.hpp>
 #include <detail/mixin/error_state_mixin.hpp>
@@ -49,7 +49,7 @@ namespace fstlog {
 	
 	static error_code formatter_txt(
 		formatter& out,
-		buff_span_const format_string,
+		byte_span_const format_string,
 		fstlog_allocator const& allocator) noexcept
 	{
 		out = make_allocated<formatter_txt_type>(allocator);
@@ -67,7 +67,7 @@ namespace fstlog {
 	{
 		return formatter_txt(
 			out,
-			buff_span_const{ 
+			byte_span_const{ 
 				safe_reinterpret_cast<const unsigned char*>(format_string.data()),
 				format_string.size() },
 			allocator);

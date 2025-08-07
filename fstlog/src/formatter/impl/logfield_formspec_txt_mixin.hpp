@@ -5,7 +5,7 @@
 #include <cstddef>
 
 #include <detail/safe_reinterpret_cast.hpp>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 #include <formatter/impl/detail/format_setting_txt.hpp>
@@ -48,7 +48,7 @@ namespace fstlog {
         //form_spec is without curly brackets and ":", ({name:form_spec})
         void set_format(
 			logfield field, 
-			buff_span_const form_spec) noexcept 
+			byte_span_const form_spec) noexcept 
 		{
 			FSTLOG_ASSERT(field < logfield_last);
 			field_formattings_[ut_cast(field)] = get_format(form_spec);
@@ -64,7 +64,7 @@ namespace fstlog {
         }
 
         static constexpr format_type get_format(
-			buff_span_const form_spec) noexcept 
+			byte_span_const form_spec) noexcept 
 		{
             format_type out;
             if (form_spec.empty()) return out;

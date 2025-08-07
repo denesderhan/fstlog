@@ -3,7 +3,7 @@
 #pragma once
 #include <string_view>
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <fstlog/detail/fstlog_allocator.hpp>
 #include <fstlog/formatter/formatter.hpp>
 
@@ -19,9 +19,9 @@ namespace fstlog {
 		virtual ~formatter_interface() = default;
 	
 	public:
-		virtual buff_span format_message(
-			buff_span_const in,
-			buff_span out) noexcept = 0;
+		virtual byte_span format_message(
+			byte_span_const in,
+			byte_span out) noexcept = 0;
 		virtual error_code clone(formatter& out) const noexcept = 0;
 		virtual error_code clone(
 			formatter& out,

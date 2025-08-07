@@ -2,7 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <detail/safe_reinterpret_cast.hpp>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
 
 namespace fstlog {
@@ -33,11 +33,11 @@ namespace fstlog {
         
         ~hash_converter_null_mixin() = default;
 
-        static byte_span<const char> convert_hash(
+        static unaligned_span<const char> convert_hash(
 			[[maybe_unused]] str_hash_fnv hash) noexcept 
 		{
 			constexpr auto temp{""};
-			return byte_span<const char>{ temp, 0};
+			return unaligned_span<const char>{ temp, 0};
         }
     };
 }

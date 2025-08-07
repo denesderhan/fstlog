@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <formatter/impl/detail/tz_format.hpp>
 #include <detail/utf_conv.hpp>
 
@@ -34,7 +34,7 @@ namespace fstlog {
 		// with a limited set of conversion specifiers
 		// for maximum compatibility.
 		inline constexpr bool valid_strftime_string(
-			buff_span_const str,
+			byte_span_const str,
 			tz_format tz) noexcept
 		{
 			if (str.empty()) return false;

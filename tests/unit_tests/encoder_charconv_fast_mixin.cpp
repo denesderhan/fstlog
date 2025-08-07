@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/mixin/allocator_mixin.hpp>
 #include <detail/mixin/error_state_mixin.hpp>
 #include <formatter/impl/detail/encoder_charconv_fast_mixin.hpp>

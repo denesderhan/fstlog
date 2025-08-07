@@ -7,7 +7,7 @@
 #pragma intrinsic(memcpy)
 
 #include <fstlog/detail/error_code.hpp>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_arg_header.hpp>
@@ -45,7 +45,7 @@ namespace fstlog {
         
         ~decoder_internal_mixin() = default;
 
-        void decoder_set_input(buff_span_const msg) noexcept {
+        void decoder_set_input(byte_span_const msg) noexcept {
 			this->input_span_init(msg);
             this->advance_input(internal_msg_header::padded_data_size);
 			if (!this->has_error()) {
@@ -58,7 +58,7 @@ namespace fstlog {
 			}
         }
 
-		buff_span_const get_signature_skip_arg_header() noexcept {
+		byte_span_const get_signature_skip_arg_header() noexcept {
 			const auto header_begin{ this->input_ptr() };
 			internal_arg_header<char> min_size_header;
 			constexpr std::size_t signature_offset = 
@@ -118,7 +118,7 @@ namespace fstlog {
         }
 
 		template <typename T>
-        void get_data(byte_span<const T>& out) noexcept {
+        void get_data(unaligned_span<const T>& out) noexcept {
             static_assert(
                 (std::numeric_limits<msg_counter>::max)()
                 <= (std::numeric_limits<std::size_t>::max)() / sizeof(T), "String size counter too big!");
@@ -129,7 +129,7 @@ namespace fstlog {
                 const auto byte_size = static_cast<std::size_t>(str_size) * sizeof(T);
                 this->advance_input(padded_size<constants::internal_msg_data_alignment>(byte_size));
                 if (!this->has_error()) {
-					out = byte_span<const T>{ str_begin, byte_size };
+					out = unaligned_span<const T>{ str_begin, byte_size };
                 }
             }
         }

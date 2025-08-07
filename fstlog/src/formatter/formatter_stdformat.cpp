@@ -7,7 +7,7 @@
 #include <format> // __cpp_lib_format is defined here in gcc if __cplusplus >= 202000L
 #endif
 #include <config_formatter_txt.hpp>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <fstlog/detail/noexceptions.hpp>
 
@@ -55,7 +55,7 @@ namespace fstlog {
 
 	static error_code formatter_stdformat(
 		formatter& out,
-		buff_span_const format_string,
+		byte_span_const format_string,
 		fstlog_allocator const& allocator) noexcept 
 	{
 		out = make_allocated<formatter_stdformat_type>(allocator);
@@ -68,7 +68,7 @@ namespace fstlog {
 #else
 	static error_code formatter_stdformat(
 		[[maybe_unused]] formatter& out,
-		[[maybe_unused]] buff_span_const format_string,
+		[[maybe_unused]] byte_span_const format_string,
 		[[maybe_unused]] fstlog_allocator const& allocator) noexcept
 	{
 		return error_code::cpp_err;
@@ -82,7 +82,7 @@ namespace fstlog {
 	{
 		return formatter_stdformat(
 			out,
-			buff_span_const{
+			byte_span_const{
 				safe_reinterpret_cast<const unsigned char*>(format_string.data()),
 				format_string.size() },
 			allocator);

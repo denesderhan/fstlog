@@ -2,7 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <chrono>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 
 namespace fstlog {
     template<class L>
@@ -26,7 +26,7 @@ namespace fstlog {
 
 		~sink_unsort_mixin() = default;
         
-        void sink_msg(buff_span_const message) noexcept {
+        void sink_msg(byte_span_const message) noexcept {
             L::write_message(L::format(message));
         }
 

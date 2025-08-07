@@ -1,7 +1,7 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 
 namespace fstlog {
     template<typename L>
@@ -31,11 +31,11 @@ namespace fstlog {
         
         ~formatter_null_mixin() = default;
 
-        static buff_span format_message(
-            [[maybe_unused]] buff_span_const in,
-            buff_span out) noexcept
+        static byte_span format_message(
+            [[maybe_unused]] byte_span_const in,
+            byte_span out) noexcept
 		{
-            return buff_span{ out.data(), 0 };
+            return byte_span{ out.data(), 0 };
         }
     };
 }

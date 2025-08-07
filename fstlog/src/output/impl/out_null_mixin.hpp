@@ -1,7 +1,7 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 
 namespace fstlog {
     template<class L>
@@ -24,7 +24,7 @@ namespace fstlog {
 
         ~out_null_mixin() = default;
 
-        static void write_message([[maybe_unused]] buff_span_const msg) noexcept {}
+        static void write_message([[maybe_unused]] byte_span_const msg) noexcept {}
         static void flush() noexcept {}
     };
 }

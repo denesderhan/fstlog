@@ -29,13 +29,13 @@ TEST_CASE("encoder_stdformat_mixin") {
 	enc_type encoder;
 	std::vector<unsigned char> buffer(128, '!');
 	encoder.clear_error();
-	encoder.output_span_init(fstlog::buff_span(buffer.data(), buffer.size()));
+	encoder.output_span_init(fstlog::byte_span(buffer.data(), buffer.size()));
 	encoder.encode(std::string_view{ "string" }, enc_type::format_type{ "{:®<10}" });
 	bool stdformat_utf_fill_char = !encoder.has_error();
 	
 	SECTION("no_space_in_buffer") {
 		buffer.resize(10, '!');
-		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		fstlog::byte_span out_buff(buffer.data(), buffer.size());
 
 		enc_type::format_type format{ "{}" };
 
@@ -87,7 +87,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 		CAPTURE(to_encode, format);
 
 		buffer.resize(128, '!');
-		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		fstlog::byte_span out_buff(buffer.data(), buffer.size());
 		encoder.clear_error();
 		encoder.output_span_init(out_buff);
 		encoder.encode(to_encode, format);
@@ -113,7 +113,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 		CAPTURE(to_encode, format);
 
 		buffer.resize(128, '!');
-		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		fstlog::byte_span out_buff(buffer.data(), buffer.size());
 		encoder.clear_error();
 		encoder.output_span_init(out_buff);
 		encoder.encode(to_encode, format);
@@ -150,7 +150,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 		CAPTURE(to_encode, format);
 
 		buffer.resize(128, '!');
-		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		fstlog::byte_span out_buff(buffer.data(), buffer.size());
 		encoder.clear_error();
 		encoder.output_span_init(out_buff);
 		encoder.encode(to_encode, format);
@@ -190,7 +190,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 		CAPTURE(to_encode, format);
 
 		buffer.resize(128, '!');
-		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		fstlog::byte_span out_buff(buffer.data(), buffer.size());
 		encoder.clear_error();
 		encoder.output_span_init(out_buff);
 		encoder.encode(to_encode, format);
@@ -205,7 +205,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 	SECTION("char") {
 		auto format = "{:}";
 		buffer.resize(256, '!');
-		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		fstlog::byte_span out_buff(buffer.data(), buffer.size());
 		
 		SECTION("default_format") {
 			encoder.clear_error();
@@ -303,7 +303,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 
 	SECTION("string") {
 		buffer.resize(128, '!');
-		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		fstlog::byte_span out_buff(buffer.data(), buffer.size());
 		auto format = "{:}";
 		
 
@@ -396,7 +396,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 
 	SECTION("reencode_tail_string") {
 		buffer.resize(128, '!');
-		fstlog::buff_span out_buff(buffer.data(), buffer.size());
+		fstlog::byte_span out_buff(buffer.data(), buffer.size());
 		auto format = "{:}";
 		encoder.clear_error();
 		encoder.output_span_init(out_buff);

@@ -148,8 +148,8 @@ TEST_CASE("parse_fmt_repl_field") {
 		auto in_pos = in_beg;
 		auto in_end = in_beg + std::get<0>(test_dat).size();
 			
-		fstlog::buff_span_const field_name;
-		fstlog::buff_span_const format_spec;
+		fstlog::byte_span_const field_name;
+		fstlog::byte_span_const format_spec;
 		auto error = fstlog::parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
 		std::string_view name{
 			reinterpret_cast<const char*>(field_name.data()),
@@ -180,8 +180,8 @@ TEST_CASE("parse_fmt_repl_field") {
 		auto in_pos = in_beg;
 		auto in_end = in_beg + std::get<0>(test_dat).size();
 			
-		fstlog::buff_span_const field_name;
-		fstlog::buff_span_const format_spec;
+		fstlog::byte_span_const field_name;
+		fstlog::byte_span_const format_spec;
 		auto error = fstlog::parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
 		std::string_view name{
 			reinterpret_cast<const char*>(field_name.data()),
@@ -434,8 +434,8 @@ TEST_CASE("time_format") {
 	);
 	std::string_view test_str = std::get<0>(test_dat);
 	INFO("The string was: " << test_str);
-	fstlog::buff_span_const format_spec(reinterpret_cast<const unsigned char*>(test_str.data()), test_str.length());
-	fstlog::buff_span_const time_format;
+	fstlog::byte_span_const format_spec(reinterpret_cast<const unsigned char*>(test_str.data()), test_str.length());
+	fstlog::byte_span_const time_format;
 	auto error = fstlog::time_format(format_spec, time_format);
 	
 	std::string_view strv_format_spec(reinterpret_cast<const char*>(format_spec.data()), format_spec.size_bytes());
@@ -451,7 +451,7 @@ TEST_CASE("get_repl_field_[id/name]") {
 	for (int ind = 0; ind < fstlog::ut_cast(fstlog::logfield_last); ind++) {
 		fstlog::logfield field = fstlog::logfield(ind);
 		auto name = fstlog::get_repl_field_name(field);
-		fstlog::buff_span_const temp(reinterpret_cast<const unsigned char*>(name.data()), name.length());
+		fstlog::byte_span_const temp(reinterpret_cast<const unsigned char*>(name.data()), name.length());
 		CHECK(field == fstlog::get_repl_field_id(temp));
 	}
 	CHECK(fstlog::logfield_last == fstlog::logfield::Args);
@@ -500,7 +500,7 @@ TEST_CASE("valid_format_spec") {
 		std::make_tuple(std::string_view{ "9999p" }, true)
 	);
 	CAPTURE(std::get<0>(test_dat).data());
-	fstlog::buff_span_const fmt_spec(
+	fstlog::byte_span_const fmt_spec(
 		reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data()),
 		std::get<0>(test_dat).size());
 	auto is_valid = fstlog::valid_format_spec(fmt_spec);

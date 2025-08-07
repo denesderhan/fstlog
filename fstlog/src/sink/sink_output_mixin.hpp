@@ -3,7 +3,7 @@
 #pragma once
 #include <output/output_interface.hpp>
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
@@ -39,7 +39,7 @@ namespace fstlog {
 			return error_code::none;
 		}
 
-        void write_message(buff_span_const message) noexcept {
+        void write_message(byte_span_const message) noexcept {
             FSTLOG_ASSERT(output_.pimpl() != nullptr);
             output_.pimpl()->write_message(message);
         }

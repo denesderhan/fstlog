@@ -6,7 +6,7 @@
 #include <cstring>
 #pragma intrinsic(memcpy)
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <fstlog/detail/small_string.hpp>
 #include <fstlog/detail/ut_cast.hpp>
@@ -51,7 +51,7 @@ namespace fstlog {
         //form_spec is without curly brackets and ":", ({name:form_spec})
         void set_format(
 			logfield field, 
-			buff_span_const form_spec) noexcept
+			byte_span_const form_spec) noexcept
 		{
 			FSTLOG_ASSERT(field < logfield_last);
 			field_formattings_[ut_cast(field)] = get_format(form_spec);
@@ -67,7 +67,7 @@ namespace fstlog {
         }
 
         static constexpr format_type get_format(
-			buff_span_const form_spec) noexcept 
+			byte_span_const form_spec) noexcept 
 		{
             const std::size_t form_spec_size = form_spec.size_bytes();
 			if (form_spec.empty() || form_spec_size > 20)

@@ -1,7 +1,7 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 #include <formatter/impl/detail/format_setting_txt_fast.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
@@ -39,7 +39,7 @@ namespace fstlog {
 
         static void set_format( 
             [[maybe_unused]] logfield field, 
-            [[maybe_unused]] buff_span_const form_spec) noexcept {}
+            [[maybe_unused]] byte_span_const form_spec) noexcept {}
 
         static constexpr format_type get_format(
 			[[maybe_unused]] logfield field) noexcept 
@@ -52,7 +52,7 @@ namespace fstlog {
         }
 
         static constexpr format_type get_format(
-			buff_span_const form_spec) noexcept
+			byte_span_const form_spec) noexcept
 		{
             format_type form;
 			if (form_spec.empty()) return form;

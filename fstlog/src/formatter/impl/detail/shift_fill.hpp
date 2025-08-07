@@ -9,13 +9,13 @@
 #include <detail/safe_reinterpret_cast.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <formatter/impl/detail/format_setting_txt.hpp>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/utf8_len.hpp>
 
 namespace fstlog::detail {
 	namespace {
 		inline void fill_with_pattern(
-			buff_span to_fill,
+			byte_span to_fill,
 			std::array<unsigned char, 4> pattern,
 			unsigned char pattern_bytes) noexcept
 		{
@@ -40,7 +40,7 @@ namespace fstlog::detail {
 	}
 
     inline utf8_len shift_fill(
-        buff_span buffer,
+        byte_span buffer,
         utf8_len str_len,
         format_setting_txt fmt) noexcept
     {

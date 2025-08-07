@@ -37,9 +37,9 @@ namespace fstlog {
 		~formatter_interface_mixin() = default;
 
 	public:
-		buff_span format_message(
-			buff_span_const in,
-			buff_span out) noexcept final
+		byte_span format_message(
+			byte_span_const in,
+			byte_span out) noexcept final
 		{
 			return L::format_message(in, out);
 		}

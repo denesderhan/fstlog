@@ -5,7 +5,7 @@
 
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 
 namespace fstlog {
     template<typename L>
@@ -36,7 +36,7 @@ namespace fstlog {
         
         ~output_span_mixin() = default;
        
-        void output_span_init(buff_span out) noexcept {
+        void output_span_init(byte_span out) noexcept {
 			FSTLOG_ASSERT(out.data() != nullptr);
 			output_begin_ = out.data();
             output_ptr_ = output_begin_;

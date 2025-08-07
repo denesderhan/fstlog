@@ -36,7 +36,7 @@ namespace fstlog {
         ~output_interface_mixin() = default;
 
 	public:
-        void write_message(buff_span_const msg) noexcept final {
+        void write_message(byte_span_const msg) noexcept final {
             L::write_message(msg);
         }
         void flush() noexcept final {

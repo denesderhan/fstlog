@@ -8,7 +8,7 @@
 #include <string_view>
 #pragma intrinsic(memcpy)
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/error.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
@@ -56,16 +56,16 @@ namespace fstlog {
         
         ~formatter_txt_mixin() = default;
 
-		error_code formatter_init(buff_span_const format_string) noexcept {
+		error_code formatter_init(byte_span_const format_string) noexcept {
 			if (format_string.empty()) {
-				format_string = buff_span_const {
+				format_string = byte_span_const {
 					safe_reinterpret_cast<const unsigned char*>(config::default_format_string.data()), 
 					config::default_format_string.size() };
 			}
 			return parse_format_string(format_string);
 		}
 
-		inline error_code parse_format_string(buff_span_const format_string) {
+		inline error_code parse_format_string(byte_span_const format_string) {
 			auto in_pos = format_string.data();
 			const auto in_end = in_pos + format_string.size_bytes();
 			auto out_pos = formatting_buffer_.data();
@@ -75,8 +75,8 @@ namespace fstlog {
 				auto error = parse_fmt_text(in_pos, in_end, out_pos, out_end);
 				if (error != error_code::none) return error;
 				if (in_pos == in_end) break;
-				buff_span_const field_name;
-				buff_span_const format_spec;
+				byte_span_const field_name;
+				byte_span_const format_spec;
 				error = parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
 				if (error != error_code::none) return error;
 				const auto field_id = get_repl_field_id(field_name);
@@ -107,9 +107,9 @@ namespace fstlog {
 			return error_code::none;
 		}
 
-        buff_span format_message(
-            buff_span_const in,
-            buff_span out) noexcept
+        byte_span format_message(
+            byte_span_const in,
+            byte_span out) noexcept
         {
 			//asserting init is called prior to
 			FSTLOG_ASSERT(msg_fmt_str_cap_ != 0);
@@ -224,8 +224,8 @@ namespace fstlog {
 				return;
 			}
 			while (in_pos < in_end) {
-				buff_span_const field_name;
-				buff_span_const format_spec;
+				byte_span_const field_name;
+				byte_span_const format_spec;
 				auto error = parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
 				if (error != error_code::none) {
 					this->set_error(__FILE__, __LINE__, error);
@@ -252,7 +252,7 @@ namespace fstlog {
 			}
 		}
 
-		void write_message_data(buff_span_const format_spec) {
+		void write_message_data(byte_span_const format_spec) {
 			auto type_signature = L::get_signature_skip_arg_header();
 			// no data
 			if (this->has_error()) return;
@@ -301,13 +301,13 @@ namespace fstlog {
 			}
 		}
 
-		buff_span_const log_format_string() noexcept {
-			return buff_span_const{ 
+		byte_span_const log_format_string() noexcept {
+			return byte_span_const{ 
 				formatting_buffer_.data(), log_fmt_str_len_ };
 		}
 
-		buff_span log_message_buffer() noexcept {
-			return buff_span{
+		byte_span log_message_buffer() noexcept {
+			return byte_span{
 				formatting_buffer_.data() + msg_fmt_str_start_, 
 				msg_fmt_str_cap_ };
 		}
@@ -316,6 +316,6 @@ namespace fstlog {
 		std::uint32_t log_fmt_str_len_{ static_cast<std::uint32_t>(formatting_buffer_.size()) };
 		std::uint32_t msg_fmt_str_start_{ static_cast<std::uint32_t>(formatting_buffer_.size()) };
 		std::uint32_t msg_fmt_str_cap_{ 0 };
-		buff_span_const message_fmt_string_;
+		byte_span_const message_fmt_string_;
     };
 }

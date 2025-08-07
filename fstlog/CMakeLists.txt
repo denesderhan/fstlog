@@ -153,7 +153,6 @@ set(src
 
 set(src_detail
     "src/detail/buffer_operation_result.hpp"
-    "src/detail/byte_span.hpp"
     "src/detail/checked_iterator.hpp"
     "src/detail/dyn_array.hpp"
     "src/detail/dyn_buffer.hpp"
@@ -166,6 +165,7 @@ set(src_detail
     "src/detail/nearest_pow2.hpp"
     "src/detail/nothrow_allocate.hpp"
     "src/detail/safe_reinterpret_cast.hpp"
+    "src/detail/unaligned_span.hpp"
     "src/detail/utf_conv.hpp"
     "src/detail/utf8_len.hpp"
 )

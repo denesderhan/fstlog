@@ -5,7 +5,7 @@
 #include <cstring>
 #pragma intrinsic(memcpy)
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>
@@ -60,7 +60,7 @@ namespace fstlog {
 					const level level{ *(dat_ptr + offsetof(internal_msg_header, severity)) };
 					const channel_type channel{ *(dat_ptr + offsetof(internal_msg_header, channel)) };
 					if (L::filter_msg(level, channel)) {
-                        L::sink_msg(buff_span_const{ dat_ptr, msg_size });
+                        L::sink_msg(byte_span_const{ dat_ptr, msg_size });
                         has_sinked = true;
                     }  
                     remaining_data -= padded_msg_size;

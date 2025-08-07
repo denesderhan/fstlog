@@ -9,7 +9,7 @@
 #include <limits>
 #pragma intrinsic(memcpy)
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/dyn_array.hpp>
 #include <detail/dyn_buffer.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -54,7 +54,7 @@ namespace fstlog {
 			message_indices_.grow(max_data_size_ / 144);
         }
 
-        void sink_msg(buff_span_const message) noexcept {
+        void sink_msg(byte_span_const message) noexcept {
 			FSTLOG_ASSERT(message.data() != nullptr);
 			FSTLOG_ASSERT(message.size_bytes() >= internal_msg_header::padded_data_size);
 			FSTLOG_ASSERT(message.size_bytes() <= (std::numeric_limits<msg_counter>::max)());
@@ -126,7 +126,7 @@ namespace fstlog {
 			);
 			
             for (const auto& mi : message_indices_) {
-                buff_span_const message{ message_data_.data() + mi.msg_pos, mi.msg_size };
+                byte_span_const message{ message_data_.data() + mi.msg_pos, mi.msg_size };
                 L::sink_msg(message);
             }
 			message_indices_.clear();

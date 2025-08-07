@@ -7,7 +7,6 @@ set(src
 source_group("Source Files" FILES ${src})
 
 set(src/unit_tests
-	"unit_tests/byte_span.cpp"
 	"unit_tests/core.cpp"
 	"unit_tests/encoder_charconv_fast_mixin.cpp"
 	"unit_tests/encoder_charconv_mixin.cpp"
@@ -41,6 +40,7 @@ set(src/unit_tests
 	"unit_tests/shift_fill.cpp"
 	"unit_tests/small_string.cpp"
 	"unit_tests/this_thread_id.cpp"
+	"unit_tests/unaligned_span.cpp"
 	"unit_tests/utf_conv.cpp"
 	"unit_tests/valid_strftime_string.cpp"
 )

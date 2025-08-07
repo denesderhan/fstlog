@@ -3,7 +3,7 @@
 #pragma once
 #include <mutex>
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 
 namespace fstlog {
     template<class L>
@@ -28,7 +28,7 @@ namespace fstlog {
 
 		~output_locked_mixin() = default;
 
-		void write_message(buff_span_const msg) noexcept {
+		void write_message(byte_span_const msg) noexcept {
 			std::lock_guard<decltype(L::get_mutex())> guard_instance{ L::get_mutex() };
 			L::write_message(msg);
 		}

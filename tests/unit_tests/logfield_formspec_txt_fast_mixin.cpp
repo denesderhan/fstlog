@@ -30,7 +30,7 @@ TEST_CASE("logfield_formspec_txt_fast_mixin") {
 			std::make_tuple(std::string_view(".<30.0001233456x"), fstlog::format_setting_txt_fast{ 'x', 0, 1233 }),
 			std::make_tuple(std::string_view(".<30"), fstlog::format_setting_txt_fast{ 0, 0, 0xffff })
 		);
-		fstlog::buff_span_const form_spec(
+		fstlog::byte_span_const form_spec(
 			reinterpret_cast<const unsigned char*>(std::get<0>(data).data()), std::get<0>(data).size());
 		fstlog::format_setting_txt_fast control = std::get<1>(data);
 

@@ -1,7 +1,7 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 
 namespace fstlog {
 	class output_interface 
@@ -15,7 +15,7 @@ namespace fstlog {
 		virtual ~output_interface() = default;
 	
 	public:
-		virtual void write_message(buff_span_const msg) noexcept = 0;
+		virtual void write_message(byte_span_const msg) noexcept = 0;
 		virtual void flush() noexcept = 0;
 		virtual bool use() noexcept = 0;
 		virtual void release() noexcept = 0;

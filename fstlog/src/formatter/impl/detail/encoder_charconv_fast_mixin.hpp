@@ -9,7 +9,7 @@
 #include <type_traits>
 #pragma intrinsic(memcpy)
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <detail/utf_conv.hpp>
@@ -141,7 +141,7 @@ namespace fstlog {
             is_char_type_v<T>
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
-            encode(byte_span<T>{ &data, 1 }, format);
+            encode(unaligned_span<T>{ &data, 1 }, format);
         }
 
         // string in buffer
@@ -149,7 +149,7 @@ namespace fstlog {
             is_char_type_v<T>
             || std::is_same_v<std::remove_const_t<T>, unsigned char>
             >* = nullptr>
-        void encode(byte_span<T> data, [[maybe_unused]] format_type format) noexcept {
+        void encode(unaligned_span<T> data, [[maybe_unused]] format_type format) noexcept {
 			FSTLOG_ASSERT(data.data() != nullptr);
 			static_assert(std::numeric_limits<unsigned char>::digits == 8);
             constexpr int bit_size{ sizeof(T) * std::numeric_limits<unsigned char>::digits };
@@ -173,7 +173,7 @@ namespace fstlog {
         // string_view
         template<typename T>
         void encode(std::basic_string_view<T> strv, format_type format) noexcept {
-            encode(byte_span<const T>{ strv.data(), strv.size() }, format);
+            encode(unaligned_span<const T>{ strv.data(), strv.size() }, format);
         }
 
         // pointer

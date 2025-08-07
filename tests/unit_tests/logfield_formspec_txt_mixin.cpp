@@ -15,7 +15,7 @@ TEST_CASE("logfield_formspec_txt_mixin") {
 		fstlog::format_setting_txt form{};
 		CHECK(test_type::get_default_format() == form);
 		std::string_view form_spec{"\xea\xb0\x80>+#30.12x"};
-		fstlog::buff_span_const f(reinterpret_cast<const unsigned char*>(form_spec.data()), form_spec.size());
+		fstlog::byte_span_const f(reinterpret_cast<const unsigned char*>(form_spec.data()), form_spec.size());
 		
 		form.type = 'x';
 		form.alternate = true;
@@ -51,7 +51,7 @@ TEST_CASE("logfield_formspec_txt_mixin") {
 		);
 		std::string_view form_spec = std::get<0>(data);
 		CAPTURE(form_spec);
-		fstlog::buff_span_const form(
+		fstlog::byte_span_const form(
 			reinterpret_cast<const unsigned char*>(form_spec.data()), form_spec.size());
 		fstlog::format_setting_txt control = std::get<1>(data);
 		auto res = instance.get_format(form);

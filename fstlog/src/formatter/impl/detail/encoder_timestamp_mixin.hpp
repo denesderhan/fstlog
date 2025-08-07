@@ -10,7 +10,7 @@
 #include <time.h>
 #pragma intrinsic(memcpy, memset)
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <detail/utf_conv.hpp>
 #include <detail/utf8_len.hpp>
@@ -60,7 +60,7 @@ namespace fstlog {
 
 		~encoder_timestamp_mixin() = default;
 
-		error_code init_encoder_timestamp(buff_span_const time_format) noexcept {
+		error_code init_encoder_timestamp(byte_span_const time_format) noexcept {
 			if (!time_format_.empty()) {
 				return error_code::double_init;
 			}
@@ -118,7 +118,7 @@ namespace fstlog {
 
 		// decompose fill-align, precision and time_format string
 		error_code decompose_format(
-			buff_span_const& time_format,
+			byte_span_const& time_format,
 			format_setting_txt& format) noexcept
 		{
 			const auto begin = time_format.data();
@@ -147,12 +147,12 @@ namespace fstlog {
 			if (precision > 9) precision = 9;
 			second_precision_ = static_cast<unsigned char>(precision);
 			
-			time_format = buff_span_const(pos, static_cast<std::size_t>(end - pos));
+			time_format = byte_span_const(pos, static_cast<std::size_t>(end - pos));
 			return error_code::none;
 		}
 
 		// setting the time format string
-		error_code set_time_format(buff_span_const format_string) noexcept {
+		error_code set_time_format(byte_span_const format_string) noexcept {
 			auto pos = format_string.data();
 			auto end = pos + format_string.size_bytes();
 			tzone_ = get_zone(pos, end);
@@ -174,7 +174,7 @@ namespace fstlog {
 					str_len);
 			}
 			if (!detail::valid_strftime_string(
-					buff_span_const(
+					byte_span_const(
 						safe_reinterpret_cast<const unsigned char*>(time_format_.data()), 
 						time_format_.size()), tzone_))
 			{

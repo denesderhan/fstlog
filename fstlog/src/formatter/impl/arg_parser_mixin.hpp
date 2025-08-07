@@ -5,7 +5,7 @@
 #include <cstddef>
 
 #include <config_parser.hpp>
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/aggregate_type.hpp>
 #include <fstlog/detail/char_type.hpp>
@@ -92,27 +92,27 @@ namespace fstlog {
 #endif
                 ) 
             {
-				byte_span<const char> to_encode;
+				unaligned_span<const char> to_encode;
                 this->get_data(to_encode);
 				if (!this->has_error())
 					this->encode(to_encode, format);
             }
 #ifdef __cpp_char8_t           
             else if (meta == ut_cast(char_type::Char8)) {
-				byte_span<const char8_t> to_encode;
+				unaligned_span<const char8_t> to_encode;
                 this->get_data(to_encode);
 				if (!this->has_error())
 					this->encode(to_encode, format);
             }
 #endif
             else if (meta == ut_cast(char_type::Char16)) {
-                byte_span<const char16_t> to_encode;
+                unaligned_span<const char16_t> to_encode;
                 this->get_data(to_encode);
 				if (!this->has_error())
 					this->encode(to_encode, format);
             }
             else if (meta == ut_cast(char_type::Char32)) {
-				byte_span<const char32_t> to_encode;
+				unaligned_span<const char32_t> to_encode;
                 this->get_data(to_encode);
 				if (!this->has_error())
 					this->encode(to_encode, format);
@@ -131,35 +131,35 @@ namespace fstlog {
                 small_string<16> to_encode;
                 this->get_data(to_encode);
                 if(!this->has_error()) 
-					this->encode(byte_span<const char>{ 
+					this->encode(unaligned_span<const char>{ 
 					to_encode.data(), to_encode.size() }, format);
             }
             else if (meta == 1) {
                 small_string<32> to_encode;
                 this->get_data(to_encode);
 				if (!this->has_error())
-					this->encode(byte_span<const char>{ 
+					this->encode(unaligned_span<const char>{ 
 					to_encode.data(), to_encode.size() }, format);
             }
             else if (meta == 2) {
                 small_string<64> to_encode;
                 this->get_data(to_encode);
 				if (!this->has_error())
-					this->encode(byte_span<const char>{ 
+					this->encode(unaligned_span<const char>{ 
 					to_encode.data(), to_encode.size() }, format);
             }
             else if (meta == 4) {
                 small_string<128> to_encode;
                 this->get_data(to_encode);
 				if (!this->has_error())
-					this->encode(byte_span<const char>{ 
+					this->encode(unaligned_span<const char>{ 
 					to_encode.data(), to_encode.size() }, format);
             }
             else if (meta == 8) {
                 small_string<256> to_encode;
                 this->get_data(to_encode);
 				if (!this->has_error())
-					this->encode(byte_span<const char>{ 
+					this->encode(unaligned_span<const char>{ 
 					to_encode.data(), to_encode.size() }, format);
             }
             else {
@@ -329,7 +329,7 @@ namespace fstlog {
             }
         }
 
-        void skip_type(buff_span_const& type_signature) noexcept {
+        void skip_type(byte_span_const& type_signature) noexcept {
 			const int end_ind = static_cast<int>(type_signature.size_bytes());
             int str_ind = 0;
             int loop_counter = 1;
@@ -367,14 +367,14 @@ namespace fstlog {
                     }
                 }
             }
-            type_signature = buff_span_const{
+            type_signature = byte_span_const{
                 type_signature.data() + str_ind, 
                 static_cast<std::size_t>(end_ind - str_ind)
             };
         }
 
         void process_list(
-			buff_span_const& type_signature, 
+			byte_span_const& type_signature, 
 			format_type format, 
 			int tree_depth) noexcept
 		{
@@ -386,7 +386,7 @@ namespace fstlog {
             this->get_data(list_size);
             if (this->has_error()) return;
             this->encode_aggregate_start(aggregate_type::List, list_size);
-            buff_span_const tmp_type_signature{
+            byte_span_const tmp_type_signature{
                 type_signature.data() + 1, 
                 type_signature.size_bytes() - 1 
             };
@@ -405,7 +405,7 @@ namespace fstlog {
         }
 
         void process_tuple(
-			buff_span_const& type_signature, 
+			byte_span_const& type_signature, 
 			format_type format, 
 			int tree_depth) noexcept
 		{
@@ -418,7 +418,7 @@ namespace fstlog {
 				(ut_cast(log_element_type::Aggregate) 
 					| ut_cast(aggregate_type::Tuple)));
             const unsigned char tuple_size = *(type_signature.data() + 1);
-            type_signature = buff_span_const{
+            type_signature = byte_span_const{
                 type_signature.data() + 2, 
                 type_signature.size_bytes() - 2 
             };
@@ -434,7 +434,7 @@ namespace fstlog {
         }
 
         void process_element(
-			buff_span_const& type_signature, 
+			byte_span_const& type_signature, 
 			format_type format, 
 			int tree_depth = 0) noexcept
 		{
@@ -446,7 +446,7 @@ namespace fstlog {
 
 				if (current_type != log_element_type::Aggregate) {
 					process_simple_type(current_type, meta, format);
-					type_signature = buff_span_const{
+					type_signature = byte_span_const{
 						type_signature.data() + 1,
 						type_signature.size_bytes() - 1
 					};

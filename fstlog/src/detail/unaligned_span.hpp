@@ -8,7 +8,7 @@
 
 namespace fstlog {
 	template<typename T = unsigned char>
-	class byte_span final {
+	class unaligned_span final {
 	public:
 		using element_type = T;
 		using value_type = std::remove_cv_t<T>;
@@ -16,9 +16,9 @@ namespace fstlog {
 			std::is_const_v<T>,
 			const unsigned char,
 			unsigned char>;
-		constexpr byte_span() noexcept = default;
+		constexpr unaligned_span() noexcept = default;
 				
-		constexpr byte_span(acc_type* data, std::size_t byte_size) noexcept
+		constexpr unaligned_span(acc_type* data, std::size_t byte_size) noexcept
 			: data_ptr_{ data },
 			bytes_{ byte_size } 
 		{
@@ -27,22 +27,22 @@ namespace fstlog {
 
 		template<typename X = std::remove_const_t<T>,
 			std::enable_if_t<!std::is_same_v<X, unsigned char>>* = nullptr>
-		constexpr byte_span(T* data, std::size_t size) noexcept
+		constexpr unaligned_span(T* data, std::size_t size) noexcept
 			: data_ptr_{ reinterpret_cast<acc_type*>(data) },
 			bytes_{ size * sizeof(T) } {}
 
 		template<std::size_t N>
-		constexpr byte_span(std::array<T, N>& data) noexcept
+		constexpr unaligned_span(std::array<T, N>& data) noexcept
 			:data_ptr_{ reinterpret_cast<acc_type*>(data.data()) },
 			bytes_{ N * sizeof(T) } {}
 
 		template<std::size_t N>
-		constexpr byte_span([[maybe_unused]] T(&str)[N]) noexcept {
+		constexpr unaligned_span([[maybe_unused]] T(&str)[N]) noexcept {
 			static_assert(!sizeof(T), "String literals and c arrays are forbidden!");
 		}
 
-		constexpr operator byte_span<const T>() const noexcept {
-			return byte_span<const T>{ data_ptr_, bytes_ };
+		constexpr operator unaligned_span<const T>() const noexcept {
+			return unaligned_span<const T>{ data_ptr_, bytes_ };
 		}
 
 		constexpr acc_type* data() const noexcept {
@@ -62,7 +62,7 @@ namespace fstlog {
 				std::is_const_v<Q>
 				|| std::is_same_v<Q, unsigned char>>* = nullptr>
 		constexpr acc_type& operator[](std::size_t byte_index) noexcept {
-			FSTLOG_ASSERT(!empty() && "byte_span was empty (op. [])!");
+			FSTLOG_ASSERT(!empty() && "unaligned_span was empty (op. [])!");
 			FSTLOG_ASSERT(byte_index < bytes_ && "Index out of bounds!");
 			return *(data_ptr_ + byte_index);
 		}
@@ -71,6 +71,6 @@ namespace fstlog {
 		std::size_t bytes_{ 0 };
 	};
 
-	using buff_span = byte_span<unsigned char>;
-	using buff_span_const = byte_span<const unsigned char>;
+	using byte_span = unaligned_span<unsigned char>;
+	using byte_span_const = unaligned_span<const unsigned char>;
 }

@@ -3,7 +3,7 @@
 #pragma once
 #include <stdio.h>
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 
 namespace fstlog {
@@ -38,7 +38,7 @@ namespace fstlog {
 			return error_code::none;
         }
 
-        void write_message(buff_span_const msg) noexcept {
+        void write_message(byte_span_const msg) noexcept {
             FSTLOG_ASSERT(stream_ != nullptr);
 			FSTLOG_ASSERT(msg.data() != nullptr);
             fwrite(

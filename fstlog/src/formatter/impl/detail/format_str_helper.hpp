@@ -7,7 +7,7 @@
 #include <string_view>
 #pragma intrinsic(memcpy)
 
-#include <detail/byte_span.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <detail/utf_conv.hpp>
 #include <formatter/impl/detail/logfield.hpp>
@@ -88,8 +88,8 @@ namespace fstlog {
 		// parse the replacement field part of the fmt format string in to out
 		inline error_code parse_fmt_repl_field(
 			unsigned char const*& in_pos, unsigned char const* in_end,
-			buff_span_const& field_name,
-			buff_span_const& format_spec) noexcept
+			byte_span_const& field_name,
+			byte_span_const& format_spec) noexcept
 		{
 			FSTLOG_ASSERT(in_pos != nullptr && in_pos < in_end && *in_pos == '{');
 			in_pos++;
@@ -125,8 +125,8 @@ namespace fstlog {
 				name_end = name_begin;
 				spec_begin = spec_end;
 			}
-			field_name = buff_span_const(name_begin, static_cast<std::size_t>(name_end - name_begin));
-			format_spec = buff_span_const(spec_begin, static_cast<std::size_t>(spec_end - spec_begin));
+			field_name = byte_span_const(name_begin, static_cast<std::size_t>(name_end - name_begin));
+			format_spec = byte_span_const(spec_begin, static_cast<std::size_t>(spec_end - spec_begin));
 			return error;
 		}
 
@@ -233,8 +233,8 @@ namespace fstlog {
 		}
 
 		inline error_code time_format(
-			buff_span_const& form_spec,
-			buff_span_const& time_fmt) noexcept
+			byte_span_const& form_spec,
+			byte_span_const& time_fmt) noexcept
 		{
 			auto error = error_code::none;
 			if (form_spec.empty()) {
@@ -252,12 +252,12 @@ namespace fstlog {
 				error = error_code::fmt_bad;
 			}
 			pos = skip_numbers(pos, end);
-			form_spec = buff_span_const{ begin, static_cast<std::size_t>(pos - begin) };
-			time_fmt = buff_span_const{ pos, static_cast<std::size_t>(end - pos) };
+			form_spec = byte_span_const{ begin, static_cast<std::size_t>(pos - begin) };
+			time_fmt = byte_span_const{ pos, static_cast<std::size_t>(end - pos) };
 			return error;
 		}
 
-		inline logfield get_repl_field_id(buff_span_const name) noexcept {
+		inline logfield get_repl_field_id(byte_span_const name) noexcept {
 			auto str_v = std::string_view{
 				safe_reinterpret_cast<const char*>(name.data()), name.size_bytes() };
 			if (str_v == "time") return logfield::Timestamp;
@@ -335,7 +335,7 @@ namespace fstlog {
 			return (digits <= max_digits);
 		}
 
-		inline bool valid_format_spec(buff_span_const format_spec) {
+		inline bool valid_format_spec(byte_span_const format_spec) {
 			if (format_spec.empty()) return true;
 			auto pos = format_spec.data();
 			const auto end = pos + format_spec.size_bytes();
