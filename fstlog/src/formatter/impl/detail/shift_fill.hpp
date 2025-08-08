@@ -19,18 +19,18 @@ namespace fstlog::detail {
 			std::array<unsigned char, 4> pattern,
 			unsigned char pattern_bytes) noexcept
 		{
-			FSTLOG_ASSERT(to_fill.data() != nullptr);
+			FSTLOG_ASSERT(to_fill.data_bytes() != nullptr);
 			FSTLOG_ASSERT(pattern_bytes > 0 && pattern_bytes <= 4 
 				&& to_fill.size_bytes() % pattern_bytes == 0);
 			
 			if (to_fill.empty()) return;
 
 			if (pattern_bytes == 1) {
-				memset(to_fill.data(), pattern[0], to_fill.size_bytes());
+				memset(to_fill.data_bytes(), pattern[0], to_fill.size_bytes());
 			}
 			else {
-				auto pos = to_fill.data();
-				auto end = to_fill.data() + to_fill.size_bytes();
+				auto pos = to_fill.data_bytes();
+				auto end = to_fill.data_bytes() + to_fill.size_bytes();
 				while (pos < end) {
 					memcpy(pos, pattern.data(), pattern_bytes);
 					pos += pattern_bytes;
@@ -45,7 +45,7 @@ namespace fstlog::detail {
         format_setting_txt fmt) noexcept
     {
         FSTLOG_ASSERT(
-			buffer.data() != nullptr 
+			buffer.data_bytes() != nullptr
 			&& str_len.byte_len <= buffer.size_bytes());
 		FSTLOG_ASSERT(fmt.fill_char[0] != 0);
 
@@ -62,20 +62,20 @@ namespace fstlog::detail {
 		if (length_grow_in_bytes > buffer.size_bytes() - str_len.byte_len) return str_len;
         
         if (fmt.align == '>') {
-            const auto dest_ptr{ buffer.data() + length_grow_in_bytes};
-            memmove(dest_ptr, buffer.data(), str_len.byte_len);
+            const auto dest_ptr{ buffer.data_bytes() + length_grow_in_bytes};
+            memmove(dest_ptr, buffer.data_bytes(), str_len.byte_len);
 			fill_with_pattern(
-				{ buffer.data(), length_grow_in_bytes }, 
+				{ buffer.data_bytes(), length_grow_in_bytes },
 				fmt.fill_char, 
 				fill_char_bytes);
         }
         else if (fmt.align == '^') {
 			const auto left_fill_bytes = (length_grow_in_chars / 2) * fill_char_bytes;
 			const auto right_fill_bytes = length_grow_in_bytes - left_fill_bytes;
-            const auto shifted_str_begin{ buffer.data() + left_fill_bytes };
-            memmove(shifted_str_begin, buffer.data(), str_len.byte_len);
+            const auto shifted_str_begin{ buffer.data_bytes() + left_fill_bytes };
+            memmove(shifted_str_begin, buffer.data_bytes(), str_len.byte_len);
 			fill_with_pattern(
-				{ buffer.data(), left_fill_bytes }, 
+				{ buffer.data_bytes(), left_fill_bytes },
 				fmt.fill_char, 
 				fill_char_bytes);
 			fill_with_pattern(
@@ -86,7 +86,7 @@ namespace fstlog::detail {
         else {
             //align '<' or any other
 			fill_with_pattern(
-				{ buffer.data() + str_len.byte_len, length_grow_in_bytes},
+				{ buffer.data_bytes() + str_len.byte_len, length_grow_in_bytes},
 				fmt.fill_char,
 				fill_char_bytes);
         }

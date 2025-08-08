@@ -66,7 +66,7 @@ namespace fstlog {
 		}
 
 		inline error_code parse_format_string(byte_span_const format_string) {
-			auto in_pos = format_string.data();
+			auto in_pos = format_string.data_bytes();
 			const auto in_end = in_pos + format_string.size_bytes();
 			auto out_pos = formatting_buffer_.data();
 			const auto out_end = out_pos + formatting_buffer_.size();
@@ -113,10 +113,10 @@ namespace fstlog {
         {
 			//asserting init is called prior to
 			FSTLOG_ASSERT(msg_fmt_str_cap_ != 0);
-			FSTLOG_ASSERT(in.data() != nullptr);
+			FSTLOG_ASSERT(in.data_bytes() != nullptr);
 			FSTLOG_ASSERT(in.size_bytes() <= 
 				(std::numeric_limits<msg_counter>::max)());
-			FSTLOG_ASSERT(out.data() != nullptr);
+			FSTLOG_ASSERT(out.data_bytes() != nullptr);
 			// we have to always have space for '\n' 
 			// and short error message.
 			FSTLOG_ASSERT(out.size_bytes() >= 64);
@@ -129,10 +129,10 @@ namespace fstlog {
 			// we have to init output after calling set_message_format_string()
 			// we initialize it 1 byte less, leaving space for '\n'
 			this->output_span_init(
-				{ out.data(),
+				{ out.data_bytes(),
 				static_cast<std::size_t>(out.size_bytes() - 1) });
 			if (!this->has_error()) write_log_line();
-			const auto msg_begin{ out.data() };
+			const auto msg_begin{ out.data_bytes() };
 			auto msg_end{ this->output_ptr() };
 
 			if (this->has_error()) {
@@ -189,7 +189,7 @@ namespace fstlog {
 
 		void write_log_line() noexcept {
 			const auto str{ log_format_string() };
-			auto str_pos = str.data();
+			auto str_pos = str.data_bytes();
 			const auto str_end = str_pos + str.size_bytes();
 			while (str_pos < str_end) {
 				// if *str_pos <= 0x1F (0b0001'1111) then it is an encoded logfield id, all else is a char
@@ -211,7 +211,7 @@ namespace fstlog {
 		}
 
 		void write_message_field() noexcept {
-			const unsigned char* in_pos = message_fmt_string_.data();
+			const unsigned char* in_pos = message_fmt_string_.data_bytes();
 			const unsigned char* const in_end = in_pos + message_fmt_string_.size_bytes();
 			write_message_text(in_pos, in_end);
 			if (this->has_error()) return;
@@ -282,7 +282,7 @@ namespace fstlog {
 			if (this->has_error()) return;
 			FSTLOG_ASSERT(!type_signature.empty());
 						
-			auto data_type = *type_signature.data();
+			auto data_type = *type_signature.data_bytes();
 			const unsigned char msg_type = data_type & log_element_type_bitmask;
 			const unsigned char msg_meta = data_type & log_type_metadata_bitmask;
 			if ( msg_type == ut_cast(log_element_type::String)

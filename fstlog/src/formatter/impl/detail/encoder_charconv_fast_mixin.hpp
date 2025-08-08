@@ -150,11 +150,11 @@ namespace fstlog {
             || std::is_same_v<std::remove_const_t<T>, unsigned char>
             >* = nullptr>
         void encode(unaligned_span<T> data, [[maybe_unused]] format_type format) noexcept {
-			FSTLOG_ASSERT(data.data() != nullptr);
+			FSTLOG_ASSERT(data.data_bytes() != nullptr);
 			static_assert(std::numeric_limits<unsigned char>::digits == 8);
             constexpr int bit_size{ sizeof(T) * std::numeric_limits<unsigned char>::digits };
             
-            const unsigned char* str_begin{ data.data() };
+            const unsigned char* str_begin{ data.data_bytes() };
             std::size_t char_num{ (std::numeric_limits<std::size_t>::max)() };
             const auto result = detail::utf8conv<bit_size, T>(
                 str_begin,

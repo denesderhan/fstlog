@@ -60,7 +60,7 @@ namespace fstlog {
 				if (form_spec[0] >= 'A') form.type = form_spec[0];
 				return form;
 			}
-			const auto begin = form_spec.data();
+			const auto begin = form_spec.data_bytes();
 			const auto end = begin + form_spec.size_bytes();
 			auto pos = end - 1;
 			if(*pos >= 'A') form.type = *pos--;

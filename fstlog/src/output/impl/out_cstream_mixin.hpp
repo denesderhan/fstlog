@@ -40,9 +40,9 @@ namespace fstlog {
 
         void write_message(byte_span_const msg) noexcept {
             FSTLOG_ASSERT(stream_ != nullptr);
-			FSTLOG_ASSERT(msg.data() != nullptr);
+			FSTLOG_ASSERT(msg.data_bytes() != nullptr);
             fwrite(
-                msg.data(),
+                msg.data_bytes(),
 				sizeof(char),
                 msg.size_bytes(),
 				stream_);

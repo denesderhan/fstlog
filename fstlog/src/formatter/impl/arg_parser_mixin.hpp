@@ -340,7 +340,7 @@ namespace fstlog {
                     return;
                 }
                 const unsigned char data_type = 
-					*(type_signature.data() + str_ind);
+					*(type_signature.data_bytes() + str_ind);
                 const log_element_type current_type = 
                     static_cast<log_element_type>(data_type & log_element_type_bitmask);
                 const unsigned char meta = 
@@ -356,7 +356,7 @@ namespace fstlog {
                             return;
                         }
                         const unsigned char tuple_size = 
-							*(type_signature.data() + str_ind);
+							*(type_signature.data_bytes() + str_ind);
                         str_ind++;
                         loop_counter += tuple_size;
                     }
@@ -368,7 +368,7 @@ namespace fstlog {
                 }
             }
             type_signature = byte_span_const{
-                type_signature.data() + str_ind, 
+                type_signature.data_bytes() + str_ind,
                 static_cast<std::size_t>(end_ind - str_ind)
             };
         }
@@ -379,7 +379,7 @@ namespace fstlog {
 			int tree_depth) noexcept
 		{
 			FSTLOG_ASSERT(!type_signature.empty());
-			FSTLOG_ASSERT(*type_signature.data() == 
+			FSTLOG_ASSERT(*type_signature.data_bytes() ==
 				(ut_cast(log_element_type::Aggregate) 
 					| ut_cast(aggregate_type::List)));
 			msg_counter list_size{0};
@@ -387,7 +387,7 @@ namespace fstlog {
             if (this->has_error()) return;
             this->encode_aggregate_start(aggregate_type::List, list_size);
             byte_span_const tmp_type_signature{
-                type_signature.data() + 1, 
+                type_signature.data_bytes() + 1,
                 type_signature.size_bytes() - 1 
             };
             for (msg_counter i = 0; i < list_size; i++) {
@@ -414,12 +414,12 @@ namespace fstlog {
 					error_code::input_bad);
                 return;
             }
-			FSTLOG_ASSERT(	*type_signature.data() == 
+			FSTLOG_ASSERT(	*type_signature.data_bytes() ==
 				(ut_cast(log_element_type::Aggregate) 
 					| ut_cast(aggregate_type::Tuple)));
-            const unsigned char tuple_size = *(type_signature.data() + 1);
+            const unsigned char tuple_size = *(type_signature.data_bytes() + 1);
             type_signature = byte_span_const{
-                type_signature.data() + 2, 
+                type_signature.data_bytes() + 2,
                 type_signature.size_bytes() - 2 
             };
             this->encode_aggregate_start(aggregate_type::Tuple, tuple_size);
@@ -439,7 +439,7 @@ namespace fstlog {
 			int tree_depth = 0) noexcept
 		{
 			if (!type_signature.empty() && !this->has_error()) {
-				auto data_type = *type_signature.data();
+				auto data_type = *type_signature.data_bytes();
 				log_element_type const current_type =
 					static_cast<log_element_type>(data_type & log_element_type_bitmask);
 				const unsigned char meta = data_type & log_type_metadata_bitmask;
@@ -447,7 +447,7 @@ namespace fstlog {
 				if (current_type != log_element_type::Aggregate) {
 					process_simple_type(current_type, meta, format);
 					type_signature = byte_span_const{
-						type_signature.data() + 1,
+						type_signature.data_bytes() + 1,
 						type_signature.size_bytes() - 1
 					};
 				}

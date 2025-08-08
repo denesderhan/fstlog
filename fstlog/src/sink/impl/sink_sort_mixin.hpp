@@ -55,12 +55,12 @@ namespace fstlog {
         }
 
         void sink_msg(byte_span_const message) noexcept {
-			FSTLOG_ASSERT(message.data() != nullptr);
+			FSTLOG_ASSERT(message.data_bytes() != nullptr);
 			FSTLOG_ASSERT(message.size_bytes() >= internal_msg_header::padded_data_size);
 			FSTLOG_ASSERT(message.size_bytes() <= (std::numeric_limits<msg_counter>::max)());
             
 			const auto msg_size = message.size_bytes();
-            const auto msg_ptr = message.data();
+            const auto msg_ptr = message.data_bytes();
             stamp_type::rep timestamp;
             memcpy(
                 &timestamp,

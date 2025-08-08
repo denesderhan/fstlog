@@ -38,7 +38,7 @@ namespace fstlog {
 			tz_format tz) noexcept
 		{
 			if (str.empty()) return false;
-			const unsigned char *pos = str.data();
+			const unsigned char *pos = str.data_bytes();
 			const auto end{ pos + str.size_bytes() };
 			std::size_t num_sec_specifiers{ 0 };
 			while (pos < end) {

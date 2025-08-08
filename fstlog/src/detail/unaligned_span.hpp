@@ -52,7 +52,7 @@ namespace fstlog {
 			return unaligned_span<const T>{ data_bytes_, byte_size_ };
 		}
 
-		constexpr byte_type* data() const noexcept {
+		constexpr byte_type* data_bytes() const noexcept {
 			return data_bytes_;
 		}
 
@@ -81,14 +81,14 @@ namespace fstlog {
 
 			operator T() {
 				value_type temp;
-				memcpy(&temp, span_.data() + index_ * sizeof(T), sizeof(T));
+				memcpy(&temp, span_.data_bytes() + index_ * sizeof(T), sizeof(T));
 				return temp;
 			}
 
 			// can not return a reference (there is no T object)
 			void operator=(const T& other) {
 				static_assert(!std::is_const_v<T>, "Assignment to const T not allowed!");
-				memcpy(span_.data() + index_ * sizeof(T), &other, sizeof(T));
+				memcpy(span_.data_bytes() + index_ * sizeof(T), &other, sizeof(T));
 			}
 			
 			unaligned_span& span_;

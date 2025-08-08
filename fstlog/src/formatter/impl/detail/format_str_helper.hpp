@@ -241,7 +241,7 @@ namespace fstlog {
 				time_fmt = form_spec;
 				return error;
 			}
-			const auto begin = form_spec.data();
+			const auto begin = form_spec.data_bytes();
 			const auto end = begin + form_spec.size_bytes();
 			auto pos = begin;
 			pos = skip_fill_align(pos, end);
@@ -259,7 +259,7 @@ namespace fstlog {
 
 		inline logfield get_repl_field_id(byte_span_const name) noexcept {
 			auto str_v = std::string_view{
-				safe_reinterpret_cast<const char*>(name.data()), name.size_bytes() };
+				safe_reinterpret_cast<const char*>(name.data_bytes()), name.size_bytes() };
 			if (str_v == "time") return logfield::Timestamp;
 			if (str_v == "message") return logfield::Message;
 			if (str_v == "level") return logfield::Severity;
@@ -337,7 +337,7 @@ namespace fstlog {
 
 		inline bool valid_format_spec(byte_span_const format_spec) {
 			if (format_spec.empty()) return true;
-			auto pos = format_spec.data();
+			auto pos = format_spec.data_bytes();
 			const auto end = pos + format_spec.size_bytes();
 			
 			// skip the fill_char AND the alignment specifier if valid + safe

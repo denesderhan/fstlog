@@ -41,8 +41,8 @@ namespace fstlog {
         }
 
         void write_message(byte_span_const msg) noexcept {
-			FSTLOG_ASSERT(msg.data() != nullptr);
-			file_.write(safe_reinterpret_cast<const char*>(msg.data()), msg.size_bytes());
+			FSTLOG_ASSERT(msg.data_bytes() != nullptr);
+			file_.write(safe_reinterpret_cast<const char*>(msg.data_bytes()), msg.size_bytes());
         }
         void flush() noexcept {
             file_.flush();

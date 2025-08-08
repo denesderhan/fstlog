@@ -46,10 +46,10 @@ namespace fstlog {
 
         void write_message(byte_span_const msg) noexcept {
             FSTLOG_ASSERT(stream_ != nullptr);
-			FSTLOG_ASSERT(msg.data() != nullptr);
+			FSTLOG_ASSERT(msg.data_bytes() != nullptr);
             //can not throw (stream_ptr_->exceptions(0))
             stream_->write(
-                safe_reinterpret_cast<const char*>(msg.data()),
+                safe_reinterpret_cast<const char*>(msg.data_bytes()),
                 msg.size_bytes());
         }
         void flush() noexcept {

@@ -37,8 +37,8 @@ namespace fstlog {
         ~output_span_mixin() = default;
        
         void output_span_init(byte_span out) noexcept {
-			FSTLOG_ASSERT(out.data() != nullptr);
-			output_begin_ = out.data();
+			FSTLOG_ASSERT(out.data_bytes() != nullptr);
+			output_begin_ = out.data_bytes();
             output_ptr_ = output_begin_;
             output_end_ = output_begin_ + out.size_bytes();
             FSTLOG_ASSERT(output_begin_ <= output_end_);

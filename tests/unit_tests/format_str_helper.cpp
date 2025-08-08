@@ -152,10 +152,10 @@ TEST_CASE("parse_fmt_repl_field") {
 		fstlog::byte_span_const format_spec;
 		auto error = fstlog::parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
 		std::string_view name{
-			reinterpret_cast<const char*>(field_name.data()),
+			reinterpret_cast<const char*>(field_name.data_bytes()),
 			static_cast<std::size_t>(field_name.size_bytes()) };
 		std::string_view spec{
-			reinterpret_cast<const char*>(format_spec.data()),
+			reinterpret_cast<const char*>(format_spec.data_bytes()),
 			static_cast<std::size_t>(format_spec.size_bytes()) };
 		CHECK(error == fstlog::error_code::fmt_bad);
 		CHECK(in_pos <= in_end);
@@ -184,10 +184,10 @@ TEST_CASE("parse_fmt_repl_field") {
 		fstlog::byte_span_const format_spec;
 		auto error = fstlog::parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
 		std::string_view name{
-			reinterpret_cast<const char*>(field_name.data()),
+			reinterpret_cast<const char*>(field_name.data_bytes()),
 			static_cast<std::size_t>(field_name.size_bytes()) };
 		std::string_view spec{
-			reinterpret_cast<const char*>(format_spec.data()),
+			reinterpret_cast<const char*>(format_spec.data_bytes()),
 			static_cast<std::size_t>(format_spec.size_bytes()) };
 		CHECK(error == fstlog::error_code::none);
 		CHECK(in_pos <= in_end);
@@ -438,8 +438,8 @@ TEST_CASE("time_format") {
 	fstlog::byte_span_const time_format;
 	auto error = fstlog::time_format(format_spec, time_format);
 	
-	std::string_view strv_format_spec(reinterpret_cast<const char*>(format_spec.data()), format_spec.size_bytes());
-	std::string_view strv_time_format(reinterpret_cast<const char*>(time_format.data()), time_format.size_bytes());
+	std::string_view strv_format_spec(reinterpret_cast<const char*>(format_spec.data_bytes()), format_spec.size_bytes());
+	std::string_view strv_time_format(reinterpret_cast<const char*>(time_format.data_bytes()), time_format.size_bytes());
 
 	CHECK(error == std::get<3>(test_dat));
 	CHECK(strv_format_spec == std::get<1>(test_dat));

@@ -37,8 +37,8 @@ namespace fstlog {
         ~input_span_mixin() = default;
 
         void input_span_init(byte_span_const msg) noexcept {
-			FSTLOG_ASSERT(msg.data() != nullptr);
-			input_msg_begin_ = msg.data();
+			FSTLOG_ASSERT(msg.data_bytes() != nullptr);
+			input_msg_begin_ = msg.data_bytes();
             input_msg_ptr_ = input_msg_begin_;
             input_msg_end_ = input_msg_begin_ + msg.size_bytes();
             FSTLOG_ASSERT(input_msg_begin_ <= input_msg_end_);

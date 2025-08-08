@@ -49,7 +49,7 @@ namespace fstlog {
 			this->input_span_init(msg);
             this->advance_input(internal_msg_header::padded_data_size);
 			if (!this->has_error()) {
-				this->set_header(msg.data());
+				this->set_header(msg.data_bytes());
 				if (this->message_type() != log_msg_type::Internal
 					|| this->message_size() != msg.size_bytes())
 				{

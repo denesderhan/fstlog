@@ -68,7 +68,7 @@ namespace fstlog {
 		{
             format_type out;
             if (form_spec.empty()) return out;
-			auto pos = form_spec.data();
+			auto pos = form_spec.data_bytes();
 			const auto end = pos + form_spec.size_bytes();
 			// fill align
 			auto align_pos = pos;

@@ -121,7 +121,7 @@ namespace fstlog {
 			byte_span_const& time_format,
 			format_setting_txt& format) noexcept
 		{
-			const auto begin = time_format.data();
+			const auto begin = time_format.data_bytes();
 			const auto end = begin + time_format.size_bytes();
 			auto pos = begin;
 
@@ -153,7 +153,7 @@ namespace fstlog {
 
 		// setting the time format string
 		error_code set_time_format(byte_span_const format_string) noexcept {
-			auto pos = format_string.data();
+			auto pos = format_string.data_bytes();
 			auto end = pos + format_string.size_bytes();
 			tzone_ = get_zone(pos, end);
 			
@@ -175,7 +175,7 @@ namespace fstlog {
 			}
 			if (!detail::valid_strftime_string(
 					byte_span_const(
-						safe_reinterpret_cast<const unsigned char*>(time_format_.data()), 
+						safe_reinterpret_cast<const unsigned char*>(time_format_.data()),
 						time_format_.size()), tzone_))
 			{
 				return error_code::fmt_bad;

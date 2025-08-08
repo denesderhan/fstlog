@@ -205,10 +205,10 @@ namespace fstlog {
             || std::is_same_v<std::remove_const_t<T>, unsigned char>
             >* = nullptr>
         void encode(unaligned_span<T> data, format_type format) noexcept {
-			FSTLOG_ASSERT(data.data() != nullptr);
+			FSTLOG_ASSERT(data.data_bytes() != nullptr);
             const auto out_begin{ this->output_ptr() };
             auto out_end{ this->output_end() };
-            const unsigned char* str_begin{ data.data() };
+            const unsigned char* str_begin{ data.data_bytes() };
             const auto data_byte_size = data.size_bytes();
 
             static_assert(std::numeric_limits<unsigned char>::digits == 8);

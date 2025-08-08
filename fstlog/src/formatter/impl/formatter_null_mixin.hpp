@@ -35,7 +35,7 @@ namespace fstlog {
             [[maybe_unused]] byte_span_const in,
             byte_span out) noexcept
 		{
-            return byte_span{ out.data(), 0 };
+            return byte_span{ out.data_bytes(), 0 };
         }
     };
 }
