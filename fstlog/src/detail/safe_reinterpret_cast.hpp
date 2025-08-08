@@ -1,12 +1,11 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <utility>
 #ifdef FSTLOG_DEBUG
-
 #include <cstdint>
 #include <cstddef>
 #include <type_traits>
-#include <utility>
 
 namespace fstlog {
 	template <typename T>
