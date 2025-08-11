@@ -1,7 +1,6 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <detail/safe_reinterpret_cast.hpp>
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
 

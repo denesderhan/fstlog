@@ -1,11 +1,10 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <utility>
-#ifdef FSTLOG_DEBUG
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
+#include <utility>
 
 namespace fstlog {
 	template <typename T>
@@ -41,13 +40,3 @@ namespace fstlog {
 		}
 	}
 }
-#else
-namespace fstlog {
-	// reinterpret_cast is used without any restrictions, potentially leading to undefined behavior.
-	// Compile with #define FSTLOG_DEBUG to use the restricted version.
-	template<typename T, typename F>
-	[[nodiscard]] constexpr auto safe_reinterpret_cast(F&& from) noexcept -> T {
-		return reinterpret_cast<T>(std::forward<F>(from));
-	};
-}
-#endif

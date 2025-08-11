@@ -6,7 +6,6 @@
 #include <cstring>
 #pragma intrinsic(memcpy, memset, memmove)
 
-#include <detail/safe_reinterpret_cast.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <formatter/impl/detail/format_setting_txt.hpp>
 #include <detail/unaligned_span.hpp>

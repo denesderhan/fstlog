@@ -4,7 +4,6 @@
 #include <array>
 #include <cstddef>
 
-#include <detail/safe_reinterpret_cast.hpp>
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 #include <formatter/impl/detail/logfield.hpp>

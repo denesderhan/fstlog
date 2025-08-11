@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 #include <detail/unaligned_span.hpp>
-#include <detail/safe_reinterpret_cast.hpp>
 
 namespace fstlog {
     template<class L>

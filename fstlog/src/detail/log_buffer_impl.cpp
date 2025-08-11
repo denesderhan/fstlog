@@ -9,7 +9,6 @@
 #include <detail/log_buffer_unread_data.hpp>
 #include <detail/nearest_pow2.hpp>
 #include <detail/nothrow_allocate.hpp>
-#include <detail/safe_reinterpret_cast.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/is_pow2.hpp>
 
