@@ -167,6 +167,7 @@ namespace fstlog {
 			FSTLOG_ASSERT(
 				str_begin >= this->output_begin() 
 				&& str_begin <= this->output_ptr());
+            if (format == "{}" || format == "{:}") return;
 			const std::size_t str_byte_size = 
 				static_cast<std::size_t>(this->output_ptr() - str_begin);
 			if (str_byte_size <= encoder_fmt_buffer_.size()) {

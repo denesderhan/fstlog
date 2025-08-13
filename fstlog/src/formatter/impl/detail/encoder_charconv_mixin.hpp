@@ -296,6 +296,7 @@ namespace fstlog {
 
         void reencode_tail_string(unsigned char* str_begin, format_type format) {
            	FSTLOG_ASSERT(str_begin >= this->output_begin() && str_begin <= this->output_ptr());
+            if (format.width == 0 && format.precision == 0xffff ) return;
 			const auto str_len = detail::utf8_str_trim(str_begin, this->output_ptr(), format.precision);
 			auto result_len = detail::shift_fill(
 				{ str_begin, static_cast<std::size_t>(this->output_end() - str_begin) },
