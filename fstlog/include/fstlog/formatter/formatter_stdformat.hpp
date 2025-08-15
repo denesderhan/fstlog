@@ -10,37 +10,37 @@
 
 namespace fstlog {
     FSTLOG_API error_code formatter_stdformat(
-		formatter& out, 
+        formatter& out, 
         fstlog_allocator const& allocator = {}) noexcept;
     FSTLOG_API error_code formatter_stdformat(
-		formatter& out,
-		std::string_view format_string,
+        formatter& out,
+        std::string_view format_string,
         fstlog_allocator const& allocator = {}) noexcept;
-	inline formatter formatter_stdformat(
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
-	{
-		formatter out;
-		[[maybe_unused]] const auto error = formatter_stdformat(out, allocator);
-		handle_error(error);
-		return out;
-	}
-	inline formatter formatter_stdformat(
-		std::string_view format_string,
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
-	{
-		formatter out;
-		[[maybe_unused]] const auto error = formatter_stdformat(out, format_string, allocator);
-		handle_error(error);
-		return out;
-	}
+    inline formatter formatter_stdformat(
+        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+    {
+        formatter out;
+        [[maybe_unused]] const auto error = formatter_stdformat(out, allocator);
+        handle_error(error);
+        return out;
+    }
+    inline formatter formatter_stdformat(
+        std::string_view format_string,
+        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+    {
+        formatter out;
+        [[maybe_unused]] const auto error = formatter_stdformat(out, format_string, allocator);
+        handle_error(error);
+        return out;
+    }
 #ifdef __cpp_char8_t
     inline formatter formatter_stdformat(
-		std::u8string_view format_string,
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
-	{
-		return formatter_stdformat(
-			std::string_view{reinterpret_cast<const char*>(format_string.data()), format_string.size()},
-			allocator);
-	}
+        std::u8string_view format_string,
+        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+    {
+        return formatter_stdformat(
+            std::string_view{reinterpret_cast<const char*>(format_string.data()), format_string.size()},
+            allocator);
+    }
 #endif
 }

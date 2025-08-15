@@ -4,11 +4,11 @@
 #include <fstlog/logger/detail/this_thread_id.hpp>
 
 namespace fstlog {
-	template<class L>
-	class logger_thread_query_mixin : public L {
-	public:
-		static auto thread() noexcept {
-			return this_thread::get_id();
-		}
-	};
+    template<class L>
+    class logger_thread_query_mixin : public L {
+    public:
+        static auto thread() noexcept {
+            return this_thread::get_id();
+        }
+    };
 }

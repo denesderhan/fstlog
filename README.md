@@ -72,26 +72,26 @@ Example binaries will be in build/bin/Static
 
 int main()
 {
-	try {
-		//create core
-		fstlog::core my_core("my_core");
-		std::cout << "fstlog version: " << my_core.version() << "\n\n";
-		//create sink
-		fstlog::sink my_sink = fstlog::sink_sort(
-			fstlog::formatter_txt(),
-			fstlog::output_console());
-		//assign sink to core
-		my_core.add_sink(my_sink);
+    try {
+        //create core
+        fstlog::core my_core("my_core");
+        std::cout << "fstlog version: " << my_core.version() << "\n\n";
+        //create sink
+        fstlog::sink my_sink = fstlog::sink_sort(
+            fstlog::formatter_txt(),
+            fstlog::output_console());
+        //assign sink to core
+        my_core.add_sink(my_sink);
 
-		//create logger
-		fstlog::logger my_logger(my_core);
-		
-		//log with logger
-		LOG_INFO(my_logger, "Hello {}!", "World");
-	}
-	catch (const std::exception& ex) {
-		std::cout << ex.what() << '\n';
-	}
+        //create logger
+        fstlog::logger my_logger(my_core);
+        
+        //log with logger
+        LOG_INFO(my_logger, "Hello {}!", "World");
+    }
+    catch (const std::exception& ex) {
+        std::cout << ex.what() << '\n';
+    }
 }
 
 ```
@@ -187,10 +187,10 @@ The formatters convert the messages to the desired format.
 Formatters are initialized with a format pattern, using the std::format syntax
 with the following differences:
 - Argument id {arg_id:} is mandatory, only the following id-s can be used:
-	message, level/severity, time/timestamp, logger, thread, policy, channel, file, line, function
+    message, level/severity, time/timestamp, logger, thread, policy, channel, file, line, function
 - The precision in the replacement field for the timestamp, is used for seconds precision.
-	The time is formatted in the local zone by default, if the first character of the strftime
-	string is 'U' or 'L' it is used for determining UTC / local time zone formatting.
+    The time is formatted in the local zone by default, if the first character of the strftime
+    string is 'U' or 'L' it is used for determining UTC / local time zone formatting.
 
 See example: formatter_config.cpp
 
@@ -199,7 +199,7 @@ See example: formatter_config.cpp
 
 ```c++
 std::string_view default_format_string{ 
-	"{timestamp:.6%Y-%m-%d %H:%M:%S %z} {severity} {file}:{line} {message}" }
+    "{timestamp:.6%Y-%m-%d %H:%M:%S %z} {severity} {file}:{line} {message}" }
 ```
 - Example of initializing a formatter with a pattern using all fields:
 

@@ -4,11 +4,11 @@
 #include <fstlog/detail/types.hpp>
 
 namespace fstlog {
-	template<channel_type channel_, class L>
-	class logger_channel_compile_time_mixin : public L {
-	public:
-		static constexpr channel_type channel() noexcept {
-			return channel_;
-		}
-	};
+    template<channel_type channel_, class L>
+    class logger_channel_compile_time_mixin : public L {
+    public:
+        static constexpr channel_type channel() noexcept {
+            return channel_;
+        }
+    };
 }

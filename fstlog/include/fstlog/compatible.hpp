@@ -5,14 +5,14 @@
 #include <fstlog/core.hpp>
 
 namespace fstlog {
-	inline bool compatible(core const& core_) noexcept {
-		if (FSTLOG_VERSION_MAJOR != 0) {
-			return (core_.version_major() == FSTLOG_VERSION_MAJOR &&
-				core_.version_minor() >= FSTLOG_VERSION_MINOR);
-		}
-		else {
-			return core_.version_minor() == FSTLOG_VERSION_MINOR &&
-				core_.version_patch() == FSTLOG_VERSION_PATCH;
-		}
-	}
+    inline bool compatible(core const& core_) noexcept {
+        if (FSTLOG_VERSION_MAJOR != 0) {
+            return (core_.version_major() == FSTLOG_VERSION_MAJOR &&
+                core_.version_minor() >= FSTLOG_VERSION_MINOR);
+        }
+        else {
+            return core_.version_minor() == FSTLOG_VERSION_MINOR &&
+                core_.version_patch() == FSTLOG_VERSION_PATCH;
+        }
+    }
 }

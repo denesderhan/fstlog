@@ -28,58 +28,58 @@
 #include <formatter/impl/output_span_mixin.hpp>
 
 namespace fstlog {
-	using formatter_txt_type = 
-		formatter_interface_mixin<
-		formatter_txt_mixin<
-		arg_parser_mixin<
-		encoder_charconv_mixin<
-		encoder_timestamp_mixin<true,
-		encoder_aggregate_separator_txt_mixin<
-		hash_converter_null_mixin<
-		output_span_mixin<
-		logfield_pos_mixin<
-		decoder_internal_mixin<
-		header_internal_mixin<
-		input_span_mixin<
-		logfield_formspec_txt_mixin<
-		error_state_mixin<
-		exclusive_use_mixin<
-		reference_counter_mixin<
-		allocator_mixin>>>>>>>>>>>>>>>>;
-	
-	static error_code formatter_txt(
-		formatter& out,
-		byte_span_const format_string,
-		fstlog_allocator const& allocator) noexcept
-	{
-		out = make_allocated<formatter_txt_type>(allocator);
-		if (out.pimpl() == nullptr) return error_code::alloc_fail;
-		auto error = static_cast<formatter_txt_type*>(out.pimpl())->
-			formatter_init(format_string);
-		if (error != error_code::none) out = formatter{};
-		return error;
-	}
+    using formatter_txt_type = 
+        formatter_interface_mixin<
+        formatter_txt_mixin<
+        arg_parser_mixin<
+        encoder_charconv_mixin<
+        encoder_timestamp_mixin<true,
+        encoder_aggregate_separator_txt_mixin<
+        hash_converter_null_mixin<
+        output_span_mixin<
+        logfield_pos_mixin<
+        decoder_internal_mixin<
+        header_internal_mixin<
+        input_span_mixin<
+        logfield_formspec_txt_mixin<
+        error_state_mixin<
+        exclusive_use_mixin<
+        reference_counter_mixin<
+        allocator_mixin>>>>>>>>>>>>>>>>;
+    
+    static error_code formatter_txt(
+        formatter& out,
+        byte_span_const format_string,
+        fstlog_allocator const& allocator) noexcept
+    {
+        out = make_allocated<formatter_txt_type>(allocator);
+        if (out.pimpl() == nullptr) return error_code::alloc_fail;
+        auto error = static_cast<formatter_txt_type*>(out.pimpl())->
+            formatter_init(format_string);
+        if (error != error_code::none) out = formatter{};
+        return error;
+    }
 
-	error_code formatter_txt(
-		formatter& out,
-		std::string_view format_string,
-		fstlog_allocator const& allocator) noexcept
-	{
-		return formatter_txt(
-			out,
-			byte_span_const{ 
-				safe_reinterpret_cast<const unsigned char*>(format_string.data()),
-				format_string.size() },
-			allocator);
-	}
+    error_code formatter_txt(
+        formatter& out,
+        std::string_view format_string,
+        fstlog_allocator const& allocator) noexcept
+    {
+        return formatter_txt(
+            out,
+            byte_span_const{ 
+                safe_reinterpret_cast<const unsigned char*>(format_string.data()),
+                format_string.size() },
+            allocator);
+    }
 
-	error_code formatter_txt(
-		formatter& out,
-		fstlog_allocator const& allocator) noexcept
-	{
-		return formatter_txt(
-			out,
-			config::default_format_string,
-			allocator);
-	}
+    error_code formatter_txt(
+        formatter& out,
+        fstlog_allocator const& allocator) noexcept
+    {
+        return formatter_txt(
+            out,
+            config::default_format_string,
+            allocator);
+    }
 }

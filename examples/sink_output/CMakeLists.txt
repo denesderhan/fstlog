@@ -14,8 +14,8 @@ set(ALL_FILES
 
 add_executable(sink_output ${ALL_FILES})
 set_target_properties(sink_output PROPERTIES 
-	DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
-	FOLDER "examples"
+    DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
+    FOLDER "examples"
 )
 
 ################################################################################
@@ -23,5 +23,5 @@ set_target_properties(sink_output PROPERTIES
 ################################################################################
 
 target_link_libraries(sink_output
-	PRIVATE fstlog
+    PRIVATE fstlog
 )

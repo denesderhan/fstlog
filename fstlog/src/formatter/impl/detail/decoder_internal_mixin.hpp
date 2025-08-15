@@ -24,19 +24,19 @@ namespace fstlog {
         using allocator_type = typename L::allocator_type;
 
         decoder_internal_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(decoder_internal_mixin(allocator_type{})))
-			: decoder_internal_mixin(allocator_type{}) {}
+            noexcept(allocator_type())
+            && noexcept(decoder_internal_mixin(allocator_type{})))
+            : decoder_internal_mixin(allocator_type{}) {}
         explicit decoder_internal_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
-			: L(allocator) {}
+            noexcept(L(allocator_type{})))
+            : L(allocator) {}
 
-		decoder_internal_mixin(const decoder_internal_mixin& other) noexcept(
-			noexcept(decoder_internal_mixin::get_allocator())
-			&& noexcept(decoder_internal_mixin(decoder_internal_mixin{}, allocator_type{})))
+        decoder_internal_mixin(const decoder_internal_mixin& other) noexcept(
+            noexcept(decoder_internal_mixin::get_allocator())
+            && noexcept(decoder_internal_mixin(decoder_internal_mixin{}, allocator_type{})))
             : decoder_internal_mixin(other, other.get_allocator()) {}
-		decoder_internal_mixin(const decoder_internal_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(decoder_internal_mixin{}, allocator_type{})))
+        decoder_internal_mixin(const decoder_internal_mixin& other, allocator_type const& allocator) noexcept(
+            noexcept(L(decoder_internal_mixin{}, allocator_type{})))
             : L(other, allocator) {}
 
         decoder_internal_mixin(decoder_internal_mixin&& other) = delete;
@@ -46,60 +46,60 @@ namespace fstlog {
         ~decoder_internal_mixin() = default;
 
         void decoder_set_input(byte_span_const msg) noexcept {
-			this->input_span_init(msg);
+            this->input_span_init(msg);
             this->advance_input(internal_msg_header::padded_data_size);
-			if (!this->has_error()) {
-				this->set_header(msg.data_bytes());
-				if (this->message_type() != log_msg_type::Internal
-					|| this->message_size() != msg.size_bytes())
-				{
-					this->set_error(__FILE__, __LINE__, error_code::input_bad);
-				}
-			}
+            if (!this->has_error()) {
+                this->set_header(msg.data_bytes());
+                if (this->message_type() != log_msg_type::Internal
+                    || this->message_size() != msg.size_bytes())
+                {
+                    this->set_error(__FILE__, __LINE__, error_code::input_bad);
+                }
+            }
         }
 
-		byte_span_const get_signature_skip_arg_header() noexcept {
-			const auto header_begin{ this->input_ptr() };
-			internal_arg_header<char> min_size_header;
-			constexpr std::size_t signature_offset = 
-				sizeof(min_size_header.arg_size) 
-				+ sizeof(min_size_header.signature_length);
-			const auto signature_begin = header_begin + signature_offset;
-			
-			const auto end_ptr{ this->input_end() };
-			if (signature_begin < end_ptr) {
-				memcpy(
-					&min_size_header,
-					header_begin,
-					internal_arg_header<char>::data_size);
-				if (min_size_header.signature_length != 0) {
-					const auto padded_header_size =
-						padded_size<constants::internal_msg_data_alignment>(
-							signature_offset + min_size_header.signature_length);
-					this->advance_input(padded_header_size);
-					if (!this->has_error()) {
-						return { signature_begin, min_size_header.signature_length };
-					}
-					else return { header_begin, 0 };
-				}
-			}
-			this->set_error(__FILE__, __LINE__, error_code::input_bad);
-			return { header_begin, 0 };
+        byte_span_const get_signature_skip_arg_header() noexcept {
+            const auto header_begin{ this->input_ptr() };
+            internal_arg_header<char> min_size_header;
+            constexpr std::size_t signature_offset = 
+                sizeof(min_size_header.arg_size) 
+                + sizeof(min_size_header.signature_length);
+            const auto signature_begin = header_begin + signature_offset;
+            
+            const auto end_ptr{ this->input_end() };
+            if (signature_begin < end_ptr) {
+                memcpy(
+                    &min_size_header,
+                    header_begin,
+                    internal_arg_header<char>::data_size);
+                if (min_size_header.signature_length != 0) {
+                    const auto padded_header_size =
+                        padded_size<constants::internal_msg_data_alignment>(
+                            signature_offset + min_size_header.signature_length);
+                    this->advance_input(padded_header_size);
+                    if (!this->has_error()) {
+                        return { signature_begin, min_size_header.signature_length };
+                    }
+                    else return { header_begin, 0 };
+                }
+            }
+            this->set_error(__FILE__, __LINE__, error_code::input_bad);
+            return { header_begin, 0 };
         }
 
         void skip_argument() noexcept {
-			const auto arg_begin{ this->input_ptr() };
-			if (static_cast<std::size_t>(this->input_end() - arg_begin)
-				>= internal_arg_header<char>::data_size)
-			{
-				internal_arg_header<char> header;
-				memcpy(
-					&header,
-					arg_begin,
-					internal_arg_header<char>::data_size);
-				this->advance_input(header.arg_size);
-			}
-			else this->set_error(__FILE__, __LINE__, error_code::input_bad);
+            const auto arg_begin{ this->input_ptr() };
+            if (static_cast<std::size_t>(this->input_end() - arg_begin)
+                >= internal_arg_header<char>::data_size)
+            {
+                internal_arg_header<char> header;
+                memcpy(
+                    &header,
+                    arg_begin,
+                    internal_arg_header<char>::data_size);
+                this->advance_input(header.arg_size);
+            }
+            else this->set_error(__FILE__, __LINE__, error_code::input_bad);
         }
 
         template<typename T, bool padded = true>
@@ -117,7 +117,7 @@ namespace fstlog {
             }
         }
 
-		template <typename T>
+        template <typename T>
         void get_data(unaligned_span<const T>& out) noexcept {
             static_assert(
                 (std::numeric_limits<msg_counter>::max)()
@@ -129,7 +129,7 @@ namespace fstlog {
                 const auto byte_size = static_cast<std::size_t>(str_size) * sizeof(T);
                 this->advance_input(padded_size<constants::internal_msg_data_alignment>(byte_size));
                 if (!this->has_error()) {
-					out = unaligned_span<const T>{ str_begin, byte_size };
+                    out = unaligned_span<const T>{ str_begin, byte_size };
                 }
             }
         }

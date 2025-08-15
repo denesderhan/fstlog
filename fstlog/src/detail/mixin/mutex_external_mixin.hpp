@@ -13,11 +13,11 @@ namespace fstlog {
         using allocator_type = typename L::allocator_type;
         
         mutex_external_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(mutex_external_mixin(allocator_type{})))
-			: mutex_external_mixin(allocator_type{}) {}
-		explicit mutex_external_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(allocator_type())
+            && noexcept(mutex_external_mixin(allocator_type{})))
+            : mutex_external_mixin(allocator_type{}) {}
+        explicit mutex_external_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
         //No copy constructor! copy would use the same mutex!
@@ -28,15 +28,15 @@ namespace fstlog {
        
         ~mutex_external_mixin() = default;
 
-		error_code set_mutex(std::shared_ptr<std::mutex> mutex) noexcept {
-			sync_mutex_ = std::move(mutex);
-			if (sync_mutex_ == nullptr) return error_code::obj_null;
-			return error_code::none;
+        error_code set_mutex(std::shared_ptr<std::mutex> mutex) noexcept {
+            sync_mutex_ = std::move(mutex);
+            if (sync_mutex_ == nullptr) return error_code::obj_null;
+            return error_code::none;
         }
 
         std::mutex& get_mutex() noexcept {
             FSTLOG_ASSERT(sync_mutex_ != nullptr);
-			return *sync_mutex_.get();
+            return *sync_mutex_.get();
         }
 
     private:

@@ -9,20 +9,20 @@ namespace fstlog {
     public:
         using allocator_type = typename L::allocator_type;
         
-		formatter_null_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(formatter_null_mixin(allocator_type{})))
-			: formatter_null_mixin(allocator_type{}) {}
+        formatter_null_mixin() noexcept(
+            noexcept(allocator_type())
+            && noexcept(formatter_null_mixin(allocator_type{})))
+            : formatter_null_mixin(allocator_type{}) {}
         explicit formatter_null_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
-			: L(allocator) {}
+            noexcept(L(allocator_type{})))
+            : L(allocator) {}
 
-		formatter_null_mixin(const formatter_null_mixin& other) noexcept(
-			noexcept(formatter_null_mixin::get_allocator())
-			&& noexcept(formatter_null_mixin(formatter_null_mixin{}, allocator_type{})))
+        formatter_null_mixin(const formatter_null_mixin& other) noexcept(
+            noexcept(formatter_null_mixin::get_allocator())
+            && noexcept(formatter_null_mixin(formatter_null_mixin{}, allocator_type{})))
             : formatter_null_mixin(other, other.get_allocator()) {}
-		formatter_null_mixin(const formatter_null_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(formatter_null_mixin{}, allocator_type{})))
+        formatter_null_mixin(const formatter_null_mixin& other, allocator_type const& allocator) noexcept(
+            noexcept(L(formatter_null_mixin{}, allocator_type{})))
             : L(other, allocator) {}
 
         formatter_null_mixin(formatter_null_mixin&& other) = delete;
@@ -34,7 +34,7 @@ namespace fstlog {
         static byte_span format_message(
             [[maybe_unused]] byte_span_const in,
             byte_span out) noexcept
-		{
+        {
             return byte_span{ out.data_bytes(), 0 };
         }
     };

@@ -12,24 +12,24 @@
 
 int main()
 {
-	try {
-		//create core
-		fstlog::core my_core("my_core");
-		std::cout << "fstlog version: " << my_core.version() << "\n\n";
-		//create sink
-		fstlog::sink my_sink = fstlog::sink_sort(
-			fstlog::formatter_txt(),
-			fstlog::output_console());
-		//assign sink to core
-		my_core.add_sink(my_sink);
+    try {
+        //create core
+        fstlog::core my_core("my_core");
+        std::cout << "fstlog version: " << my_core.version() << "\n\n";
+        //create sink
+        fstlog::sink my_sink = fstlog::sink_sort(
+            fstlog::formatter_txt(),
+            fstlog::output_console());
+        //assign sink to core
+        my_core.add_sink(my_sink);
 
-		//create logger
-		fstlog::logger my_logger(my_core);
-		
-		//log with logger
-		LOG_INFO(my_logger, "Hello {}!", "World");
-	}
-	catch (const std::exception& ex) {
-		std::cout << ex.what() << '\n';
-	}
+        //create logger
+        fstlog::logger my_logger(my_core);
+        
+        //log with logger
+        LOG_INFO(my_logger, "Hello {}!", "World");
+    }
+    catch (const std::exception& ex) {
+        std::cout << ex.what() << '\n';
+    }
 }

@@ -6,7 +6,7 @@
 #endif
 #include <chrono>
 namespace fstlog {
-	namespace config {
-		inline constexpr std::chrono::milliseconds default_sink_flush_interval{ FSTLOG_SINK_FLUSHINTERVAL };
-	}
+    namespace config {
+        inline constexpr std::chrono::milliseconds default_sink_flush_interval{ FSTLOG_SINK_FLUSHINTERVAL };
+    }
 }

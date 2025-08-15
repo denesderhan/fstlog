@@ -13,16 +13,16 @@ namespace fstlog {
     using sink_null_impl_type = 
         sink_interface_mixin<
         sink_null_mixin<
-		reference_counter_mixin<
+        reference_counter_mixin<
         concurrent_use_mixin<
         allocator_mixin>>>>;
 
-	error_code sink_null(
-		sink& out,
+    error_code sink_null(
+        sink& out,
         fstlog_allocator const& allocator) noexcept
-	{
+    {
         out = make_allocated<sink_null_impl_type>(allocator);
-		if (out.pimpl() == nullptr) return error_code::alloc_fail;
-		return error_code::none;
+        if (out.pimpl() == nullptr) return error_code::alloc_fail;
+        return error_code::none;
     }
 }

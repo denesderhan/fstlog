@@ -7,8 +7,8 @@
 #include <chrono>
 
 namespace fstlog {
-	namespace config {
-		//Default core background thread full flush period in milliseconds.
-		inline constexpr std::chrono::milliseconds default_polling_interval{ FSTLOG_POLLINTERVAL };
-	}
+    namespace config {
+        //Default core background thread full flush period in milliseconds.
+        inline constexpr std::chrono::milliseconds default_polling_interval{ FSTLOG_POLLINTERVAL };
+    }
 }

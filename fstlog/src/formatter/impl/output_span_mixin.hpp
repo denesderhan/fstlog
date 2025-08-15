@@ -15,19 +15,19 @@ namespace fstlog {
         using allocator_type = typename L::allocator_type;
 
         output_span_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(output_span_mixin(allocator_type{})))
-			: output_span_mixin(allocator_type{}) {}
-		explicit output_span_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(allocator_type())
+            && noexcept(output_span_mixin(allocator_type{})))
+            : output_span_mixin(allocator_type{}) {}
+        explicit output_span_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
         output_span_mixin(const output_span_mixin& other) noexcept(
-			noexcept(output_span_mixin::get_allocator())
-			&& noexcept(output_span_mixin(output_span_mixin{}, allocator_mixin{})))
+            noexcept(output_span_mixin::get_allocator())
+            && noexcept(output_span_mixin(output_span_mixin{}, allocator_mixin{})))
             : output_span_mixin(other, other.get_allocator()) {}
-		output_span_mixin(const output_span_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(output_span_mixin{}, allocator_type{})))
+        output_span_mixin(const output_span_mixin& other, allocator_type const& allocator) noexcept(
+            noexcept(L(output_span_mixin{}, allocator_type{})))
             : L(other, allocator) {}
 
         output_span_mixin(output_span_mixin&& other) = delete;
@@ -37,8 +37,8 @@ namespace fstlog {
         ~output_span_mixin() = default;
        
         void output_span_init(byte_span out) noexcept {
-			FSTLOG_ASSERT(out.data_bytes() != nullptr);
-			output_begin_ = out.data_bytes();
+            FSTLOG_ASSERT(out.data_bytes() != nullptr);
+            output_begin_ = out.data_bytes();
             output_ptr_ = output_begin_;
             output_end_ = output_begin_ + out.size_bytes();
             FSTLOG_ASSERT(output_begin_ <= output_end_);

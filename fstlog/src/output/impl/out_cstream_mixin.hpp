@@ -12,12 +12,12 @@ namespace fstlog {
     public:
         using allocator_type = typename L::allocator_type;
 
-		out_cstream_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(out_cstream_mixin(allocator_type{})))
-			: out_cstream_mixin(allocator_type{}) {}
-		explicit out_cstream_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+        out_cstream_mixin() noexcept(
+            noexcept(allocator_type())
+            && noexcept(out_cstream_mixin(allocator_type{})))
+            : out_cstream_mixin(allocator_type{}) {}
+        explicit out_cstream_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
         out_cstream_mixin(const out_cstream_mixin& other) = delete;
@@ -27,30 +27,30 @@ namespace fstlog {
 
         ~out_cstream_mixin() noexcept {
             if (stream_ != nullptr) {
-				fflush(stream_);
+                fflush(stream_);
             }
         }
 
-		error_code set_stream(FILE* stream_ptr) noexcept {
-			if (stream_ptr == nullptr) return error_code::obj_null;
-			stream_ = stream_ptr;
-			return error_code::none;
+        error_code set_stream(FILE* stream_ptr) noexcept {
+            if (stream_ptr == nullptr) return error_code::obj_null;
+            stream_ = stream_ptr;
+            return error_code::none;
         }
 
         void write_message(byte_span_const msg) noexcept {
             FSTLOG_ASSERT(stream_ != nullptr);
-			FSTLOG_ASSERT(msg.data_bytes() != nullptr);
+            FSTLOG_ASSERT(msg.data_bytes() != nullptr);
             fwrite(
                 msg.data_bytes(),
-				sizeof(char),
+                sizeof(char),
                 msg.size_bytes(),
-				stream_);
+                stream_);
         }
         void flush() noexcept {
             FSTLOG_ASSERT(stream_ != nullptr);
             fflush(stream_);
         }
     private:
-		FILE* stream_{ nullptr };
+        FILE* stream_{ nullptr };
     };
 }

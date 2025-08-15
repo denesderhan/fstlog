@@ -4,8 +4,8 @@
 #include <cstdint>
 
 namespace fstlog {
-	enum class tz_format {
-		UTC = 0,
-		Local = 1
-	};
+    enum class tz_format {
+        UTC = 0,
+        Local = 1
+    };
 }

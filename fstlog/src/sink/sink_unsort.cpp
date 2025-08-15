@@ -28,82 +28,82 @@ namespace fstlog {
         sink_output_mixin<
         filter_mixin<
         sink_flush_time_mixin<
-		reference_counter_mixin<
+        reference_counter_mixin<
         exclusive_use_mixin<
         allocator_mixin>>>>>>>>>;
     
-	static error_code sink_unsort(
-		sink& out,
-		formatter formatter,
-		output output,
-		filter_internal const& filter,
-		std::chrono::milliseconds flush_interval,
-		fstlog_allocator const& allocator) noexcept
-	{
-		out = make_allocated<sink_unsort_impl_type>(allocator);
-		sink_unsort_impl_type* const pimpl = 
-			static_cast<sink_unsort_impl_type*>(out.pimpl());
-		if (pimpl == nullptr) return error_code::alloc_fail;
-		auto error = pimpl->set_formatter(std::move(formatter));
-		if(error == error_code::none) error = pimpl->set_output(std::move(output));
-		if (error != error_code::none) {
-			out = sink{};
-			return error;
-		}
-		pimpl->set_filter(filter);
-		pimpl->set_flush_interval(flush_interval);
-		return error_code::none;
-	}
+    static error_code sink_unsort(
+        sink& out,
+        formatter formatter,
+        output output,
+        filter_internal const& filter,
+        std::chrono::milliseconds flush_interval,
+        fstlog_allocator const& allocator) noexcept
+    {
+        out = make_allocated<sink_unsort_impl_type>(allocator);
+        sink_unsort_impl_type* const pimpl = 
+            static_cast<sink_unsort_impl_type*>(out.pimpl());
+        if (pimpl == nullptr) return error_code::alloc_fail;
+        auto error = pimpl->set_formatter(std::move(formatter));
+        if(error == error_code::none) error = pimpl->set_output(std::move(output));
+        if (error != error_code::none) {
+            out = sink{};
+            return error;
+        }
+        pimpl->set_filter(filter);
+        pimpl->set_flush_interval(flush_interval);
+        return error_code::none;
+    }
 
-	error_code sink_unsort(
-		sink& out,
-		formatter formatter,
+    error_code sink_unsort(
+        sink& out,
+        formatter formatter,
         output output,
         fstlog_allocator const& allocator) noexcept
-	{
-		out = sink{};
-		filter_internal filter{ level::All, 1, 255 };
-		return sink_unsort(
-			out,
-			std::move(formatter),
-			std::move(output),
-			filter,
-			config::default_sink_flush_interval,
-			allocator);
+    {
+        out = sink{};
+        filter_internal filter{ level::All, 1, 255 };
+        return sink_unsort(
+            out,
+            std::move(formatter),
+            std::move(output),
+            filter,
+            config::default_sink_flush_interval,
+            allocator);
     }
-	error_code sink_unsort(
-		sink& out,
-		formatter formatter, 
+    error_code sink_unsort(
+        sink& out,
+        formatter formatter, 
         output output,
         filter filter,
         fstlog_allocator const& allocator) noexcept
-	{
-		out = sink{};
-		if (!filter.good()) return error_code::obj_null;
-		return sink_unsort(
-			out,
-			std::move(formatter),
-			std::move(output),
-			filter.pimpl()->message_filter_,
-			config::default_sink_flush_interval,
-			allocator);
+    {
+        out = sink{};
+        if (!filter.good()) return error_code::obj_null;
+        return sink_unsort(
+            out,
+            std::move(formatter),
+            std::move(output),
+            filter.pimpl()->message_filter_,
+            config::default_sink_flush_interval,
+            allocator);
     }
-	error_code sink_unsort(
-		sink& out,
-		formatter formatter, 
-		output output,
+    error_code sink_unsort(
+        sink& out,
+        formatter formatter, 
+        output output,
         filter filter,
         std::chrono::milliseconds flush_interval, 
         fstlog_allocator const& allocator) noexcept
-	{
-		out = sink{};
-		if (!filter.good()) return error_code::obj_null;
-		return sink_unsort(
-			out,
-			std::move(formatter), 
-			std::move(output),
-			filter.pimpl()->message_filter_,
-			flush_interval,
-			allocator);
+    {
+        out = sink{};
+        if (!filter.good()) return error_code::obj_null;
+        return sink_unsort(
+            out,
+            std::move(formatter), 
+            std::move(output),
+            filter.pimpl()->message_filter_,
+            flush_interval,
+            allocator);
     }
 }

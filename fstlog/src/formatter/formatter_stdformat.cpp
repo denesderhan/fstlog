@@ -34,12 +34,12 @@
 
 namespace fstlog {
 #if defined(__cpp_lib_format) && !defined(FSTLOG_NOEXCEPTIONS)
-	using formatter_stdformat_type =
+    using formatter_stdformat_type =
         formatter_interface_mixin<
         formatter_txt_mixin<
         arg_parser_mixin<
         encoder_stdformat_mixin<
-		encoder_timestamp_mixin<true,
+        encoder_timestamp_mixin<true,
         encoder_aggregate_separator_txt_mixin<
         hash_converter_null_mixin<
         output_span_mixin<
@@ -50,51 +50,51 @@ namespace fstlog {
         logfield_formspec_fmt_mixin<
         error_state_mixin<
         exclusive_use_mixin<
-		reference_counter_mixin<
+        reference_counter_mixin<
         allocator_mixin>>>>>>>>>>>>>>>>;
 
-	static error_code formatter_stdformat(
-		formatter& out,
-		byte_span_const format_string,
-		fstlog_allocator const& allocator) noexcept 
-	{
-		out = make_allocated<formatter_stdformat_type>(allocator);
-		if (out.pimpl() == nullptr) return error_code::alloc_fail;
-		auto error = static_cast<formatter_stdformat_type*>(out.pimpl())->
-			formatter_init(format_string);
-		if (error != error_code::none) out = formatter{};
-		return error;
-	}
+    static error_code formatter_stdformat(
+        formatter& out,
+        byte_span_const format_string,
+        fstlog_allocator const& allocator) noexcept 
+    {
+        out = make_allocated<formatter_stdformat_type>(allocator);
+        if (out.pimpl() == nullptr) return error_code::alloc_fail;
+        auto error = static_cast<formatter_stdformat_type*>(out.pimpl())->
+            formatter_init(format_string);
+        if (error != error_code::none) out = formatter{};
+        return error;
+    }
 #else
-	static error_code formatter_stdformat(
-		[[maybe_unused]] formatter& out,
-		[[maybe_unused]] byte_span_const format_string,
-		[[maybe_unused]] fstlog_allocator const& allocator) noexcept
-	{
-		return error_code::cpp_err;
-	}
+    static error_code formatter_stdformat(
+        [[maybe_unused]] formatter& out,
+        [[maybe_unused]] byte_span_const format_string,
+        [[maybe_unused]] fstlog_allocator const& allocator) noexcept
+    {
+        return error_code::cpp_err;
+    }
 #endif
 
-	error_code formatter_stdformat(
-		formatter& out, 
-		std::string_view format_string,
+    error_code formatter_stdformat(
+        formatter& out, 
+        std::string_view format_string,
         fstlog_allocator const& allocator) noexcept 
-	{
-		return formatter_stdformat(
-			out,
-			byte_span_const{
-				safe_reinterpret_cast<const unsigned char*>(format_string.data()),
-				format_string.size() },
-			allocator);
+    {
+        return formatter_stdformat(
+            out,
+            byte_span_const{
+                safe_reinterpret_cast<const unsigned char*>(format_string.data()),
+                format_string.size() },
+            allocator);
     }
 
-	error_code formatter_stdformat(
-		formatter& out,
-		fstlog_allocator const& allocator) noexcept
-	{
+    error_code formatter_stdformat(
+        formatter& out,
+        fstlog_allocator const& allocator) noexcept
+    {
         return formatter_stdformat(
-			out, 
-			config::default_format_string,
-			allocator);
+            out, 
+            config::default_format_string,
+            allocator);
     }
 }

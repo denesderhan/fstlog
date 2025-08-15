@@ -6,11 +6,11 @@
 #include <fstlog/detail/fast_to_str.hpp>
 
 namespace fstlog {
-	namespace this_thread {
-		inline small_string<32> get_str() noexcept {
-			const auto thr_id{ this_thread::get_id() };
-			char buffer[24]{ '0' };
-			return to_dec(thr_id, buffer);
-		}
-	}
+    namespace this_thread {
+        inline small_string<32> get_str() noexcept {
+            const auto thr_id{ this_thread::get_id() };
+            char buffer[24]{ '0' };
+            return to_dec(thr_id, buffer);
+        }
+    }
 }

@@ -4,10 +4,10 @@
 #include <cstdint>
 
 namespace fstlog {
-	struct log_buffer_unread_data {
-		unsigned char const* pos1{ nullptr };
-		unsigned char const* pos2{ nullptr };
-		std::uint32_t size1{ 0 };
-		std::uint32_t size2{ 0 };
-	};
+    struct log_buffer_unread_data {
+        unsigned char const* pos1{ nullptr };
+        unsigned char const* pos2{ nullptr };
+        std::uint32_t size1{ 0 };
+        std::uint32_t size2{ 0 };
+    };
 }

@@ -14,8 +14,8 @@ set(ALL_FILES
 
 add_executable(filter ${ALL_FILES})
 set_target_properties(filter PROPERTIES 
-	DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
-	FOLDER "examples"
+    DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
+    FOLDER "examples"
 )
 
 ################################################################################
@@ -23,5 +23,5 @@ set_target_properties(filter PROPERTIES
 ################################################################################
 
 target_link_libraries(filter
-	PRIVATE fstlog
+    PRIVATE fstlog
 )

@@ -14,8 +14,8 @@ set(ALL_FILES
 
 add_executable(multi_threaded ${ALL_FILES})
 set_target_properties(multi_threaded PROPERTIES 
-	DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
-	FOLDER "examples"
+    DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
+    FOLDER "examples"
 )
 
 ################################################################################
@@ -23,5 +23,5 @@ set_target_properties(multi_threaded PROPERTIES
 ################################################################################
 
 target_link_libraries(multi_threaded
-	PRIVATE fstlog
+    PRIVATE fstlog
 )

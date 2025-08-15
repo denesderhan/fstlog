@@ -3,11 +3,11 @@
 #pragma once
 
 namespace fstlog {
-	template<auto name_, class L>
-	class logger_name_compile_time_mixin : public L {
-	public:
-		static constexpr auto name() noexcept {
-			return name_;
-		}
-	};
+    template<auto name_, class L>
+    class logger_name_compile_time_mixin : public L {
+    public:
+        static constexpr auto name() noexcept {
+            return name_;
+        }
+    };
 }

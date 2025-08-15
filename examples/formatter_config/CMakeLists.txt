@@ -14,8 +14,8 @@ set(ALL_FILES
 
 add_executable(formatter_config ${ALL_FILES})
 set_target_properties(formatter_config PROPERTIES 
-	DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
-	FOLDER "examples"
+    DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
+    FOLDER "examples"
 )
 
 
@@ -24,5 +24,5 @@ set_target_properties(formatter_config PROPERTIES
 ################################################################################
 
 target_link_libraries(formatter_config
-	PRIVATE fstlog
+    PRIVATE fstlog
 )

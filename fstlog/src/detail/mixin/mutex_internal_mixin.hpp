@@ -11,19 +11,19 @@ namespace fstlog {
         using allocator_type = typename L::allocator_type;
         
         mutex_internal_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(mutex_internal_mixin(allocator_type{})))
-			: mutex_internal_mixin(allocator_type{}) {}
-		explicit mutex_internal_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(allocator_type())
+            && noexcept(mutex_internal_mixin(allocator_type{})))
+            : mutex_internal_mixin(allocator_type{}) {}
+        explicit mutex_internal_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
         mutex_internal_mixin(const mutex_internal_mixin& other) noexcept(
-			noexcept(mutex_internal_mixin::get_allocator())
-			&& noexcept(mutex_internal_mixin(mutex_internal_mixin{}, allocator_type{})))
+            noexcept(mutex_internal_mixin::get_allocator())
+            && noexcept(mutex_internal_mixin(mutex_internal_mixin{}, allocator_type{})))
             : mutex_internal_mixin(other, other.get_allocator()) {}
         mutex_internal_mixin(const mutex_internal_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(mutex_internal_mixin{}, allocator_type{})))
+            noexcept(L(mutex_internal_mixin{}, allocator_type{})))
             : L(other, allocator) {}
 
         mutex_internal_mixin(mutex_internal_mixin&& other) = delete;

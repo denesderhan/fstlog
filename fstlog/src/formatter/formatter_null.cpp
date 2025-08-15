@@ -14,16 +14,16 @@ namespace fstlog {
     using formatter_null_type = 
         formatter_interface_mixin<
         formatter_null_mixin<
-		concurrent_use_mixin<
-		reference_counter_mixin<
+        concurrent_use_mixin<
+        reference_counter_mixin<
         allocator_mixin>>>>;
 
     error_code formatter_null(
-		formatter& out,
-		fstlog_allocator const& allocator) noexcept 
-	{
-		out = make_allocated<formatter_null_type>(allocator);
-		if (out.pimpl() == nullptr) return error_code::alloc_fail;
-		return error_code::none;
+        formatter& out,
+        fstlog_allocator const& allocator) noexcept 
+    {
+        out = make_allocated<formatter_null_type>(allocator);
+        if (out.pimpl() == nullptr) return error_code::alloc_fail;
+        return error_code::none;
     }
 }

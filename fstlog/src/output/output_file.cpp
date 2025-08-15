@@ -13,37 +13,37 @@ namespace fstlog {
     using output_file_impl_type = 
         output_interface_mixin<
         out_file_mixin<
-		reference_counter_mixin<
+        reference_counter_mixin<
         exclusive_use_mixin<
         allocator_mixin>>>>;
     
-	error_code output_file(
-		output& out,
+    error_code output_file(
+        output& out,
         const char* file_path,
         fstlog_allocator const& allocator) noexcept
-	{
+    {
         return output_file(out, file_path, false, allocator);
     }
-	error_code output_file(
-		output& out,
+    error_code output_file(
+        output& out,
         const char* file_path,
         bool truncate,
         fstlog_allocator const& allocator) noexcept
-	{
+    {
         return output_file(out, file_path, truncate, 16 * 1024, allocator);
     }
-	error_code output_file(
-		output& out,
-		const char* file_path,
-		bool truncate,
-		std::uint32_t buffer_size,
-		fstlog_allocator const& allocator) noexcept
-	{
-		out = make_allocated<output_file_impl_type>(allocator);
-		if (out.pimpl() == nullptr) return error_code::alloc_fail;
-		const auto error = static_cast<output_file_impl_type*>(out.pimpl())->
-			init_output(file_path, truncate, buffer_size);
-		if (error != error_code::none) out = output{};
-		return error;
-	}
+    error_code output_file(
+        output& out,
+        const char* file_path,
+        bool truncate,
+        std::uint32_t buffer_size,
+        fstlog_allocator const& allocator) noexcept
+    {
+        out = make_allocated<output_file_impl_type>(allocator);
+        if (out.pimpl() == nullptr) return error_code::alloc_fail;
+        const auto error = static_cast<output_file_impl_type*>(out.pimpl())->
+            init_output(file_path, truncate, buffer_size);
+        if (error != error_code::none) out = output{};
+        return error;
+    }
 }

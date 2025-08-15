@@ -4,18 +4,18 @@
 
 #ifndef FSTLOG_API
 #if defined(FSTLOG_SHARED)
-	#if defined(_WIN32)
-		#if defined(FSTLOG_EXPORT)
-			#define FSTLOG_API __declspec(dllexport)
-		#else
-			#define FSTLOG_API __declspec(dllimport)
-		#endif
-	#elif defined(__GNUC__) || defined(__clang__)
-		#define FSTLOG_API __attribute__((visibility("default")))
-	#else
-		#define FSTLOG_API
-	#endif
+    #if defined(_WIN32)
+        #if defined(FSTLOG_EXPORT)
+            #define FSTLOG_API __declspec(dllexport)
+        #else
+            #define FSTLOG_API __declspec(dllimport)
+        #endif
+    #elif defined(__GNUC__) || defined(__clang__)
+        #define FSTLOG_API __attribute__((visibility("default")))
+    #else
+        #define FSTLOG_API
+    #endif
 #else
-	#define FSTLOG_API
+    #define FSTLOG_API
 #endif
 #endif

@@ -29,26 +29,26 @@
 #endif
 
 namespace fstlog {
-	template<typename L>
+    template<typename L>
     class encoder_stdformat_mixin : public L {
     public:
         typedef std::string_view format_type;
         using allocator_type = typename L::allocator_type;
 
         encoder_stdformat_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(encoder_stdformat_mixin(allocator_type{})))
-			: encoder_stdformat_mixin(allocator_type{}) {}
-		explicit encoder_stdformat_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(allocator_type())
+            && noexcept(encoder_stdformat_mixin(allocator_type{})))
+            : encoder_stdformat_mixin(allocator_type{}) {}
+        explicit encoder_stdformat_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
-		encoder_stdformat_mixin(const encoder_stdformat_mixin& other) noexcept(
-			noexcept(encoder_stdformat_mixin::get_allocator())
-			&& noexcept(encoder_stdformat_mixin(encoder_stdformat_mixin{}, allocator_type{})))
+        encoder_stdformat_mixin(const encoder_stdformat_mixin& other) noexcept(
+            noexcept(encoder_stdformat_mixin::get_allocator())
+            && noexcept(encoder_stdformat_mixin(encoder_stdformat_mixin{}, allocator_type{})))
             : encoder_stdformat_mixin(other, other.get_allocator()) {}
-		encoder_stdformat_mixin(const encoder_stdformat_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(encoder_stdformat_mixin{}, allocator_type{})))
+        encoder_stdformat_mixin(const encoder_stdformat_mixin& other, allocator_type const& allocator) noexcept(
+            noexcept(L(encoder_stdformat_mixin{}, allocator_type{})))
             : L(other, allocator) {}
 
         encoder_stdformat_mixin(encoder_stdformat_mixin&& other) = delete;
@@ -89,12 +89,12 @@ namespace fstlog {
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
             encode(unaligned_span<const T>{ &data, 1 }, format);
-		}
+        }
 
-		template<typename T>
-		void encode(std::basic_string_view<T> strv, format_type format) noexcept {
-			encode(unaligned_span<const T>{ strv.data(), strv.size() }, format);
-		}
+        template<typename T>
+        void encode(std::basic_string_view<T> strv, format_type format) noexcept {
+            encode(unaligned_span<const T>{ strv.data(), strv.size() }, format);
+        }
 
         //string in buffer
         template<typename T, std::enable_if_t<
@@ -102,32 +102,32 @@ namespace fstlog {
             || std::is_same_v<const T, const unsigned char>
         >* = nullptr>
         void encode(unaligned_span<const T> data, format_type format) noexcept {
-			FSTLOG_ASSERT(data.data_bytes() != nullptr);
-			constexpr int bit_size{ sizeof(T) * 8 };
-			unaligned_span output(
-				safe_reinterpret_cast<unsigned char*>(encoder_fmt_buffer_.data()),
-				encoder_fmt_buffer_.size());
-			const auto result = detail::utf::utf8conv<bit_size>(data, output);
+            FSTLOG_ASSERT(data.data_bytes() != nullptr);
+            constexpr int bit_size{ sizeof(T) * 8 };
+            unaligned_span output(
+                safe_reinterpret_cast<unsigned char*>(encoder_fmt_buffer_.data()),
+                encoder_fmt_buffer_.size());
+            const auto result = detail::utf::utf8conv<bit_size>(data, output);
             if (result.ec != error_code::none) {
                 this->set_error(__FILE__, __LINE__, result.ec);
             }
 
             std::size_t str_byte_size = encoder_fmt_buffer_.size() - output.size();
-			std::string_view str = std::string_view { encoder_fmt_buffer_.data(), str_byte_size};
-			try {
-				detail::checked_iterator it(
-					safe_reinterpret_cast<char*>(this->output_ptr()),
-					safe_reinterpret_cast<char*>(this->output_end()));
-				auto result_fmt = std::vformat_to(
-					it,
-					format,
-					std::make_format_args(str));
-				this->set_output_ptr_unchecked(
-					safe_reinterpret_cast<unsigned char*>(result_fmt.get_ptr()));
-			}
-			catch (...) {
-				this->set_error(__FILE__, __LINE__, error_code::extern_err);
-			}
+            std::string_view str = std::string_view { encoder_fmt_buffer_.data(), str_byte_size};
+            try {
+                detail::checked_iterator it(
+                    safe_reinterpret_cast<char*>(this->output_ptr()),
+                    safe_reinterpret_cast<char*>(this->output_end()));
+                auto result_fmt = std::vformat_to(
+                    it,
+                    format,
+                    std::make_format_args(str));
+                this->set_output_ptr_unchecked(
+                    safe_reinterpret_cast<unsigned char*>(result_fmt.get_ptr()));
+            }
+            catch (...) {
+                this->set_error(__FILE__, __LINE__, error_code::extern_err);
+            }
         }
 
         //pointer
@@ -154,15 +154,15 @@ namespace fstlog {
         }
 
         void reencode_tail_string(unsigned char* str_begin, format_type format) noexcept {
-            FSTLOG_ASSERT(str_begin >= this->output_begin()	
+            FSTLOG_ASSERT(str_begin >= this->output_begin()    
                 && str_begin <= this->output_ptr());
             if (format == "{}" || format == "{:}") return;
             const std::size_t str_byte_size = 
-	            static_cast<std::size_t>(this->output_ptr() - str_begin);
+                static_cast<std::size_t>(this->output_ptr() - str_begin);
             if (str_byte_size <= encoder_fmt_buffer_.size()) {
-	            std::memcpy(&encoder_fmt_buffer_[0], str_begin, str_byte_size);
-	            this->set_output_ptr_unchecked(str_begin);
-	            encode(std::string_view{ &encoder_fmt_buffer_[0], str_byte_size }, format);
+                std::memcpy(&encoder_fmt_buffer_[0], str_begin, str_byte_size);
+                this->set_output_ptr_unchecked(str_begin);
+                encode(std::string_view{ &encoder_fmt_buffer_[0], str_byte_size }, format);
             }
         }
 

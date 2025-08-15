@@ -6,24 +6,24 @@
 #include <limits>
 #endif
 namespace fstlog {
-	template<typename T>
-	struct log2_size {
-		static constexpr unsigned char value = []{
+    template<typename T>
+    struct log2_size {
+        static constexpr unsigned char value = []{
 #ifndef NDEBUG
-			static_assert(std::numeric_limits<unsigned char>::digits == 8);
-			static_assert(sizeof(T) > 0 && sizeof(T) <= 128,
-				"Type size not in range!");
-			static_assert(is_pow2(sizeof(T)),
-				"Type size not power of 2!");
+            static_assert(std::numeric_limits<unsigned char>::digits == 8);
+            static_assert(sizeof(T) > 0 && sizeof(T) <= 128,
+                "Type size not in range!");
+            static_assert(is_pow2(sizeof(T)),
+                "Type size not power of 2!");
 #endif
-			unsigned char s = static_cast<unsigned char>(sizeof(T));
-			unsigned char log2s = 0;
-			while(true) {
-				s >>= 1;
-				if (s == 0 ) break;
-				log2s++;
-			};
-			return log2s;
-		}();
-	};
+            unsigned char s = static_cast<unsigned char>(sizeof(T));
+            unsigned char log2s = 0;
+            while(true) {
+                s >>= 1;
+                if (s == 0 ) break;
+                log2s++;
+            };
+            return log2s;
+        }();
+    };
 }

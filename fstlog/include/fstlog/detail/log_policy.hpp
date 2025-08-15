@@ -3,11 +3,11 @@
 #pragma once
 #include <fstlog/detail/types.hpp>
 namespace fstlog {
-	//bits: 7-6
-	//not flags (2 bit, 3 value)
-	enum class log_policy : log_call_flag {
-		Guaranteed = 0x00,
-		NonGuaranteed = 0x40,
-		LowLatency = 0x80
-	};
+    //bits: 7-6
+    //not flags (2 bit, 3 value)
+    enum class log_policy : log_call_flag {
+        Guaranteed = 0x00,
+        NonGuaranteed = 0x40,
+        LowLatency = 0x80
+    };
 }

@@ -4,10 +4,10 @@
 #include <cstddef>
 
 namespace fstlog {
-	namespace detail {
-		struct utf8_len {
-			std::size_t byte_len{ 0 }; // Length in bytes.
-			std::size_t char_len{ 0 }; // Length in utf code points.
-		};
-	}
+    namespace detail {
+        struct utf8_len {
+            std::size_t byte_len{ 0 }; // Length in bytes.
+            std::size_t char_len{ 0 }; // Length in utf code points.
+        };
+    }
 }

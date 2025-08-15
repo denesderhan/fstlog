@@ -17,23 +17,23 @@ namespace fstlog {
         output_locked_mixin<
         out_stream_mixin<
         concurrent_use_mixin<
-		reference_counter_mixin<
+        reference_counter_mixin<
         mutex_external_mixin<
         allocator_mixin>>>>>>;
 
    error_code output_stream_mt(
-		output& out,
+        output& out,
         std::shared_ptr<std::ostream> stream,
         std::shared_ptr<std::mutex> mutex,
         fstlog_allocator const& allocator) noexcept
-	{
-		out = make_allocated<output_stream_mt_impl_type>(allocator);
-		if (out.pimpl() == nullptr) return error_code::alloc_fail;
-		auto error = 
-			static_cast<output_stream_mt_impl_type*>(out.pimpl())->set_mutex(std::move(mutex));
-		if (error != error_code::none) return error;
-		error = static_cast<output_stream_mt_impl_type*>(out.pimpl())->set_stream(stream);
-		if (error != error_code::none) out = output{};
-		return error;
+    {
+        out = make_allocated<output_stream_mt_impl_type>(allocator);
+        if (out.pimpl() == nullptr) return error_code::alloc_fail;
+        auto error = 
+            static_cast<output_stream_mt_impl_type*>(out.pimpl())->set_mutex(std::move(mutex));
+        if (error != error_code::none) return error;
+        error = static_cast<output_stream_mt_impl_type*>(out.pimpl())->set_stream(stream);
+        if (error != error_code::none) out = output{};
+        return error;
     }
 }

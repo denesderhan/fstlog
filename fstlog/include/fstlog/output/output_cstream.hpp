@@ -9,22 +9,22 @@
 #include <fstlog/detail/fstlog_allocator.hpp>
 
 namespace fstlog {
-	// non thread safe, opening/closing FILE* is callers responsibility
-	// FILE* must be opened in binary mode
+    // non thread safe, opening/closing FILE* is callers responsibility
+    // FILE* must be opened in binary mode
     FSTLOG_API error_code output_cstream(
-		output& out,
+        output& out,
         FILE* file, 
         fstlog_allocator const& allocator) noexcept;
-	// non thread safe, opening/closing FILE* is callers responsibility
-	// FILE* must be opened in binary mode
-	inline output output_cstream(
-		FILE* file,
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
-	{
-		output out;
-		[[maybe_unused]] const auto error = output_cstream(out, file, allocator);
-		handle_error(error);
-		return out;
-	}
+    // non thread safe, opening/closing FILE* is callers responsibility
+    // FILE* must be opened in binary mode
+    inline output output_cstream(
+        FILE* file,
+        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+    {
+        output out;
+        [[maybe_unused]] const auto error = output_cstream(out, file, allocator);
+        handle_error(error);
+        return out;
+    }
 }
 

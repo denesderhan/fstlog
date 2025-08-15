@@ -6,33 +6,33 @@
 #include <fstlog/detail/types.hpp>
 
 namespace fstlog {
-	template<class L>
-	class log_check_core_mixin : public L {
-	public:
-		template<
-			level level, 
-			template<class T> class policy, 
-			log_call_flag flags,  
-			class... Args>
-		void log(Args const&... args)  noexcept(
-			noexcept(error_if(true, error_code::none))
-			&& noexcept(this->is_core_set())
-			&& noexcept(L{}.template log<level, policy, flags>(args...)))
-		{
-			error_if(!L::is_core_set(), error_code::core_null);
-			L::template log<level, policy, flags>(args...);
-		}
-		template<
-			template<class T> class policy,
-			log_call_flag flags,
-			class... Args>
-		void log(level level, Args const&... args)  noexcept(
-			noexcept(error_if(true, error_code::none))
-			&& noexcept(this->is_core_set())
-			&& noexcept(L{}.template log<policy, flags>(level, args...)))
-		{
-			error_if(!L::is_core_set(), error_code::core_null);
-			L::template log<policy, flags>(level, args...);
-		}
-	};
+    template<class L>
+    class log_check_core_mixin : public L {
+    public:
+        template<
+            level level, 
+            template<class T> class policy, 
+            log_call_flag flags,  
+            class... Args>
+        void log(Args const&... args)  noexcept(
+            noexcept(error_if(true, error_code::none))
+            && noexcept(this->is_core_set())
+            && noexcept(L{}.template log<level, policy, flags>(args...)))
+        {
+            error_if(!L::is_core_set(), error_code::core_null);
+            L::template log<level, policy, flags>(args...);
+        }
+        template<
+            template<class T> class policy,
+            log_call_flag flags,
+            class... Args>
+        void log(level level, Args const&... args)  noexcept(
+            noexcept(error_if(true, error_code::none))
+            && noexcept(this->is_core_set())
+            && noexcept(L{}.template log<policy, flags>(level, args...)))
+        {
+            error_if(!L::is_core_set(), error_code::core_null);
+            L::template log<policy, flags>(level, args...);
+        }
+    };
 }

@@ -11,12 +11,12 @@ namespace fstlog {
     public:
         using allocator_type = typename L::allocator_type;
 
-		sink_unsort_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(sink_unsort_mixin(allocator_type{})))
-			: sink_unsort_mixin(allocator_type{}) {}
-		explicit sink_unsort_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+        sink_unsort_mixin() noexcept(
+            noexcept(allocator_type())
+            && noexcept(sink_unsort_mixin(allocator_type{})))
+            : sink_unsort_mixin(allocator_type{}) {}
+        explicit sink_unsort_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
         sink_unsort_mixin(const sink_unsort_mixin& other) = delete;
@@ -24,7 +24,7 @@ namespace fstlog {
         sink_unsort_mixin& operator=(const sink_unsort_mixin& rhs) = delete;
         sink_unsort_mixin& operator=(sink_unsort_mixin&& rhs) = delete;
 
-		~sink_unsort_mixin() = default;
+        ~sink_unsort_mixin() = default;
         
         void sink_msg(byte_span_const message) noexcept {
             L::write_message(L::format(message));
@@ -42,13 +42,13 @@ namespace fstlog {
                 has_flushable_data_ = false;
             }
         }
-		
-		void set_unflushed_data() noexcept {
+        
+        void set_unflushed_data() noexcept {
             has_flushable_data_ = true;
         }
 
     private:
-		bool unflushed_data() const noexcept {
+        bool unflushed_data() const noexcept {
             return has_flushable_data_;
         }
         //accessed only under locked sink_store_mutex_

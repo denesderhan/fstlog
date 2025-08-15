@@ -4,5 +4,5 @@
 #include <memory_resource>
 
 namespace fstlog {
-	using fstlog_allocator = std::pmr::polymorphic_allocator<unsigned char>;
+    using fstlog_allocator = std::pmr::polymorphic_allocator<unsigned char>;
 }

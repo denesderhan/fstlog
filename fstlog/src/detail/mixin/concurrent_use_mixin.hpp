@@ -11,19 +11,19 @@ namespace fstlog {
         using allocator_type = typename L::allocator_type;
         
         concurrent_use_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(concurrent_use_mixin(allocator_type{})))
-			: concurrent_use_mixin(allocator_type{}) {}
-		explicit concurrent_use_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(allocator_type())
+            && noexcept(concurrent_use_mixin(allocator_type{})))
+            : concurrent_use_mixin(allocator_type{}) {}
+        explicit concurrent_use_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
-		concurrent_use_mixin(const concurrent_use_mixin& other) noexcept(
-			noexcept(concurrent_use_mixin::get_allocator())
-			&& noexcept(concurrent_use_mixin(concurrent_use_mixin{}, allocator_type{})))
+        concurrent_use_mixin(const concurrent_use_mixin& other) noexcept(
+            noexcept(concurrent_use_mixin::get_allocator())
+            && noexcept(concurrent_use_mixin(concurrent_use_mixin{}, allocator_type{})))
             : concurrent_use_mixin(other, other.get_allocator()) {}
-		concurrent_use_mixin(const concurrent_use_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(concurrent_use_mixin{}, allocator_type{})))
+        concurrent_use_mixin(const concurrent_use_mixin& other, allocator_type const& allocator) noexcept(
+            noexcept(L(concurrent_use_mixin{}, allocator_type{})))
             : L(other, allocator){
         }
 

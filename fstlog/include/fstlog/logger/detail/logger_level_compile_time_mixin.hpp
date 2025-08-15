@@ -4,11 +4,11 @@
 #include <fstlog/detail/level.hpp>
 
 namespace fstlog {
-	template<fstlog::level level_, class L>
-	class logger_level_compile_time_mixin : public L {
-	public:
-		static constexpr fstlog::level level() noexcept {
-			return level_;
-		}
-	};
+    template<fstlog::level level_, class L>
+    class logger_level_compile_time_mixin : public L {
+    public:
+        static constexpr fstlog::level level() noexcept {
+            return level_;
+        }
+    };
 }

@@ -6,10 +6,10 @@
 #include <fstlog/logger/detail/log_element_counter_overhead.hpp>
 
 TEST_CASE("log_element_counter_overhead") {
-	SECTION("01") {
-		
-		int test_int{ 0 };
-		constexpr auto oh_int = fstlog::log_element_counter_overhead(test_int);
-		CHECK(oh_int == 0);
-	};
+    SECTION("01") {
+        
+        int test_int{ 0 };
+        constexpr auto oh_int = fstlog::log_element_counter_overhead(test_int);
+        CHECK(oh_int == 0);
+    };
 }

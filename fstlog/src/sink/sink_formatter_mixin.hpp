@@ -16,11 +16,11 @@ namespace fstlog {
         using allocator_type = typename L::allocator_type;
 
         sink_formatter_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(sink_formatter_mixin(allocator_type{})))
-			: sink_formatter_mixin(allocator_type{}) {}
-		explicit sink_formatter_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(allocator_type())
+            && noexcept(sink_formatter_mixin(allocator_type{})))
+            : sink_formatter_mixin(allocator_type{}) {}
+        explicit sink_formatter_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
         sink_formatter_mixin(const sink_formatter_mixin& other) = delete;
@@ -29,17 +29,17 @@ namespace fstlog {
         sink_formatter_mixin& operator=(sink_formatter_mixin&& rhs) = delete;
 
         ~sink_formatter_mixin() noexcept {
-			if (formatter_.pimpl() != nullptr) {
-				formatter_.pimpl()->release();
-			}
+            if (formatter_.pimpl() != nullptr) {
+                formatter_.pimpl()->release();
+            }
         }
 
-		error_code set_formatter(formatter formatter) noexcept {
-			if (!formatter.good()) return error_code::obj_null;
-			if (!formatter.pimpl()->use()) return error_code::obj_locked;
-			formatter_ = std::move(formatter);
-			return error_code::none;
-		}
+        error_code set_formatter(formatter formatter) noexcept {
+            if (!formatter.good()) return error_code::obj_null;
+            if (!formatter.pimpl()->use()) return error_code::obj_locked;
+            formatter_ = std::move(formatter);
+            return error_code::none;
+        }
 
         byte_span_const format(byte_span_const message) noexcept {
             FSTLOG_ASSERT(formatter_.pimpl() != nullptr);

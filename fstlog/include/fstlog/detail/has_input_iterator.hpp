@@ -7,18 +7,18 @@
 #include <fstlog/detail/rm_cvref_t.hpp>
 
 namespace fstlog {
-	template <typename T, typename = void>
-	struct has_input_iterator
-		: std::false_type {};
+    template <typename T, typename = void>
+    struct has_input_iterator
+        : std::false_type {};
 
-	template <typename T>
-	struct has_input_iterator<T, std::enable_if_t<
-		std::is_base_of_v<std::input_iterator_tag,
-		typename std::iterator_traits<
-		decltype(std::declval<rm_cvref_t<T>>().begin())
-		>::iterator_category>>>
-		: std::true_type {};
+    template <typename T>
+    struct has_input_iterator<T, std::enable_if_t<
+        std::is_base_of_v<std::input_iterator_tag,
+        typename std::iterator_traits<
+        decltype(std::declval<rm_cvref_t<T>>().begin())
+        >::iterator_category>>>
+        : std::true_type {};
 
-	template <typename T>
-	constexpr bool has_input_iterator_v = has_input_iterator<T>::value;
+    template <typename T>
+    constexpr bool has_input_iterator_v = has_input_iterator<T>::value;
 }

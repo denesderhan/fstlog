@@ -5,10 +5,10 @@
 //assertions are used only in Debug builds and only if FSTLOG_DEBUG is defined 
 //(intended for debugging fstlog library code)
 #ifndef FSTLOG_ASSERT
-	#ifdef FSTLOG_DEBUG
-		#include <cassert>
-		#define FSTLOG_ASSERT(x) assert(x)
-	#else
-		#define FSTLOG_ASSERT(x) ((void)0)
-	#endif
+    #ifdef FSTLOG_DEBUG
+        #include <cassert>
+        #define FSTLOG_ASSERT(x) assert(x)
+    #else
+        #define FSTLOG_ASSERT(x) ((void)0)
+    #endif
 #endif

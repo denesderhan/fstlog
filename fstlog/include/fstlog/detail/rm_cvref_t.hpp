@@ -3,6 +3,6 @@
 #pragma once
 #include <type_traits>
 namespace fstlog {
-	template<typename T>
-	using rm_cvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+    template<typename T>
+    using rm_cvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 }

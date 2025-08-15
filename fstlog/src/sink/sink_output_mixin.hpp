@@ -13,11 +13,11 @@ namespace fstlog {
         using allocator_type = typename L::allocator_type;
 
         sink_output_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(sink_output_mixin(allocator_type{})))
-			: sink_output_mixin(allocator_type{}) {}
-		explicit sink_output_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(allocator_type())
+            && noexcept(sink_output_mixin(allocator_type{})))
+            : sink_output_mixin(allocator_type{}) {}
+        explicit sink_output_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
         sink_output_mixin(const sink_output_mixin& other) = delete;
@@ -32,12 +32,12 @@ namespace fstlog {
             }
         }
 
-		error_code set_output(output output) noexcept {
-			if (!output.good()) return error_code::obj_null;
-			if (!output.pimpl()->use()) return error_code::obj_locked;
-			output_ = std::move(output);
-			return error_code::none;
-		}
+        error_code set_output(output output) noexcept {
+            if (!output.good()) return error_code::obj_null;
+            if (!output.pimpl()->use()) return error_code::obj_locked;
+            output_ = std::move(output);
+            return error_code::none;
+        }
 
         void write_message(byte_span_const message) noexcept {
             FSTLOG_ASSERT(output_.pimpl() != nullptr);
@@ -45,8 +45,8 @@ namespace fstlog {
         }
 
         void output_flush() noexcept {
-			FSTLOG_ASSERT(output_.pimpl() != nullptr);
-			output_.pimpl()->flush();
+            FSTLOG_ASSERT(output_.pimpl() != nullptr);
+            output_.pimpl()->flush();
         }
 
     private:

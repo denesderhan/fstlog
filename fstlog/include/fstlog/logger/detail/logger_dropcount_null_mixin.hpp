@@ -3,9 +3,9 @@
 #pragma once
 
 namespace fstlog {
-	template<class L>
-	class logger_dropcount_null_mixin : public L {
-	public:
-		static void count_dropped() noexcept {}
-	};
+    template<class L>
+    class logger_dropcount_null_mixin : public L {
+    public:
+        static void count_dropped() noexcept {}
+    };
 }

@@ -3,9 +3,9 @@
 #pragma once
 #include <fstlog/detail/types.hpp>
 namespace fstlog {
-	//used bits 3-0
-	enum class aggregate_type : log_element_ut {
-		List =  0,
-		Tuple = 1
-	};
+    //used bits 3-0
+    enum class aggregate_type : log_element_ut {
+        List =  0,
+        Tuple = 1
+    };
 }

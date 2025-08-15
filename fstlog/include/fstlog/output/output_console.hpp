@@ -5,13 +5,13 @@
 
 namespace fstlog {
     inline output output_console(
-		fstlog_allocator const& allocator = {}) noexcept
-	{
-		return output_cstream(stdout, allocator);
-	}
-	inline output output_stderr(
-		fstlog_allocator const& allocator = {}) noexcept
-	{
-		return output_cstream(stderr, allocator);
-	}
+        fstlog_allocator const& allocator = {}) noexcept
+    {
+        return output_cstream(stdout, allocator);
+    }
+    inline output output_stderr(
+        fstlog_allocator const& allocator = {}) noexcept
+    {
+        return output_cstream(stderr, allocator);
+    }
 }

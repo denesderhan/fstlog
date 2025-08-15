@@ -277,36 +277,36 @@ set(src_sink_impl
 
 set(FSTLOG_ALLOCATOR "${CMAKE_CURRENT_LIST_DIR}/include/fstlog/detail/pmr_allocator.hpp" CACHE STRING "Path to allocator.")
 if(NOT EXISTS ${FSTLOG_ALLOCATOR})
-	message(FATAL_ERROR "FSTLOG_ALLOCATOR path: ${FSTLOG_ALLOCATOR} does not exists!")
+    message(FATAL_ERROR "FSTLOG_ALLOCATOR path: ${FSTLOG_ALLOCATOR} does not exists!")
 endif()
 file(COPY_FILE 
-	"${FSTLOG_ALLOCATOR}" 
-	"${CMAKE_CURRENT_LIST_DIR}/include/fstlog/detail/fstlog_allocator.hpp"
-	ONLY_IF_DIFFERENT)
+    "${FSTLOG_ALLOCATOR}" 
+    "${CMAKE_CURRENT_LIST_DIR}/include/fstlog/detail/fstlog_allocator.hpp"
+    ONLY_IF_DIFFERENT)
 
 
 set(ALL_FILES 
-	${include_fstlog}
-	${include_fstlog_detail}
-	${include_fstlog_filter}
-	${include_fstlog_formatter}
-	${include_fstlog_logger}
-	${include_fstlog_logger_detail}
-	${include_fstlog_logger_detail_log}
-	${include_fstlog_output}
-	${include_fstlog_sink}
-	${src}
-	${src_detail}
-	${src_detail_mixin}
-	${src_filter}
-	${src_formatter}
-	${src_formatter_impl}
-	${src_formatter_impl_detail}
-	${src_logger}
-	${src_output}
-	${src_output_impl}
-	${src_sink}
-	${src_sink_impl}
+    ${include_fstlog}
+    ${include_fstlog_detail}
+    ${include_fstlog_filter}
+    ${include_fstlog_formatter}
+    ${include_fstlog_logger}
+    ${include_fstlog_logger_detail}
+    ${include_fstlog_logger_detail_log}
+    ${include_fstlog_output}
+    ${include_fstlog_sink}
+    ${src}
+    ${src_detail}
+    ${src_detail_mixin}
+    ${src_filter}
+    ${src_formatter}
+    ${src_formatter_impl}
+    ${src_formatter_impl_detail}
+    ${src_logger}
+    ${src_output}
+    ${src_output_impl}
+    ${src_sink}
+    ${src_sink_impl}
 )
 
 source_group("include/fstlog" FILES ${include_fstlog})
@@ -337,71 +337,71 @@ target_link_libraries(fstlog PUBLIC Threads::Threads)
 set_target_properties(fstlog PROPERTIES VERSION ${FSTLOG_VERSION} SOVERSION  ${FSTLOG_VERSION_MAJOR}.${FSTLOG_VERSION_MINOR})
 
 if(BUILD_SHARED_LIBS)
-	target_compile_definitions(fstlog
-		PUBLIC "FSTLOG_SHARED"
-		PRIVATE "FSTLOG_EXPORT"
-	)
+    target_compile_definitions(fstlog
+        PUBLIC "FSTLOG_SHARED"
+        PRIVATE "FSTLOG_EXPORT"
+    )
 endif()
 
 if(MSVC AND NOT(FSTLOG_DEBUG))
-	target_compile_definitions(fstlog PRIVATE
-		FSTLOG_COMPILETIME_LOGLEVEL=Debug
-	)
+    target_compile_definitions(fstlog PRIVATE
+        FSTLOG_COMPILETIME_LOGLEVEL=Debug
+    )
 else()
-		target_compile_definitions(fstlog 
-			PRIVATE $<IF:$<CONFIG:Debug>,FSTLOG_COMPILETIME_LOGLEVEL=Trace,FSTLOG_COMPILETIME_LOGLEVEL=Debug>
-			PUBLIC $<$<CONFIG:Debug>:FSTLOG_DEBUG>
-		)
+        target_compile_definitions(fstlog 
+            PRIVATE $<IF:$<CONFIG:Debug>,FSTLOG_COMPILETIME_LOGLEVEL=Trace,FSTLOG_COMPILETIME_LOGLEVEL=Debug>
+            PUBLIC $<$<CONFIG:Debug>:FSTLOG_DEBUG>
+        )
 endif()
 
 if(FSTLOG_DEFAULT_BUFFERSIZE)
-	set(FSTLOG_DEFAULT_BUFFERSIZE ${FSTLOG_DEFAULT_BUFFERSIZE} CACHE STRING "Default log buffer size. (bytes, per thread)")
-	target_compile_definitions(fstlog PRIVATE FSTLOG_DEFAULT_BUFFERSIZE=${FSTLOG_DEFAULT_BUFFERSIZE})
+    set(FSTLOG_DEFAULT_BUFFERSIZE ${FSTLOG_DEFAULT_BUFFERSIZE} CACHE STRING "Default log buffer size. (bytes, per thread)")
+    target_compile_definitions(fstlog PRIVATE FSTLOG_DEFAULT_BUFFERSIZE=${FSTLOG_DEFAULT_BUFFERSIZE})
 endif()
 if(FSTLOG_MAX_BUFFERSIZE)
-	set(FSTLOG_MAX_BUFFERSIZE ${FSTLOG_MAX_BUFFERSIZE} CACHE STRING "Max log buffer size. (bytes, per thread)")
-	target_compile_definitions(fstlog PRIVATE FSTLOG_MAX_BUFFERSIZE=${FSTLOG_MAX_BUFFERSIZE})
+    set(FSTLOG_MAX_BUFFERSIZE ${FSTLOG_MAX_BUFFERSIZE} CACHE STRING "Max log buffer size. (bytes, per thread)")
+    target_compile_definitions(fstlog PRIVATE FSTLOG_MAX_BUFFERSIZE=${FSTLOG_MAX_BUFFERSIZE})
 endif()
 if(FSTLOG_MIN_BUFFERSIZE)
-	set(FSTLOG_MIN_BUFFERSIZE ${FSTLOG_MIN_BUFFERSIZE} CACHE STRING "Min log buffer size. (bytes, per thread)")
-	target_compile_definitions(fstlog PRIVATE FSTLOG_MIN_BUFFERSIZE=${FSTLOG_MIN_BUFFERSIZE})
+    set(FSTLOG_MIN_BUFFERSIZE ${FSTLOG_MIN_BUFFERSIZE} CACHE STRING "Min log buffer size. (bytes, per thread)")
+    target_compile_definitions(fstlog PRIVATE FSTLOG_MIN_BUFFERSIZE=${FSTLOG_MIN_BUFFERSIZE})
 endif()
 if(FSTLOG_MAX_MESSAGESIZE)
-	set(FSTLOG_MAX_MESSAGESIZE ${FSTLOG_MAX_MESSAGESIZE} CACHE STRING "Max log message size (bytes, per thread)")
-	target_compile_definitions(fstlog PRIVATE FSTLOG_MAX_MESSAGESIZE=${FSTLOG_MAX_MESSAGESIZE})
+    set(FSTLOG_MAX_MESSAGESIZE ${FSTLOG_MAX_MESSAGESIZE} CACHE STRING "Max log message size (bytes, per thread)")
+    target_compile_definitions(fstlog PRIVATE FSTLOG_MAX_MESSAGESIZE=${FSTLOG_MAX_MESSAGESIZE})
 endif()
 option(FSTLOG_NO_NESTING "Disable logging nested containers. Only used by user code and passed to compiler of user code." OFF)
 if(FSTLOG_NO_NESTING)
-	target_compile_definitions(fstlog PUBLIC FSTLOG_NO_NESTING)
+    target_compile_definitions(fstlog PUBLIC FSTLOG_NO_NESTING)
 endif()
 if(FSTLOG_CONTAINER_NESTING_DEPTH)
-	set(FSTLOG_CONTAINER_NESTING_DEPTH ${FSTLOG_CONTAINER_NESTING_DEPTH} CACHE STRING "Nesting depth of logged containers.")
-	target_compile_definitions(fstlog PRIVATE FSTLOG_CONTAINER_NESTING_DEPTH=${FSTLOG_CONTAINER_NESTING_DEPTH})
+    set(FSTLOG_CONTAINER_NESTING_DEPTH ${FSTLOG_CONTAINER_NESTING_DEPTH} CACHE STRING "Nesting depth of logged containers.")
+    target_compile_definitions(fstlog PRIVATE FSTLOG_CONTAINER_NESTING_DEPTH=${FSTLOG_CONTAINER_NESTING_DEPTH})
 endif()
 if(FSTLOG_POLLINTERVAL)
-	set(FSTLOG_POLLINTERVAL ${FSTLOG_POLLINTERVAL} CACHE STRING "Default interval of log buffer flushing (in milliseconds).")
-	target_compile_definitions(fstlog PRIVATE FSTLOG_POLLINTERVAL=${FSTLOG_POLLINTERVAL})
+    set(FSTLOG_POLLINTERVAL ${FSTLOG_POLLINTERVAL} CACHE STRING "Default interval of log buffer flushing (in milliseconds).")
+    target_compile_definitions(fstlog PRIVATE FSTLOG_POLLINTERVAL=${FSTLOG_POLLINTERVAL})
 endif()
 if(FSTLOG_SINK_FLUSHINTERVAL)
-	set(FSTLOG_SINK_FLUSHINTERVAL ${FSTLOG_SINK_FLUSHINTERVAL} CACHE STRING "Default interval of sink flushing (in milliseconds).")
-	target_compile_definitions(fstlog PRIVATE FSTLOG_SINK_FLUSHINTERVAL=${FSTLOG_SINK_FLUSHINTERVAL})
+    set(FSTLOG_SINK_FLUSHINTERVAL ${FSTLOG_SINK_FLUSHINTERVAL} CACHE STRING "Default interval of sink flushing (in milliseconds).")
+    target_compile_definitions(fstlog PRIVATE FSTLOG_SINK_FLUSHINTERVAL=${FSTLOG_SINK_FLUSHINTERVAL})
 endif()
 
 #--------------------
 # Include directories
 #--------------------
 target_include_directories(fstlog
-	PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>"
-	PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>"
-	PUBLIC "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>"
+    PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>"
+    PUBLIC "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
 #--------
 # Install
 #--------
 install(
-	TARGETS fstlog
-	EXPORT fstlogTargets
+    TARGETS fstlog
+    EXPORT fstlogTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -428,33 +428,33 @@ install(EXPORT fstlogTargets
 # ---------------------
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/fstlogConfig.cmake.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/fstlogConfig.cmake"
-	INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/fstlog
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/fstlogConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/fstlogConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/fstlog
 )
 
 set_property(
-	TARGET fstlog PROPERTY
-	INTERFACE_fstlog_MAJOR_VERSION ${FSTLOG_VERSION_MAJOR}
+    TARGET fstlog PROPERTY
+    INTERFACE_fstlog_MAJOR_VERSION ${FSTLOG_VERSION_MAJOR}
 )
 set_property(
-	TARGET fstlog APPEND PROPERTY
-	COMPATIBLE_INTERFACE_STRING fstog_MAJOR_VERSION
+    TARGET fstlog APPEND PROPERTY
+    COMPATIBLE_INTERFACE_STRING fstog_MAJOR_VERSION
 )
 
 # generate the version file for the config file
 if(FSTLOG_VERSION_MAJOR EQUAL 0)
-	write_basic_package_version_file(
-	  "${CMAKE_CURRENT_BINARY_DIR}/fstlogConfigVersion.cmake"
-	  VERSION "${FSTLOG_VERSION}"
-	  COMPATIBILITY ExactVersion
-	)
+    write_basic_package_version_file(
+      "${CMAKE_CURRENT_BINARY_DIR}/fstlogConfigVersion.cmake"
+      VERSION "${FSTLOG_VERSION}"
+      COMPATIBILITY ExactVersion
+    )
 else()
-	write_basic_package_version_file(
-	  "${CMAKE_CURRENT_BINARY_DIR}/fstlogConfigVersion.cmake"
-	  VERSION "${FSTLOG_VERSION}"
-	  COMPATIBILITY SameMajorVersion
-	)
+    write_basic_package_version_file(
+      "${CMAKE_CURRENT_BINARY_DIR}/fstlogConfigVersion.cmake"
+      VERSION "${FSTLOG_VERSION}"
+      COMPATIBILITY SameMajorVersion
+    )
 endif()
 
 
@@ -469,32 +469,32 @@ if(CMAKE_BUILD_TYPE)
 # ----------
 # pkg-config
 # ----------
-	set(PKG_LIBNAME "fstlog")
-	string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE_UPPER)
-	set(PKG_DEFINES "")
-	if (BUILD_TYPE_UPPER STREQUAL "DEBUG")
-		set(PKG_LIBNAME "${PKG_LIBNAME}${CMAKE_DEBUG_POSTFIX}")
-		set(PKG_DEFINES "-DFSTLOG_DEBUG")
-	endif ()
-	if(IS_ABSOLUTE "${CMAKE_INSTALL_INCLUDEDIR}")
-			set(PKG_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
-	else()
-		set(PKG_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
-	endif()
-	if(IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
-		set(PKG_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
-	else()
-		set(PKG_LIBDIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-	endif()
+    set(PKG_LIBNAME "fstlog")
+    string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE_UPPER)
+    set(PKG_DEFINES "")
+    if (BUILD_TYPE_UPPER STREQUAL "DEBUG")
+        set(PKG_LIBNAME "${PKG_LIBNAME}${CMAKE_DEBUG_POSTFIX}")
+        set(PKG_DEFINES "-DFSTLOG_DEBUG")
+    endif ()
+    if(IS_ABSOLUTE "${CMAKE_INSTALL_INCLUDEDIR}")
+            set(PKG_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
+    else()
+        set(PKG_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
+    endif()
+    if(IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
+        set(PKG_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
+    else()
+        set(PKG_LIBDIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+    endif()
 
-	configure_file(
-		"${CMAKE_CURRENT_SOURCE_DIR}/cmake/libfstlog.pc.in"
-		"${CMAKE_CURRENT_BINARY_DIR}/lib${PKG_LIBNAME}.pc" 
-		@ONLY)
-	install(FILES
-		"${CMAKE_CURRENT_BINARY_DIR}/lib${PKG_LIBNAME}.pc"
-		DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
-	)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/libfstlog.pc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/lib${PKG_LIBNAME}.pc" 
+        @ONLY)
+    install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/lib${PKG_LIBNAME}.pc"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+    )
 endif()
 
 # -------------------------------------

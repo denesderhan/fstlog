@@ -15,11 +15,11 @@ namespace fstlog {
         using allocator_type = typename L::allocator_type;
 
         out_stream_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(out_stream_mixin(allocator_type{})))
-			: out_stream_mixin(allocator_type{}) {}
-		explicit out_stream_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(allocator_type())
+            && noexcept(out_stream_mixin(allocator_type{})))
+            : out_stream_mixin(allocator_type{}) {}
+        explicit out_stream_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
         out_stream_mixin(const out_stream_mixin& other) = delete;
@@ -29,24 +29,24 @@ namespace fstlog {
 
         ~out_stream_mixin() noexcept {
             if (stream_ != nullptr) {
-				//can not throw (stream_ptr_->exceptions(0))
+                //can not throw (stream_ptr_->exceptions(0))
                 stream_->flush();
             }
         }
 
-		error_code set_stream(std::shared_ptr<std::ostream> stream_smart_ptr) noexcept {
-			if (stream_smart_ptr == nullptr || !stream_smart_ptr->good()) {
-				return error_code::obj_null;
-			}
-			//this can not throw, stream was good() (no error state)
-			stream_smart_ptr->exceptions(std::ios_base::iostate(0));
-			stream_ = std::move(stream_smart_ptr);
-			return error_code::none;
+        error_code set_stream(std::shared_ptr<std::ostream> stream_smart_ptr) noexcept {
+            if (stream_smart_ptr == nullptr || !stream_smart_ptr->good()) {
+                return error_code::obj_null;
+            }
+            //this can not throw, stream was good() (no error state)
+            stream_smart_ptr->exceptions(std::ios_base::iostate(0));
+            stream_ = std::move(stream_smart_ptr);
+            return error_code::none;
         }
 
         void write_message(byte_span_const msg) noexcept {
             FSTLOG_ASSERT(stream_ != nullptr);
-			FSTLOG_ASSERT(msg.data_bytes() != nullptr);
+            FSTLOG_ASSERT(msg.data_bytes() != nullptr);
             //can not throw (stream_ptr_->exceptions(0))
             stream_->write(
                 safe_reinterpret_cast<const char*>(msg.data_bytes()),

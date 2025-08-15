@@ -30,19 +30,19 @@ namespace fstlog {
         typedef format_setting_txt_fast format_type;
 
         encoder_charconv_fast_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(encoder_charconv_fast_mixin(allocator_type{})))
-			: encoder_charconv_fast_mixin(allocator_type{}) {}
-		explicit encoder_charconv_fast_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(allocator_type())
+            && noexcept(encoder_charconv_fast_mixin(allocator_type{})))
+            : encoder_charconv_fast_mixin(allocator_type{}) {}
+        explicit encoder_charconv_fast_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
-		encoder_charconv_fast_mixin(const encoder_charconv_fast_mixin& other) noexcept(
-			noexcept(encoder_charconv_fast_mixin::get_allocator())
-			&& noexcept(encoder_charconv_fast_mixin(encoder_charconv_fast_mixin{}, allocator_type{})))
+        encoder_charconv_fast_mixin(const encoder_charconv_fast_mixin& other) noexcept(
+            noexcept(encoder_charconv_fast_mixin::get_allocator())
+            && noexcept(encoder_charconv_fast_mixin(encoder_charconv_fast_mixin{}, allocator_type{})))
             : encoder_charconv_fast_mixin(other, other.get_allocator()) {}
         encoder_charconv_fast_mixin(const encoder_charconv_fast_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(encoder_charconv_fast_mixin{}, allocator_type{})))
+            noexcept(L(encoder_charconv_fast_mixin{}, allocator_type{})))
             : L(other, allocator) {}
 
         encoder_charconv_fast_mixin(encoder_charconv_fast_mixin&& other) = delete;
@@ -58,52 +58,52 @@ namespace fstlog {
             !is_char_type_v<T>
         >* = nullptr>
         void encode(T data, format_type format) noexcept {
-			// ensure minimum space for sign + prefix
-			if (!this->output_has_space(3)) {
-				this->set_error(__FILE__, __LINE__, error_code::buff_full);
-				return;
-			}
-			const auto str_begin = this->output_ptr();
-			// We will increase buffer_pos as we write the formatted data
-			auto buffer_pos{ str_begin };
-			
-			// write sign
-			if (data < 0) *buffer_pos++ = '-';
-			
-			// format type
-			const unsigned char type_char = detail::sanitize_int_type_char(format.type);
+            // ensure minimum space for sign + prefix
+            if (!this->output_has_space(3)) {
+                this->set_error(__FILE__, __LINE__, error_code::buff_full);
+                return;
+            }
+            const auto str_begin = this->output_ptr();
+            // We will increase buffer_pos as we write the formatted data
+            auto buffer_pos{ str_begin };
+            
+            // write sign
+            if (data < 0) *buffer_pos++ = '-';
+            
+            // format type
+            const unsigned char type_char = detail::sanitize_int_type_char(format.type);
 
-			// set base
-			const int base = detail::get_int_base(type_char);
-			
-			// write the prefix 
-			// do not write prefix if data is octal 0 (write 0 not 00)
-			if (!(type_char == 'o' && data == 0)) {
-				detail::int_write_prefix(base, type_char, buffer_pos);
-			}
-			// convert data to unsigned absolute value
-			const std::make_unsigned_t<T> abs_data = detail::abs_unsigned(data);
-			// use std::to_chars() to format the number
-			char* const digits_start = safe_reinterpret_cast<char*>(buffer_pos);
-			auto buffer_end = this->output_end();
-			auto result = std::to_chars(
-				digits_start,
-				safe_reinterpret_cast<char*>(buffer_end),
-				abs_data,
-				base);
-			if (result.ec != std::errc{}) {
-				this->set_error(__FILE__, __LINE__, error_code::buff_full);
-				return;
-			}
-			auto str_end = safe_reinterpret_cast<unsigned char*>(result.ptr);
+            // set base
+            const int base = detail::get_int_base(type_char);
+            
+            // write the prefix 
+            // do not write prefix if data is octal 0 (write 0 not 00)
+            if (!(type_char == 'o' && data == 0)) {
+                detail::int_write_prefix(base, type_char, buffer_pos);
+            }
+            // convert data to unsigned absolute value
+            const std::make_unsigned_t<T> abs_data = detail::abs_unsigned(data);
+            // use std::to_chars() to format the number
+            char* const digits_start = safe_reinterpret_cast<char*>(buffer_pos);
+            auto buffer_end = this->output_end();
+            auto result = std::to_chars(
+                digits_start,
+                safe_reinterpret_cast<char*>(buffer_end),
+                abs_data,
+                base);
+            if (result.ec != std::errc{}) {
+                this->set_error(__FILE__, __LINE__, error_code::buff_full);
+                return;
+            }
+            auto str_end = safe_reinterpret_cast<unsigned char*>(result.ptr);
 
-			// convert digits to upper case (if format type is X, binary B can't have chars )
-			if (type_char == 'X') {
-				detail::num_to_upper_case(digits_start, result.ptr);
-			}
+            // convert digits to upper case (if format type is X, binary B can't have chars )
+            if (type_char == 'X') {
+                detail::num_to_upper_case(digits_start, result.ptr);
+            }
 
-			// update buffer pointer to the first free byte
-			this->set_output_ptr_unchecked(str_end);
+            // update buffer pointer to the first free byte
+            this->set_output_ptr_unchecked(str_end);
         }
         
         // float
@@ -113,10 +113,10 @@ namespace fstlog {
             auto str_beg = safe_reinterpret_cast<char*>(this->output_ptr());
             auto buffer_end = safe_reinterpret_cast<char*>(this->output_end());
 
-			// format type
-			const unsigned char type_char = detail::sanitize_float_type_char(format.type);
+            // format type
+            const unsigned char type_char = detail::sanitize_float_type_char(format.type);
 
-			const auto fmt = std::chars_format(detail::charconv_float_format(type_char));
+            const auto fmt = std::chars_format(detail::charconv_float_format(type_char));
               
             std::to_chars_result result;
             if (format.precision == 0xffff) {
@@ -130,11 +130,11 @@ namespace fstlog {
                 this->set_error(__FILE__, __LINE__, error_code::buff_full);
                 return;
             }
-			
+            
             // update buffer pointer to the first free byte
             this->set_output_ptr_unchecked(safe_reinterpret_cast<unsigned char*>(result.ptr));
         }
-		        
+                
         // character
         template<typename T, std::enable_if_t<
             is_char_type_v<T>
@@ -149,14 +149,14 @@ namespace fstlog {
             || std::is_same_v<std::remove_const_t<T>, unsigned char>
             >* = nullptr>
         void encode(unaligned_span<const T> data, [[maybe_unused]] format_type format) noexcept {
-			FSTLOG_ASSERT(data.data_bytes() != nullptr);
-			constexpr int bit_size{ sizeof(T) * 8 };
-			unaligned_span output(
-				this->output_ptr(), 
-				static_cast<std::size_t>(this->output_end() - this->output_ptr()));
-			const auto result = detail::utf::utf8conv<bit_size>(data, output);
-			this->set_output_ptr_unchecked(output.data_bytes());
-			if (result.ec != error_code::none) {
+            FSTLOG_ASSERT(data.data_bytes() != nullptr);
+            constexpr int bit_size{ sizeof(T) * 8 };
+            unaligned_span output(
+                this->output_ptr(), 
+                static_cast<std::size_t>(this->output_end() - this->output_ptr()));
+            const auto result = detail::utf::utf8conv<bit_size>(data, output);
+            this->set_output_ptr_unchecked(output.data_bytes());
+            if (result.ec != error_code::none) {
                 this->set_error(__FILE__, __LINE__, result.ec);
             }
         }
@@ -181,14 +181,14 @@ namespace fstlog {
             std::is_same_v<rm_cvref_t<T>, bool>
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
-			if (format.type == 0 || format.type == 's') {
-				if (data) {
-					encode(std::string_view{ "true" }, format);
-				}
-				else {
-					encode(std::string_view{ "false" }, format);
-				}
-			}
+            if (format.type == 0 || format.type == 's') {
+                if (data) {
+                    encode(std::string_view{ "true" }, format);
+                }
+                else {
+                    encode(std::string_view{ "false" }, format);
+                }
+            }
             else {
                 encode(static_cast<int>(data), format);
             }

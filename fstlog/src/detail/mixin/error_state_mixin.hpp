@@ -10,19 +10,19 @@ namespace fstlog {
         using allocator_type = typename L::allocator_type;
 
         error_state_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(error_state_mixin(allocator_type{})))
-			: error_state_mixin(allocator_type{}) {}
-		explicit error_state_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{}))) 
-			: L(allocator) {}
+            noexcept(allocator_type())
+            && noexcept(error_state_mixin(allocator_type{})))
+            : error_state_mixin(allocator_type{}) {}
+        explicit error_state_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{}))) 
+            : L(allocator) {}
 
-		error_state_mixin(const error_state_mixin& other) noexcept(
-			noexcept(error_state_mixin::get_allocator())
-			&& noexcept(error_state_mixin(error_state_mixin{}, allocator_type{})))
+        error_state_mixin(const error_state_mixin& other) noexcept(
+            noexcept(error_state_mixin::get_allocator())
+            && noexcept(error_state_mixin(error_state_mixin{}, allocator_type{})))
             : error_state_mixin(other, other.get_allocator()) {}
         error_state_mixin(const error_state_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(error_state_mixin{}, allocator_type{})))
+            noexcept(L(error_state_mixin{}, allocator_type{})))
             : L(other, allocator) {}
 
         error_state_mixin(error_state_mixin&& other) = delete;
@@ -36,11 +36,11 @@ namespace fstlog {
         }
 
         void set_error(const char* file, int line, error_code err) noexcept {
-			error_ = error{ file, line, err };
+            error_ = error{ file, line, err };
         }
 
         void clear_error() noexcept {
-			error_ = error{};
+            error_ = error{};
         }
 
         error get_error() const noexcept {

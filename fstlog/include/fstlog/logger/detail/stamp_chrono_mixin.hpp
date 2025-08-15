@@ -5,11 +5,11 @@
 #include <fstlog/detail/types.hpp>
 
 namespace fstlog {
-	template<class L>
-	class stamp_chrono_mixin : public L {
-	public:
-		static stamp_type timestamp() noexcept {
-			return std::chrono::system_clock::now();
-		}
-	};
+    template<class L>
+    class stamp_chrono_mixin : public L {
+    public:
+        static stamp_type timestamp() noexcept {
+            return std::chrono::system_clock::now();
+        }
+    };
 }

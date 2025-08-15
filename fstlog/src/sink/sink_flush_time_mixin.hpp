@@ -10,12 +10,12 @@ namespace fstlog {
     public:
         using allocator_type = typename L::allocator_type;
 
-		sink_flush_time_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(sink_flush_time_mixin(allocator_type{})))
-			: sink_flush_time_mixin(allocator_type{}) {}
+        sink_flush_time_mixin() noexcept(
+            noexcept(allocator_type())
+            && noexcept(sink_flush_time_mixin(allocator_type{})))
+            : sink_flush_time_mixin(allocator_type{}) {}
         explicit sink_flush_time_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
         sink_flush_time_mixin(const sink_flush_time_mixin& other) = delete;
@@ -35,7 +35,7 @@ namespace fstlog {
                 current_time + flush_interval_
                 : (steady_msec::max)();
         }
-		//only called at construction (no concurrency issue)
+        //only called at construction (no concurrency issue)
         void set_flush_interval( std::chrono::milliseconds interval) noexcept {
             flush_interval_ = interval;
             next_flush_time_ = interval != std::chrono::milliseconds{ 0 } ?

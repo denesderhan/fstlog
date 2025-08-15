@@ -14,19 +14,19 @@ namespace fstlog {
         using allocator_type = typename L::allocator_type;
 
         encoder_aggregate_separator_txt_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(encoder_aggregate_separator_txt_mixin(allocator_type{})))
-			: encoder_aggregate_separator_txt_mixin(allocator_type{}) {}
-		explicit encoder_aggregate_separator_txt_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+            noexcept(allocator_type())
+            && noexcept(encoder_aggregate_separator_txt_mixin(allocator_type{})))
+            : encoder_aggregate_separator_txt_mixin(allocator_type{}) {}
+        explicit encoder_aggregate_separator_txt_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
-		encoder_aggregate_separator_txt_mixin(const encoder_aggregate_separator_txt_mixin& other) noexcept(
-			noexcept(encoder_aggregate_separator_txt_mixin::get_allocator())
-			&& noexcept(encoder_aggregate_separator_txt_mixin(encoder_aggregate_separator_txt_mixin{}, allocator_type{})))
+        encoder_aggregate_separator_txt_mixin(const encoder_aggregate_separator_txt_mixin& other) noexcept(
+            noexcept(encoder_aggregate_separator_txt_mixin::get_allocator())
+            && noexcept(encoder_aggregate_separator_txt_mixin(encoder_aggregate_separator_txt_mixin{}, allocator_type{})))
             : encoder_aggregate_separator_txt_mixin(other, other.get_allocator()) {}
         encoder_aggregate_separator_txt_mixin(const encoder_aggregate_separator_txt_mixin& other, allocator_type const& allocator) noexcept(
-			noexcept(L(encoder_aggregate_separator_txt_mixin{}, allocator_type{})))
+            noexcept(L(encoder_aggregate_separator_txt_mixin{}, allocator_type{})))
             : L(other, allocator) {}
 
         encoder_aggregate_separator_txt_mixin(encoder_aggregate_separator_txt_mixin&& other) = delete;
@@ -36,9 +36,9 @@ namespace fstlog {
         ~encoder_aggregate_separator_txt_mixin() = default;
         
         void encode_aggregate_start(
-			[[maybe_unused]] aggregate_type type, 
-			[[maybe_unused]] msg_counter element_number) noexcept 
-		{
+            [[maybe_unused]] aggregate_type type, 
+            [[maybe_unused]] msg_counter element_number) noexcept 
+        {
             if (this->output_has_space()) {
                 *this->output_ptr() = '[';
                 this->advance_output_unchecked(1);
@@ -49,8 +49,8 @@ namespace fstlog {
         }
         void encode_aggregate_element_separator() noexcept {
             if (this->output_has_space(2)) {
-				const auto o_ptr{ this->output_ptr() };
-				*o_ptr = ',';
+                const auto o_ptr{ this->output_ptr() };
+                *o_ptr = ',';
                 *(o_ptr + 1) = ' ';
                 this->advance_output_unchecked(2);
             }

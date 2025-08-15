@@ -8,11 +8,11 @@
 #include <fstlog/logger/detail/this_thread_id.hpp>
 
 TEST_CASE("this_thread_id") {
-	SECTION("01") {
+    SECTION("01") {
 #ifdef _WIN32
-		CHECK(fstlog::this_thread::get_id() == GetCurrentThreadId());
+        CHECK(fstlog::this_thread::get_id() == GetCurrentThreadId());
 #endif
 
-	};
+    };
 
 }

@@ -7,7 +7,7 @@
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
-	namespace detail {
+    namespace detail {
         template<typename T>
         class checked_iterator
         {
@@ -16,13 +16,13 @@ namespace fstlog {
 
             checked_iterator(T* start, T* end)
                 : current_(start), end_(end)
-			{
-				FSTLOG_ASSERT(end >= start && "Invalid pointers!");
-			}
+            {
+                FSTLOG_ASSERT(end >= start && "Invalid pointers!");
+            }
 
             T& operator*() {
-				if (current_ >= end_) throw fstlog_ex("Iterator out of bounds!");
-				return *current_;
+                if (current_ >= end_) throw fstlog_ex("Iterator out of bounds!");
+                return *current_;
             }
 
             //pre increment
@@ -46,5 +46,5 @@ namespace fstlog {
             T* current_;
             T* end_;
         };
-	}
+    }
 }

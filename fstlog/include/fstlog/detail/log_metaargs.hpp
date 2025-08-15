@@ -4,13 +4,13 @@
 #include <fstlog/detail/types.hpp>
 
 namespace fstlog {
-	enum class log_metaargs : log_call_flag {
-		None = 0,
-		Logger = 1,
-		Thread = 2,
-		File = 4,
-		Line = 8,
-		Function = 16,
-		All = 255
-	};
+    enum class log_metaargs : log_call_flag {
+        None = 0,
+        Logger = 1,
+        Thread = 2,
+        File = 4,
+        Line = 8,
+        Function = 16,
+        All = 255
+    };
 }

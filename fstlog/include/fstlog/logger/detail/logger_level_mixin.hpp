@@ -4,17 +4,17 @@
 #include <fstlog/detail/level.hpp>
 
 namespace fstlog {
-	template<class L>
-	class logger_level_mixin : public L {
-	public:
-		fstlog::level level() const noexcept {
-			return level_;
-		}
+    template<class L>
+    class logger_level_mixin : public L {
+    public:
+        fstlog::level level() const noexcept {
+            return level_;
+        }
 
-		void set_level(fstlog::level level) noexcept {
-			level_ = level;
-		}
+        void set_level(fstlog::level level) noexcept {
+            level_ = level;
+        }
 
-		fstlog::level level_{level::All};
-	};
+        fstlog::level level_{level::All};
+    };
 }

@@ -7,15 +7,15 @@
 #include <fstlog/detail/fstlog_allocator.hpp>
 
 namespace fstlog {
-	FSTLOG_API error_code output_null(
-		output& out,
-		fstlog_allocator const& allocator) noexcept;
-	inline output output_null(
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
-	{
-		output out;
-		[[maybe_unused]] const auto error = output_null(out, allocator);
-		handle_error(error);
-		return out;
-	}
+    FSTLOG_API error_code output_null(
+        output& out,
+        fstlog_allocator const& allocator) noexcept;
+    inline output output_null(
+        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+    {
+        output out;
+        [[maybe_unused]] const auto error = output_null(out, allocator);
+        handle_error(error);
+        return out;
+    }
 }

@@ -27,21 +27,21 @@ namespace fstlog {
         using format_type = typename L::format_type;
 
         arg_parser_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(arg_parser_mixin(allocator_type{})))
-			: arg_parser_mixin(allocator_type{}) {}
+            noexcept(allocator_type())
+            && noexcept(arg_parser_mixin(allocator_type{})))
+            : arg_parser_mixin(allocator_type{}) {}
         explicit arg_parser_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{}))) 
-			: L(allocator) {}
+            noexcept(L(allocator_type{}))) 
+            : L(allocator) {}
 
-		arg_parser_mixin(const arg_parser_mixin& other) noexcept(
-			noexcept(arg_parser_mixin::get_allocator())
-			&& noexcept(arg_parser_mixin(arg_parser_mixin{}, allocator_type{})))
+        arg_parser_mixin(const arg_parser_mixin& other) noexcept(
+            noexcept(arg_parser_mixin::get_allocator())
+            && noexcept(arg_parser_mixin(arg_parser_mixin{}, allocator_type{})))
             : arg_parser_mixin(other, other.get_allocator()) {}
-		arg_parser_mixin(
-			const arg_parser_mixin& other, 
-			allocator_type const& allocator) noexcept(
-				noexcept(L(arg_parser_mixin{}, allocator_type{})))
+        arg_parser_mixin(
+            const arg_parser_mixin& other, 
+            allocator_type const& allocator) noexcept(
+                noexcept(L(arg_parser_mixin{}, allocator_type{})))
             : L(other, allocator) {}
 
         arg_parser_mixin(arg_parser_mixin&& other) = delete;
@@ -54,8 +54,8 @@ namespace fstlog {
             if (meta == ut_cast(char_type::Char)) {
                 char to_encode{'!'};
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else if (meta == ut_cast(char_type::Char8)) {
 #ifdef __cpp_char8_t
@@ -64,24 +64,24 @@ namespace fstlog {
                 char to_encode{'!'};
 #endif
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else if (meta == ut_cast(char_type::Char16)) {
                 char16_t to_encode{u'!'};
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else if (meta == ut_cast(char_type::Char32)) {
                 char32_t to_encode{U'!'};
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_bad);
+                    error_code::input_bad);
             }
         }
 
@@ -92,186 +92,186 @@ namespace fstlog {
 #endif
                 ) 
             {
-				unaligned_span<const char> to_encode;
+                unaligned_span<const char> to_encode;
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
 #ifdef __cpp_char8_t           
             else if (meta == ut_cast(char_type::Char8)) {
-				unaligned_span<const char8_t> to_encode;
+                unaligned_span<const char8_t> to_encode;
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
 #endif
             else if (meta == ut_cast(char_type::Char16)) {
                 unaligned_span<const char16_t> to_encode;
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else if (meta == ut_cast(char_type::Char32)) {
-				unaligned_span<const char32_t> to_encode;
+                unaligned_span<const char32_t> to_encode;
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_bad);
+                    error_code::input_bad);
             }
         }
 
         void process_small_string(
-			log_element_ut meta, 
-			format_type format) noexcept 
-		{
+            log_element_ut meta, 
+            format_type format) noexcept 
+        {
             if (meta == 0) {
                 small_string<16> to_encode;
                 this->get_data(to_encode);
                 if(!this->has_error()) 
-					this->encode(unaligned_span<const char>{ 
-					to_encode.data(), to_encode.size() }, format);
+                    this->encode(unaligned_span<const char>{ 
+                    to_encode.data(), to_encode.size() }, format);
             }
             else if (meta == 1) {
                 small_string<32> to_encode;
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(unaligned_span<const char>{ 
-					to_encode.data(), to_encode.size() }, format);
+                if (!this->has_error())
+                    this->encode(unaligned_span<const char>{ 
+                    to_encode.data(), to_encode.size() }, format);
             }
             else if (meta == 2) {
                 small_string<64> to_encode;
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(unaligned_span<const char>{ 
-					to_encode.data(), to_encode.size() }, format);
+                if (!this->has_error())
+                    this->encode(unaligned_span<const char>{ 
+                    to_encode.data(), to_encode.size() }, format);
             }
             else if (meta == 4) {
                 small_string<128> to_encode;
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(unaligned_span<const char>{ 
-					to_encode.data(), to_encode.size() }, format);
+                if (!this->has_error())
+                    this->encode(unaligned_span<const char>{ 
+                    to_encode.data(), to_encode.size() }, format);
             }
             else if (meta == 8) {
                 small_string<256> to_encode;
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(unaligned_span<const char>{ 
-					to_encode.data(), to_encode.size() }, format);
+                if (!this->has_error())
+                    this->encode(unaligned_span<const char>{ 
+                    to_encode.data(), to_encode.size() }, format);
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_bad);
+                    error_code::input_bad);
             }
         }
         
         void process_integral(log_element_ut meta, format_type format) noexcept {
             bool const int_signed = meta & 0b1000;
-			std::size_t const int_size = 
-				std::size_t{ 1 } << (meta & 0b111);
+            std::size_t const int_size = 
+                std::size_t{ 1 } << (meta & 0b111);
             if (int_size == sizeof(int)) {
                 if (int_signed) {
                     int to_encode{0};
                     this->get_data(to_encode);
-					if (!this->has_error())
-						this->encode(to_encode, format);
+                    if (!this->has_error())
+                        this->encode(to_encode, format);
                 }
                 else {
                     unsigned int to_encode{0};
                     this->get_data(to_encode);
-					if (!this->has_error())
-						this->encode(to_encode, format);
+                    if (!this->has_error())
+                        this->encode(to_encode, format);
                 }
             }
             else if (int_size == sizeof(long)) {
                 if (int_signed) {
                     long to_encode{0};
                     this->get_data(to_encode);
-					if (!this->has_error())
-						this->encode(to_encode, format);
+                    if (!this->has_error())
+                        this->encode(to_encode, format);
                 }
                 else {
                     unsigned long to_encode{0};
                     this->get_data(to_encode);
-					if (!this->has_error())
-						this->encode(to_encode, format);
+                    if (!this->has_error())
+                        this->encode(to_encode, format);
                 }
             }
             else if (int_size == sizeof(long long)) {
                 if (int_signed) {
                     long long to_encode{0};
                     this->get_data(to_encode);
-					if (!this->has_error())
-						this->encode(to_encode, format);
+                    if (!this->has_error())
+                        this->encode(to_encode, format);
                 }
                 else {
                     unsigned long long to_encode{0};
                     this->get_data(to_encode);
-					if (!this->has_error())
-						this->encode(to_encode, format);
+                    if (!this->has_error())
+                        this->encode(to_encode, format);
                 }
             }
             else if (int_size == sizeof(short)) {
                 if (int_signed) {
                     short to_encode{0};
                     this->get_data(to_encode);
-					if (!this->has_error())
-						this->encode(to_encode, format);
+                    if (!this->has_error())
+                        this->encode(to_encode, format);
                 }
                 else {
                     unsigned short to_encode{0};
                     this->get_data(to_encode);
-					if (!this->has_error())
-						this->encode(to_encode, format);
+                    if (!this->has_error())
+                        this->encode(to_encode, format);
                 }
             }
             else if (int_size == sizeof(unsigned char)) {
                 if (int_signed) {
                     signed char to_encode{0};
                     this->get_data(to_encode);
-					if (!this->has_error())
-						this->encode(to_encode, format);
+                    if (!this->has_error())
+                        this->encode(to_encode, format);
                 }
                 else {
                     unsigned char to_encode{0};
                     this->get_data(to_encode);
-					if (!this->has_error())
-						this->encode(to_encode, format);
+                    if (!this->has_error())
+                        this->encode(to_encode, format);
                 }
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_bad);
+                    error_code::input_bad);
             }
         }
 
         void process_float(log_element_ut meta, format_type format) noexcept {
-			std::size_t const float_size = 
-				std::size_t{ 1 } << (meta & 0b111);
+            std::size_t const float_size = 
+                std::size_t{ 1 } << (meta & 0b111);
             if (float_size == sizeof(float)) {
                 float to_encode{0.0f};
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else if (float_size == sizeof(double)) {
                 double to_encode{0.0};
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else if (float_size == sizeof(long double)) {
                 long double to_encode{ (long double)(0.0) };
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_bad);
+                    error_code::input_bad);
             }
         }
 
@@ -279,20 +279,20 @@ namespace fstlog {
             if (meta == ut_cast(hash_type::Fnv)) {
                 str_hash_fnv to_encode;
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_bad);
+                    error_code::input_bad);
             }
         }
 
         void process_simple_type(
-			log_element_type type, 
-			log_element_ut meta, 
-			format_type format) noexcept
-		{
+            log_element_type type, 
+            log_element_ut meta, 
+            format_type format) noexcept
+        {
             if (type == log_element_type::Smallstring) {
                 process_small_string(meta, format);
             }
@@ -308,8 +308,8 @@ namespace fstlog {
             else if (type == log_element_type::Pointer) {
                 void* to_encode{nullptr};
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else if (type == log_element_type::Hash) {
                 process_hash(meta, format);
@@ -320,31 +320,31 @@ namespace fstlog {
             else if (type == log_element_type::Bool) {
                 bool to_encode{false};
                 this->get_data(to_encode);
-				if (!this->has_error())
-					this->encode(to_encode, format);
+                if (!this->has_error())
+                    this->encode(to_encode, format);
             }
             else {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_bad);
+                    error_code::input_bad);
             }
         }
 
         void skip_type(byte_span_const& type_signature) noexcept {
-			const int end_ind = static_cast<int>(type_signature.size_bytes());
+            const int end_ind = static_cast<int>(type_signature.size_bytes());
             int str_ind = 0;
             int loop_counter = 1;
             while (loop_counter-- != 0) {
                 if (str_ind >= end_ind) {
                     this->set_error(__FILE__, __LINE__, 
-						error_code::input_bad);
+                        error_code::input_bad);
                     return;
                 }
                 const unsigned char data_type = 
-					*(type_signature.data_bytes() + str_ind);
+                    *(type_signature.data_bytes() + str_ind);
                 const log_element_type current_type = 
                     static_cast<log_element_type>(data_type & log_element_type_bitmask);
                 const unsigned char meta = 
-					data_type & log_type_metadata_bitmask;
+                    data_type & log_type_metadata_bitmask;
                 str_ind++;
                 if (current_type == log_element_type::Aggregate) {
                     if (meta == ut_cast(aggregate_type::List))
@@ -352,17 +352,17 @@ namespace fstlog {
                     else if (meta == ut_cast(aggregate_type::Tuple)) {
                         if (str_ind >= end_ind) {
                             this->set_error(__FILE__, __LINE__, 
-								error_code::input_bad);
+                                error_code::input_bad);
                             return;
                         }
                         const unsigned char tuple_size = 
-							*(type_signature.data_bytes() + str_ind);
+                            *(type_signature.data_bytes() + str_ind);
                         str_ind++;
                         loop_counter += tuple_size;
                     }
                     else {
                         this->set_error(__FILE__, __LINE__, 
-							error_code::input_bad);
+                            error_code::input_bad);
                         return;
                     }
                 }
@@ -374,15 +374,15 @@ namespace fstlog {
         }
 
         void process_list(
-			byte_span_const& type_signature, 
-			format_type format, 
-			int tree_depth) noexcept
-		{
-			FSTLOG_ASSERT(!type_signature.empty());
-			FSTLOG_ASSERT(*type_signature.data_bytes() ==
-				(ut_cast(log_element_type::Aggregate) 
-					| ut_cast(aggregate_type::List)));
-			msg_counter list_size{0};
+            byte_span_const& type_signature, 
+            format_type format, 
+            int tree_depth) noexcept
+        {
+            FSTLOG_ASSERT(!type_signature.empty());
+            FSTLOG_ASSERT(*type_signature.data_bytes() ==
+                (ut_cast(log_element_type::Aggregate) 
+                    | ut_cast(aggregate_type::List)));
+            msg_counter list_size{0};
             this->get_data(list_size);
             if (this->has_error()) return;
             this->encode_aggregate_start(aggregate_type::List, list_size);
@@ -405,18 +405,18 @@ namespace fstlog {
         }
 
         void process_tuple(
-			byte_span_const& type_signature, 
-			format_type format, 
-			int tree_depth) noexcept
-		{
+            byte_span_const& type_signature, 
+            format_type format, 
+            int tree_depth) noexcept
+        {
             if (type_signature.size_bytes() < 2) {
                 this->set_error(__FILE__, __LINE__, 
-					error_code::input_bad);
+                    error_code::input_bad);
                 return;
             }
-			FSTLOG_ASSERT(	*type_signature.data_bytes() ==
-				(ut_cast(log_element_type::Aggregate) 
-					| ut_cast(aggregate_type::Tuple)));
+            FSTLOG_ASSERT(    *type_signature.data_bytes() ==
+                (ut_cast(log_element_type::Aggregate) 
+                    | ut_cast(aggregate_type::Tuple)));
             const unsigned char tuple_size = *(type_signature.data_bytes() + 1);
             type_signature = byte_span_const{
                 type_signature.data_bytes() + 2,
@@ -434,45 +434,45 @@ namespace fstlog {
         }
 
         void process_element(
-			byte_span_const& type_signature, 
-			format_type format, 
-			int tree_depth = 0) noexcept
-		{
-			if (!type_signature.empty() && !this->has_error()) {
-				auto data_type = *type_signature.data_bytes();
-				log_element_type const current_type =
-					static_cast<log_element_type>(data_type & log_element_type_bitmask);
-				const unsigned char meta = data_type & log_type_metadata_bitmask;
+            byte_span_const& type_signature, 
+            format_type format, 
+            int tree_depth = 0) noexcept
+        {
+            if (!type_signature.empty() && !this->has_error()) {
+                auto data_type = *type_signature.data_bytes();
+                log_element_type const current_type =
+                    static_cast<log_element_type>(data_type & log_element_type_bitmask);
+                const unsigned char meta = data_type & log_type_metadata_bitmask;
 
-				if (current_type != log_element_type::Aggregate) {
-					process_simple_type(current_type, meta, format);
-					type_signature = byte_span_const{
-						type_signature.data_bytes() + 1,
-						type_signature.size_bytes() - 1
-					};
-				}
-				else {
-					tree_depth++;
-					if (tree_depth > config::max_parser_tree_depth) {
-						this->set_error(__FILE__, __LINE__, 
-							error_code::recur_lim);
-						//cant use skip_type() alone, should make skip_data too!!
-					}
-					else if (meta == ut_cast(aggregate_type::List)) {
-						process_list(type_signature, format, tree_depth);
-					}
-					else if (meta == ut_cast(aggregate_type::Tuple)) {
-						process_tuple(type_signature, format, tree_depth);
-					}
-					else {
-						this->set_error(__FILE__, __LINE__, 
-							error_code::input_bad);
-					}
-				}
-			}
-			else if (!this->has_error())
-				this->set_error(__FILE__, __LINE__, 
-					error_code::input_bad);
+                if (current_type != log_element_type::Aggregate) {
+                    process_simple_type(current_type, meta, format);
+                    type_signature = byte_span_const{
+                        type_signature.data_bytes() + 1,
+                        type_signature.size_bytes() - 1
+                    };
+                }
+                else {
+                    tree_depth++;
+                    if (tree_depth > config::max_parser_tree_depth) {
+                        this->set_error(__FILE__, __LINE__, 
+                            error_code::recur_lim);
+                        //cant use skip_type() alone, should make skip_data too!!
+                    }
+                    else if (meta == ut_cast(aggregate_type::List)) {
+                        process_list(type_signature, format, tree_depth);
+                    }
+                    else if (meta == ut_cast(aggregate_type::Tuple)) {
+                        process_tuple(type_signature, format, tree_depth);
+                    }
+                    else {
+                        this->set_error(__FILE__, __LINE__, 
+                            error_code::input_bad);
+                    }
+                }
+            }
+            else if (!this->has_error())
+                this->set_error(__FILE__, __LINE__, 
+                    error_code::input_bad);
         }
     };
 }

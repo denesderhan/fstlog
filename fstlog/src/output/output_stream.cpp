@@ -13,19 +13,19 @@ namespace fstlog {
     using output_stream_impl_type =  
         output_interface_mixin<
         out_stream_mixin<
-		reference_counter_mixin<
+        reference_counter_mixin<
         exclusive_use_mixin<
         allocator_mixin>>>>;
 
-	error_code output_stream(
-		output& out,
+    error_code output_stream(
+        output& out,
         std::shared_ptr<std::ostream> stream,
         fstlog_allocator const& allocator) noexcept
-	{
-		out = make_allocated<output_stream_impl_type>(allocator);
-		if (out.pimpl() == nullptr) return error_code::alloc_fail;
-		const auto error = static_cast<output_stream_impl_type*>(out.pimpl())->set_stream(stream);
-		if (error != error_code::none) out = output{};
-		return error;
+    {
+        out = make_allocated<output_stream_impl_type>(allocator);
+        if (out.pimpl() == nullptr) return error_code::alloc_fail;
+        const auto error = static_cast<output_stream_impl_type*>(out.pimpl())->set_stream(stream);
+        if (error != error_code::none) out = output{};
+        return error;
     }
 }

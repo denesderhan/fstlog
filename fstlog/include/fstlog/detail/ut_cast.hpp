@@ -3,11 +3,11 @@
 #pragma once
 #include <type_traits>
 namespace fstlog {
-	//casts the enum type to its underlying type.
-	template <typename T>
-	constexpr auto ut_cast(T const& x) noexcept 
-		-> std::enable_if_t<std::is_enum_v<T>, std::underlying_type_t<T>> 
-	{
-		return static_cast<std::underlying_type_t<T>>(x);
-	}
+    //casts the enum type to its underlying type.
+    template <typename T>
+    constexpr auto ut_cast(T const& x) noexcept 
+        -> std::enable_if_t<std::is_enum_v<T>, std::underlying_type_t<T>> 
+    {
+        return static_cast<std::underlying_type_t<T>>(x);
+    }
 }

@@ -8,12 +8,12 @@
 #include <fstlog/detail/array_copy.hpp>
 
 namespace fstlog {
-	template <typename T, std::size_t... Sizes>
-	inline constexpr auto array_concat(const std::array<T, Sizes>... arrays) noexcept {
-		std::array<T, (Sizes + ...)> result{};
-		std::size_t index{0};
-		((array_copy(result, arrays, index), index += Sizes), ...);
-		return result;
-	}
+    template <typename T, std::size_t... Sizes>
+    inline constexpr auto array_concat(const std::array<T, Sizes>... arrays) noexcept {
+        std::array<T, (Sizes + ...)> result{};
+        std::size_t index{0};
+        ((array_copy(result, arrays, index), index += Sizes), ...);
+        return result;
+    }
 
 }

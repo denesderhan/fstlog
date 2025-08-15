@@ -11,12 +11,12 @@ namespace fstlog {
     public:
         using allocator_type = typename L::allocator_type;
 
-		sink_null_mixin() noexcept(
-			noexcept(allocator_type())
-			&& noexcept(sink_null_mixin(allocator_type{})))
-			: sink_null_mixin(allocator_type{}) {}
-		explicit sink_null_mixin(allocator_type const& allocator) noexcept(
-			noexcept(L(allocator_type{})))
+        sink_null_mixin() noexcept(
+            noexcept(allocator_type())
+            && noexcept(sink_null_mixin(allocator_type{})))
+            : sink_null_mixin(allocator_type{}) {}
+        explicit sink_null_mixin(allocator_type const& allocator) noexcept(
+            noexcept(L(allocator_type{})))
             : L(allocator) {}
 
         sink_null_mixin(const sink_null_mixin& other) = delete;

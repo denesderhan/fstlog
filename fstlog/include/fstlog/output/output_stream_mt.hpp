@@ -11,21 +11,21 @@
 #include <fstlog/detail/fstlog_allocator.hpp>
 
 namespace fstlog {
-	// thread safe, ofstream must be opened in binary mode
-	FSTLOG_API error_code output_stream_mt(
-		output& out,
-		std::shared_ptr<std::ostream> stream,
-		std::shared_ptr<std::mutex> mutex,
-		fstlog_allocator const& allocator = {}) noexcept;
-	// thread safe, ofstream must be opened in binary mode
-	inline output output_stream_mt(
-		std::shared_ptr<std::ostream> stream,
-		std::shared_ptr<std::mutex> mutex,
-		fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
-	{
-		output out;
-		[[maybe_unused]] const auto error = output_stream_mt(out, stream, mutex, allocator);
-		handle_error(error);
-		return out;
-	}
+    // thread safe, ofstream must be opened in binary mode
+    FSTLOG_API error_code output_stream_mt(
+        output& out,
+        std::shared_ptr<std::ostream> stream,
+        std::shared_ptr<std::mutex> mutex,
+        fstlog_allocator const& allocator = {}) noexcept;
+    // thread safe, ofstream must be opened in binary mode
+    inline output output_stream_mt(
+        std::shared_ptr<std::ostream> stream,
+        std::shared_ptr<std::mutex> mutex,
+        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+    {
+        output out;
+        [[maybe_unused]] const auto error = output_stream_mt(out, stream, mutex, allocator);
+        handle_error(error);
+        return out;
+    }
 }

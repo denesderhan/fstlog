@@ -5,13 +5,13 @@
 #include <chrono>
 
 namespace fstlog {
-	using log_element_ut = unsigned char;
-	using type_size_counter = unsigned char;
-	using level_type = unsigned char;
-	using msg_counter = std::uint16_t;
-	using channel_type = unsigned char;
-	using log_call_flag = unsigned char;
-	using stamp_type = std::chrono::system_clock::time_point;
+    using log_element_ut = unsigned char;
+    using type_size_counter = unsigned char;
+    using level_type = unsigned char;
+    using msg_counter = std::uint16_t;
+    using channel_type = unsigned char;
+    using log_call_flag = unsigned char;
+    using stamp_type = std::chrono::system_clock::time_point;
 
-	enum class level : level_type;
+    enum class level : level_type;
 }
