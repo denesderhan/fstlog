@@ -196,7 +196,7 @@ namespace fstlog {
             is_char_type_v<T>
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
-            encode(unaligned_span<T>{ &data, 1 }, format);
+            encode(unaligned_span<const T>{ &data, 1 }, format);
         }
 
         // string in buffer
@@ -204,40 +204,29 @@ namespace fstlog {
             is_char_type_v<T>
             || std::is_same_v<std::remove_const_t<T>, unsigned char>
             >* = nullptr>
-        void encode(unaligned_span<T> data, format_type format) noexcept {
+        void encode(unaligned_span<const T> data, format_type format) noexcept {
 			FSTLOG_ASSERT(data.data_bytes() != nullptr);
-            const auto out_begin{ this->output_ptr() };
-            auto out_end{ this->output_end() };
-            const unsigned char* str_begin{ data.data_bytes() };
-            const auto data_byte_size = data.size_bytes();
-
-            static_assert(std::numeric_limits<unsigned char>::digits == 8);
-            constexpr int bit_size{ sizeof(T) * std::numeric_limits<unsigned char>::digits };
-            // convert and trim in one step
-			std::size_t char_num{ format.precision };
-            const auto result = detail::utf8conv<bit_size, T>(
-                str_begin,
-                str_begin + data_byte_size,
-                out_begin,
-                out_end,
-                char_num);
-            if (result.ec != error_code::none) {
-                this->set_error(__FILE__, __LINE__, result.ec);
-                return;
-            }
-
+			constexpr int bit_size{ sizeof(T) * 8 };
+			unaligned_span output(
+				this->output_ptr(),
+				static_cast<std::size_t>(this->output_end() - this->output_ptr()));
+			const auto result = detail::utf::utf8conv<bit_size>(data, output, format.precision);
+			if (result.ec != error_code::none) {
+				this->set_error(__FILE__, __LINE__, result.ec);
+			}
+			
             // fill align
 			if (format.width != 0) {
-				const auto byte_size = static_cast<std::size_t>(result.ptr - out_begin);
+				const auto byte_size = static_cast<std::size_t>(output.data_bytes() - this->output_ptr());
 				auto result_len = detail::shift_fill(
-					{ out_begin, static_cast<std::size_t>(out_end - out_begin) },
-					{byte_size, char_num},
+					{ this->output_ptr(), static_cast<std::size_t>(this->output_end() - this->output_ptr()) },
+					{byte_size, result.codepoints_written },
 					format);
-                this->set_output_ptr_unchecked(out_begin + result_len.byte_len);
+                this->advance_output_unchecked(result_len.byte_len);
             }
 			// no fill align
             else {
-                this->set_output_ptr_unchecked(result.ptr);
+                this->set_output_ptr_unchecked(output.data_bytes());
             }
         }
 
@@ -295,13 +284,16 @@ namespace fstlog {
         }
 
         void reencode_tail_string(unsigned char* str_begin, format_type format) {
-           	FSTLOG_ASSERT(str_begin >= this->output_begin() && str_begin <= this->output_ptr());
-            if (format.width == 0 && format.precision == 0xffff ) return;
-			const auto str_len = detail::utf8_str_trim(str_begin, this->output_ptr(), format.precision);
-			auto result_len = detail::shift_fill(
-				{ str_begin, static_cast<std::size_t>(this->output_end() - str_begin) },
-                str_len,
-                format);
+            FSTLOG_ASSERT(str_begin >= this->output_begin() 
+                && str_begin <= this->output_ptr());
+            if (format.width == 0 && format.precision == 0xffff ) return;      
+            const auto str_len = detail::utf::utf8_str_trim(
+	            byte_span_const{ str_begin, static_cast<std::size_t>(this->output_ptr() - str_begin) },
+	            format.precision);
+            const auto result_len = detail::shift_fill(
+	            byte_span{ str_begin, static_cast<std::size_t>(this->output_end() - str_begin) },
+	            str_len,
+	            format);
             this->set_output_ptr_unchecked(str_begin + result_len.byte_len);
         }
     };

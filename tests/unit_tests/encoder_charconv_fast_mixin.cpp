@@ -17,9 +17,6 @@ using enc_type = fstlog::encoder_charconv_fast_mixin<
 					fstlog::output_span_mixin<
 					fstlog::allocator_mixin>>>;
 
-using utf8_char_std = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(u8"")>>>;
-using utf8_char_lib = std::conditional<std::is_signed_v<utf8_char_std>, std::make_unsigned<utf8_char_std>::type, utf8_char_std>::type;
-
 TEST_CASE("encoder_charconv_fast_mixin") {
 	
 	SECTION("no_space_in_buffer") {
@@ -37,8 +34,7 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 		CAPTURE(res);
 		CHECK(encoder.has_error());
 		CHECK(encoder.get_error().code() == fstlog::error_code::buff_full);
-		CHECK(res == "");
-		CHECK(encoder.output_ptr() == encoder.output_begin());
+		CHECK(res == "This will ");
 	};
 
 	SECTION("bool") {
@@ -293,10 +289,10 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 			encoder.encode(char32_t{ 'C' }, format);
 			encoder.encode(char32_t{ 0xD800 }, format);
 			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_std*>(encoder.output_begin()),
+				reinterpret_cast<const char*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
 			CHECK(!encoder.has_error());
-			CHECK(res == u8"A\\u0000B\\uFFFDC\\uFFFD");
+			CHECK(res == "A\\u0000B\\uFFFDC\\uFFFD");
 		}
 	}
 
@@ -327,16 +323,18 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 			buffer.fill('!');
 			encoder.output_span_init(buffer);
 
-			encoder.encode(std::basic_string_view("ASCII string\n"), format);
-			encoder.encode(std::basic_string_view(u8"UTF-8 string§©"), format);
+			encoder.encode(std::string_view("ASCII string\n"), format);
+            std::string_view str("UTF-8 string§©");
+            fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+            encoder.encode(input, format);
 			encoder.encode(std::basic_string_view(u"UTF-16 string§©"), format);
 			encoder.encode(std::basic_string_view(U"UTF-32 string§©"), format);
 
 			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_std*>(encoder.output_begin()),
+				reinterpret_cast<const char*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
 			CHECK(!encoder.has_error());
-			CHECK(res == u8"ASCII string\\u000AUTF-8 string§©UTF-16 string§©UTF-32 string§©");
+			CHECK(res == "ASCII string\\u000AUTF-8 string§©UTF-16 string§©UTF-32 string§©");
 		}
 	}
 

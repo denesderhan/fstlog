@@ -1,6 +1,7 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 
@@ -35,18 +36,20 @@ namespace fstlog {
         {
 			if (file_path == nullptr) return error_code::obj_null;
 			if (handle_ != nullptr) return error_code::double_init;
-			const unsigned char* utf8_pos{ safe_reinterpret_cast<const unsigned char*>(file_path) };
-			const auto utf8_end{ utf8_pos + std::strlen(file_path) };
+			unaligned_span<const unsigned char> input(
+				safe_reinterpret_cast<const unsigned char*>(file_path), 
+				std::strlen(file_path));
 #if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
 			wchar_t path[512]{ 0 };
-			const auto result = detail::safe_utf8_to_utf16(utf8_pos, utf8_end, path, path + 511); // 511 last char must be '/0'
+			unaligned_span output(path, 511); // 511 last char must be '/0'
+			const auto result = detail::utf::safe_utf8_to_utf16(input, output);
 			if (result.ec != error_code::none) {
-				return error_code::path_bad;
+				return result.ec;
 			}
 #else
-			while (utf8_pos < utf8_end) {
-				auto code_point = detail::decode_utf8_char(utf8_pos, utf8_end);
-				if (!detail::safe_utf_code_point(code_point)) {
+			while (!input.empty()) {
+				auto code_point = detail::utf::decode_utf8_char(input);
+				if (!detail::utf::safe_utf_code_point(code_point)) {
 					return error_code::path_bad;
 				}
 			}
@@ -81,17 +84,17 @@ namespace fstlog {
 			}
 #else
 			if (truncate) {
-				handle_ = fopen(file_path, "wb");
+				handle_ = std::fopen(file_path, "wb");
 			}
 			else { 
-				handle_ = fopen(file_path, "ab"); 
+				handle_ = std::fopen(file_path, "ab"); 
 			}
 #endif
-			//buffer wont be deallocated
+			//buffer won't be deallocated
 			if (handle_ == nullptr) return error_code::path_bad;
 			
 			const auto buffer_mode = buffer_size_ == 0 ? _IONBF : _IOFBF;
-			if (setvbuf(handle_, buffer_, buffer_mode, buffer_size_)) {
+			if (std::setvbuf(handle_, buffer_, buffer_mode, buffer_size_)) {
 				close();
 				return error_code::extern_err;
 			}
@@ -102,35 +105,37 @@ namespace fstlog {
 			FSTLOG_ASSERT(handle_ != nullptr);
 			
 			FILE* temp{ nullptr };
-			const unsigned char* utf8_pos{ safe_reinterpret_cast<const unsigned char*>(file_path) };
-			const auto utf8_end{ utf8_pos + strlen(file_path) };
+			unaligned_span input(
+				safe_reinterpret_cast<const unsigned char*>(file_path),
+				std::strlen(file_path));
 #if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
 			wchar_t path[512]{ 0 };
-			const auto result = detail::safe_utf8_to_utf16(utf8_pos, utf8_end, path, path + 511); //511 (last char must be '/0')
+			unaligned_span output(path, 511); //511 (last char must be '/0')
+			const auto result = detail::utf::safe_utf8_to_utf16(input, output);
 			if (result.ec != error_code::none) {
 				return; //Path was bad or too long!
 			}
 			_wfopen_s(&temp, path, L"ab");
 #else
-			while (utf8_pos < utf8_end) {
-				auto code_point = detail::decode_utf8_char(utf8_pos, utf8_end);
-				if (!detail::safe_utf_code_point(code_point)) {
+			while (!input.empty()) {
+				auto code_point = detail::utf::decode_utf8_char(input);
+				if (!detail::utf::safe_utf_code_point(code_point)) {
 					return; //Path was bad or too long!
 				}
 			}
-			temp = fopen(file_path, "ab");
+			temp = std::fopen(file_path, "ab");
 #endif
 			if (temp == nullptr) return;
 
-			fclose(handle_);
+			std::fclose(handle_);
 
 			const auto buffer_mode = buffer_size_ == 0 ? _IONBF : _IOFBF;
 			//trying to set buffer_
-			if (setvbuf(temp, buffer_, buffer_mode, buffer_size_)) {
+			if (std::setvbuf(temp, buffer_, buffer_mode, buffer_size_)) {
 				deallocate_buffer();
 				//if fails trying to set unbuffered mode
 				//if fails buffering will be system default 
-				setvbuf(temp, nullptr, _IONBF, 0);
+				std::setvbuf(temp, nullptr, _IONBF, 0);
 			}
 	
 			handle_ = temp;
@@ -142,19 +147,19 @@ namespace fstlog {
 
         void close() noexcept {
             if (handle_ != nullptr) {
-                fclose(handle_);
+                std::fclose(handle_);
                 handle_ = nullptr;
             }
         }
 
         void flush() noexcept {
 			FSTLOG_ASSERT(handle_ != nullptr);
-			fflush(handle_);
+			std::fflush(handle_);
         }
 
         void write(const char* data, std::size_t byte_size) noexcept {
 			FSTLOG_ASSERT(handle_ != nullptr);
-			fwrite(data, byte_size, 1, handle_);
+			std::fwrite(data, byte_size, 1, handle_);
         }
 
     private:
@@ -170,7 +175,7 @@ namespace fstlog {
             buffer_size_ = 0;
         }
 
-        FILE* handle_{ nullptr };
+        std::FILE* handle_{ nullptr };
         char* buffer_{ nullptr };
         std::size_t buffer_size_{ 0 };
         allocator_type allocator_;

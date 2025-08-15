@@ -152,7 +152,6 @@ set(src
 )
 
 set(src_detail
-    "src/detail/buffer_operation_result.hpp"
     "src/detail/checked_iterator.hpp"
     "src/detail/dyn_array.hpp"
     "src/detail/dyn_buffer.hpp"

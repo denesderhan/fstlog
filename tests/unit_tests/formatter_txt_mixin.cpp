@@ -202,11 +202,11 @@ TEST_CASE("formatter_txt_mixin") {
 		out_str->str("");
 		LOG_INFO(logger, "This will not fit in the sinks formatting buffer of size 128 bytes! {}", "This will not fit in the sinks formatting buffer of size 128 bytes!");
 		core.flush();
-		CHECK(out_str->str() == "This will not fit in the sinks formatting buffer of size 128 bytes! ... fstlog error:002\n");
+		CHECK(out_str->str() == "This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer of size 12\n");
 		out_str->str("");
 		LOG_INFO(logger, "String: {}", "This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer of size 128 bytes!");
 		core.flush();
-		CHECK(out_str->str() == "String: ... Message truncated, fstlog error: Not enough space in output buffer!\n");
+		CHECK(out_str->str() == "String: This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer of\n");
 
 	};
 	

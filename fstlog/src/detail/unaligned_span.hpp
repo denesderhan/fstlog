@@ -6,8 +6,8 @@
 #include <cstring>
 #include <type_traits>
 
-#include <fstlog/detail/fstlog_assert.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
+#include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
 	template<typename T = unsigned char>

@@ -57,23 +57,23 @@ TEST_CASE("unaligned_span") {
 		SECTION("get-set-constexpr") {
 			buff.fill(0);
 			// copy data
-			test.set<0>(data[0]);
-			test.set<1>(data[1]);
-			test.set<2>(data[2]);
-			test.set<3>(data[3]);
+			test.template set<0>(data[0]);
+			test.template set<1>(data[1]);
+			test.template set<2>(data[2]);
+			test.template set<3>(data[3]);
 			
 			fstlog::unaligned_span<const double> test2(buff.data() + 1, buff.size() - 1);
 
 			// verify
-			CHECK(data[0] == test.get<0>());
-			CHECK(data[1] == test.get<1>());
-			CHECK(data[2] == test.get<2>());
-			CHECK(data[3] == test.get<3>());
+			CHECK(data[0] == test.template get<0>());
+			CHECK(data[1] == test.template get<1>());
+			CHECK(data[2] == test.template get<2>());
+			CHECK(data[3] == test.template get<3>());
 
-			CHECK(data[0] == test2.get<0>());
-			CHECK(data[1] == test2.get<1>());
-			CHECK(data[2] == test2.get<2>());
-			CHECK(data[3] == test2.get<3>());
+			CHECK(data[0] == test2.template get<0>());
+			CHECK(data[1] == test2.template get<1>());
+			CHECK(data[2] == test2.template get<2>());
+			CHECK(data[3] == test2.template get<3>());
 			
 		};
 	};
@@ -106,13 +106,13 @@ TEST_CASE("unaligned_span") {
 		std::array<int, 4> data1{ 0 };
 		const auto test1 = fstlog::unaligned_span(data1);
 		test1[0] = 1;
-		test1.set<1>(0);
+		test1.template set<1>(0);
 		test1.set(2, 2);
 		
 		auto d = test1[0];
 		CHECK(d == 1);
 		CHECK(test1.get(1) == 0);
-		CHECK(test1.get<2>() == 2);
+		CHECK(test1.template get<2>() == 2);
 	};
 
 	SECTION("subspan") {
@@ -138,10 +138,10 @@ TEST_CASE("unaligned_span") {
 		auto span2 = fstlog::unaligned_span(&data[1], 2);
 
 		auto temp = span;
-		CHECK(temp.drop_front<1>().drop_back(1) == span2);
+		CHECK(temp.template drop_front<1>().drop_back(1) == span2);
 		temp = span;
-		CHECK(temp.drop_front(1).drop_back<1>() == span2);
+		CHECK(temp.drop_front(1).template drop_back<1>() == span2);
 		temp = span;
-		CHECK(temp.drop_front(3).drop_back<1>().empty());
+		CHECK(temp.drop_front(3).template drop_back<1>().empty());
 	};
 }

@@ -5,13 +5,13 @@
 #include <cstdint>
 #include <cstring>
 #include <string_view>
-#pragma intrinsic(memcpy)
 
-#include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
+#include <detail/unaligned_span.hpp>
 #include <detail/utf_conv.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 #include <formatter/impl/detail/tz_format.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
@@ -33,7 +33,7 @@ namespace fstlog {
 				begin++;
 			}
 		}
-
+				
 		// write the text part of the fmt format string in to out
 		inline error_code parse_fmt_text(
 			unsigned char const*& in_pos, unsigned char const* in_end,
@@ -50,7 +50,7 @@ namespace fstlog {
 			}
 			auto fast_len = static_cast<std::size_t>(fast_end - in_pos);
 			if (fast_len > static_cast<std::size_t>(out_end - out_pos)) fast_len = static_cast<std::size_t>(out_end - out_pos);
-			memcpy(out_pos, in_pos, fast_len);
+			std::memcpy(out_pos, in_pos, fast_len);
 			in_pos += fast_len;
 			out_pos += fast_len;
 
@@ -71,15 +71,16 @@ namespace fstlog {
 						break;
 					}
 				}
-				auto next_in_pos = in_pos;
-				std::uint32_t code_point = detail::decode_utf8_char(next_in_pos, in_end);
-				auto next_out_pos = detail::encode_safe_utf8_char(code_point, out_pos, out_end);
-				if (next_out_pos == nullptr) {
+				byte_span_const input(in_pos, static_cast<std::size_t>(in_end - in_pos));
+				byte_span output(out_pos, static_cast<std::size_t>(out_end - out_pos));
+				if (output.size() < 10) {
 					error = error_code::buff_full;
 					break;
 				}
-				out_pos = next_out_pos;
-				in_pos = next_in_pos;
+				std::uint32_t code_point = detail::utf::decode_utf8_char(input);
+				detail::utf::encode_safe_utf8_char(code_point, output);
+				out_pos = output.data_bytes();
+				in_pos = input.data_bytes();
 				if (skip) in_pos++;
 			}
 			return error;
@@ -136,8 +137,9 @@ namespace fstlog {
 		{
 			if (begin >= end) return begin;
 			auto pos = begin;
-			const auto first_char = detail::decode_utf8_char(pos, end);
-			
+			unaligned_span<const unsigned char> input(pos, static_cast<std::size_t>(end - pos));
+			std::uint32_t first_char = detail::utf::decode_utf8_char(input);
+			pos = input.data_bytes();
 			// check if there is a good fill char (first_char) + align char
 			if (pos < end) {
 				const unsigned char align_char{ *pos };
@@ -146,7 +148,7 @@ namespace fstlog {
 					align_char == '^')
 				{
 					if (first_char != '{' && first_char != '}'
-						&& detail::safe_utf_code_point(first_char))
+						&& detail::utf::safe_utf_code_point(first_char))
 					{
 						// skip align char (and fill char)
 						return pos + 1;

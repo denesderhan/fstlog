@@ -8,7 +8,6 @@
 #include <cstring>
 #include <limits>
 #include <time.h>
-#pragma intrinsic(memcpy, memset)
 
 #include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
@@ -107,7 +106,7 @@ namespace fstlog {
 			}
 
 			const auto out_begin = this->output_ptr();
-			memcpy(out_begin, time_string.data(), formatted_length_);
+			std::memcpy(out_begin, time_string.data(), formatted_length_);
 			// replacing the second placeholder with the second string
 			write_second(nanoseconds, out_begin);
 			
@@ -130,7 +129,7 @@ namespace fstlog {
 				auto fill_begin = begin;
 				auto align_end = pos;
 				if (fill_begin < align_end) format.align = *--align_end;
-				memcpy(format.fill_char.data(), fill_begin, static_cast<std::size_t>(align_end - fill_begin));
+				std::memcpy(format.fill_char.data(), fill_begin, static_cast<std::size_t>(align_end - fill_begin));
 			}
 
 			auto pos0 = pos;
@@ -204,7 +203,7 @@ namespace fstlog {
 			
 			// replace 0x1-s with '0'-s
 			std::array<char, 64> temp{ 0 };
-			memcpy(temp.data(), time_format_.data(), time_format_.size());
+			std::memcpy(temp.data(), time_format_.data(), time_format_.size());
 			for (auto& c : temp) if (c == 1) c = '0';
 			time_format_ = small_string<64>(temp.data(), time_format_.size());
 		}
@@ -215,13 +214,13 @@ namespace fstlog {
 				// compute string lengths for the formatted timestamp
 				auto stamp_str = create_time_string(stamp_type{});
 				const detail::utf8_len formatted_len =
-					detail::utf8_str_trim(stamp_str.data(), stamp_str.data() + stamp_str.size());
+					detail::utf::utf8_str_trim(unaligned_span{ stamp_str.data(), stamp_str.size() });
 
 				// do not truncate
 				if (formatted_len.char_len < format.width) {
 					const std::size_t time_format_bytes = time_format_.size();
 					std::array<unsigned char, small_string<64>::capacity()> temp{};
-					memcpy(temp.data(), time_format_.data(), time_format_bytes);
+					std::memcpy(temp.data(), time_format_.data(), time_format_bytes);
 					// try to add fill characters to the time_format_ 
 					// but use the formatted character number instead of the format string character number
 					const detail::utf8_len result_len = detail::shift_fill(
@@ -265,14 +264,14 @@ namespace fstlog {
 				std::array<char, 64> buff{ 0 };
 				auto dest_ptr{ buff.data() };
 				auto src_ptr{ time_format_.data() };
-				memcpy(dest_ptr, src_ptr, sec_pos);
+				std::memcpy(dest_ptr, src_ptr, sec_pos);
 				dest_ptr += sec_pos;
 				std::size_t second_char_num = second_precision_ == 0 ? 2 : 3ULL + second_precision_;
-				memset(dest_ptr, 1, second_char_num);
+				std::memset(dest_ptr, 1, second_char_num);
 				dest_ptr += second_char_num;
 				const auto post_sec_pos{ sec_pos + 2 };
 				src_ptr += post_sec_pos;
-				memcpy(dest_ptr, src_ptr, time_format_.size() - post_sec_pos);
+				std::memcpy(dest_ptr, src_ptr, time_format_.size() - post_sec_pos);
 				// replace time_format_
 				time_format_ = small_string<64>(buff.data(), str_len);
 			}
@@ -358,10 +357,10 @@ namespace fstlog {
 				// %z (UTC offset "+0000")
 				else if (c1 == 'z') {
 					if (time.tm_isdst > 0) {
-						memcpy(&buff[pos], utc_offset_.daylight.data(), 5);
+						std::memcpy(&buff[pos], utc_offset_.daylight.data(), 5);
 					}
 					else {
-						memcpy(&buff[pos], utc_offset_.standard.data(), 5);
+						std::memcpy(&buff[pos], utc_offset_.standard.data(), 5);
 					}
 					pos += 5;
 				}
@@ -373,7 +372,7 @@ namespace fstlog {
 				// %a (day abbreviated)
 				else if (c1 == 'a' && time.tm_wday >= 0 && time.tm_wday <= 6) {
 					const auto days = "SunMonTueWedThuFriSat";
-					memcpy(&buff[pos], days + (time.tm_wday * 3), 3);
+					std::memcpy(&buff[pos], days + (time.tm_wday * 3), 3);
 					pos += 3;
 				}
 				// unsupported "%?"

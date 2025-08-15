@@ -22,9 +22,6 @@ using enc_type = fstlog::encoder_stdformat_mixin<
 					fstlog::output_span_mixin<
 					fstlog::allocator_mixin>>>;
 
-using utf8_char_std = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(u8"")>>>;
-using utf8_char_lib = std::conditional<std::is_signed_v<utf8_char_std>, std::make_unsigned<utf8_char_std>::type, utf8_char_std>::type;
-
 TEST_CASE("encoder_stdformat_mixin") {
 	enc_type encoder;
 	std::vector<unsigned char> buffer(128, '!');
@@ -218,10 +215,10 @@ TEST_CASE("encoder_stdformat_mixin") {
 			encoder.encode(char32_t{ 'C' }, format);
 			encoder.encode(char32_t{ 0xD800 }, format);
 			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				reinterpret_cast<const char*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
 			CHECK(!encoder.has_error());
-			CHECK(res == u8"A\\u0000B\\uFFFDC\\uFFFD");
+			CHECK(res == "A\\u0000B\\uFFFDC\\uFFFD");
 		}
 
 		if (stdformat_utf_fill_char) {
@@ -238,10 +235,10 @@ TEST_CASE("encoder_stdformat_mixin") {
 				encoder.encode(char32_t{ 'C' }, format);
 				encoder.encode(char32_t{ 0xD800 }, format);
 				auto res = std::basic_string_view(
-					reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+					reinterpret_cast<const char*>(encoder.output_begin()),
 					encoder.output_ptr() - encoder.output_begin());
 				CHECK(!encoder.has_error());
-				CHECK(res == u8"₰₰₰₰A₰₰₰₰₰₰₰\\u0000₰₰₰₰₰₰B₰₰₰₰₰₰₰\\uFFFD₰₰₰₰₰₰C₰₰₰₰₰₰₰\\uFFFD₰₰");
+				CHECK(res == "₰₰₰₰A₰₰₰₰₰₰₰\\u0000₰₰₰₰₰₰B₰₰₰₰₰₰₰\\uFFFD₰₰₰₰₰₰C₰₰₰₰₰₰₰\\uFFFD₰₰");
 			}
 
 			SECTION("fill_align_precision_utf") {
@@ -256,10 +253,10 @@ TEST_CASE("encoder_stdformat_mixin") {
 				encoder.encode(char32_t{ U'®' }, format);
 				encoder.encode(char32_t{ 0xD800 }, format);
 				auto res = std::basic_string_view(
-					reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+					reinterpret_cast<const char*>(encoder.output_begin()),
 					encoder.output_ptr() - encoder.output_begin());
 				CHECK(!encoder.has_error());
-				CHECK(res == u8"¤¤¤A\\u000¤¤¤§\\uFFF¤¤¤®\\uFFF");
+				CHECK(res == "¤¤¤A\\u000¤¤¤§\\uFFF¤¤¤®\\uFFF");
 			}
 		}
 		
@@ -275,10 +272,10 @@ TEST_CASE("encoder_stdformat_mixin") {
 			encoder.encode(char32_t{ 'C' }, format);
 			encoder.encode(char32_t{ 0xD800 }, format);
 			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				reinterpret_cast<const char*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
 			CHECK(!encoder.has_error());
-			CHECK(res == u8"xxxxAxxxxxxx\\u0000xxxxxxBxxxxxxx\\uFFFDxxxxxxCxxxxxxx\\uFFFDxx");
+			CHECK(res == "xxxxAxxxxxxx\\u0000xxxxxxBxxxxxxx\\uFFFDxxxxxxCxxxxxxx\\uFFFDxx");
 		}
 
 		SECTION("fill_align_precision") {
@@ -293,10 +290,10 @@ TEST_CASE("encoder_stdformat_mixin") {
 			encoder.encode(char32_t{ U'w' }, format);
 			encoder.encode(char32_t{ 0xD800 }, format);
 			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				reinterpret_cast<const char*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
 			CHECK(!encoder.has_error());
-			CHECK(res == u8"xxxA\\u000xxxq\\uFFFxxxw\\uFFF");
+			CHECK(res == "xxxA\\u000xxxq\\uFFFxxxw\\uFFF");
 		}
 		
 	}
@@ -312,15 +309,17 @@ TEST_CASE("encoder_stdformat_mixin") {
 			encoder.output_span_init(out_buff);
 
 			encoder.encode(std::basic_string_view("ASCII string\n"), format);
-			encoder.encode(std::basic_string_view(u8"UTF-8 string§©"), format);
-			encoder.encode(std::basic_string_view(u"UTF-16 string§©"), format);
+            std::string_view str("UTF-8 string§©");
+            fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+            encoder.encode(input, format);
+            encoder.encode(std::basic_string_view(u"UTF-16 string§©"), format);
 			encoder.encode(std::basic_string_view(U"UTF-32 string§©"), format);
 
 			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				reinterpret_cast<const char*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
 			CHECK(!encoder.has_error());
-			CHECK(res == u8"ASCII string\\u000AUTF-8 string§©UTF-16 string§©UTF-32 string§©");
+			CHECK(res == "ASCII string\\u000AUTF-8 string§©UTF-16 string§©UTF-32 string§©");
 		}
 
 		if (stdformat_utf_fill_char) {
@@ -330,15 +329,17 @@ TEST_CASE("encoder_stdformat_mixin") {
 				format = "{:©<20}";
 
 				encoder.encode(std::basic_string_view("ASCII string\n"), format);
-				encoder.encode(std::basic_string_view(u8"UTF-8 string§©"), format);
+                std::string_view str("UTF-8 string§©");
+                fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+                encoder.encode(input, format);
 				encoder.encode(std::basic_string_view(u"UTF-16 string§©"), format);
 				encoder.encode(std::basic_string_view(U"UTF-32 string§©"), format);
 
 				auto res = std::basic_string_view(
-					reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+					reinterpret_cast<const char*>(encoder.output_begin()),
 					encoder.output_ptr() - encoder.output_begin());
 				CHECK(!encoder.has_error());
-				CHECK(res == u8"ASCII string\\u000A©©UTF-8 string§©©©©©©©UTF-16 string§©©©©©©UTF-32 string§©©©©©©");
+				CHECK(res == "ASCII string\\u000A©©UTF-8 string§©©©©©©©UTF-16 string§©©©©©©UTF-32 string§©©©©©©");
 			}
 		
 			SECTION("fill_align_precision_utf") {
@@ -347,15 +348,17 @@ TEST_CASE("encoder_stdformat_mixin") {
 				format = "{:.^10.6}";
 			
 				encoder.encode(std::basic_string_view("ASCII string\n"), format);
-				encoder.encode(std::basic_string_view(u8"§©UTF-8 string§©"), format);
+                std::string_view str("§©UTF-8 string§©");
+                fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+                encoder.encode(input, format);
 				encoder.encode(std::basic_string_view(u"§©UTF-16 string§©"), format);
 				encoder.encode(std::basic_string_view(U"§©UTF-32 string§©"), format);
 
 				auto res = std::basic_string_view(
-					reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+					reinterpret_cast<const char*>(encoder.output_begin()),
 					encoder.output_ptr() - encoder.output_begin());
 				CHECK(!encoder.has_error());
-				CHECK(res == u8"..ASCII ....§©UTF-....§©UTF-....§©UTF-..");
+				CHECK(res == "..ASCII ....§©UTF-....§©UTF-....§©UTF-..");
 			}
 		}
 		
@@ -365,15 +368,15 @@ TEST_CASE("encoder_stdformat_mixin") {
 			format = "{:x<20}";
 
 			encoder.encode(std::basic_string_view("ASCII string\n"), format);
-			encoder.encode(std::basic_string_view(u8"UTF-8 stringqw"), format);
+			encoder.encode(std::basic_string_view("UTF-8 stringqw"), format);
 			encoder.encode(std::basic_string_view(u"UTF-16 stringqw"), format);
 			encoder.encode(std::basic_string_view(U"UTF-32 stringqw"), format);
 
 			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				reinterpret_cast<const char*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
 			CHECK(!encoder.has_error());
-			CHECK(res == u8"ASCII string\\u000AxxUTF-8 stringqwxxxxxxUTF-16 stringqwxxxxxUTF-32 stringqwxxxxx");
+			CHECK(res == "ASCII string\\u000AxxUTF-8 stringqwxxxxxxUTF-16 stringqwxxxxxUTF-32 stringqwxxxxx");
 		}
 
 		SECTION("fill_align_precision") {
@@ -382,15 +385,15 @@ TEST_CASE("encoder_stdformat_mixin") {
 			format = "{:.^10.6}";
 
 			encoder.encode(std::basic_string_view("ASCII string\n"), format);
-			encoder.encode(std::basic_string_view(u8"qwUTF-8 stringqw"), format);
+			encoder.encode(std::basic_string_view("qwUTF-8 stringqw"), format);
 			encoder.encode(std::basic_string_view(u"qwUTF-16 stringqw"), format);
 			encoder.encode(std::basic_string_view(U"qwUTF-32 stringqw"), format);
 
 			auto res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				reinterpret_cast<const char*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
 			CHECK(!encoder.has_error());
-			CHECK(res == u8"..ASCII ....qwUTF-....qwUTF-....qwUTF-..");
+			CHECK(res == "..ASCII ....qwUTF-....qwUTF-....qwUTF-..");
 		}
 	}
 
@@ -405,24 +408,24 @@ TEST_CASE("encoder_stdformat_mixin") {
 		auto str_begin = encoder.output_ptr();
 		encoder.encode(std::string_view("String to \"shift fill\"."), format);
 		auto res = std::basic_string_view(
-			reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+			reinterpret_cast<const char*>(encoder.output_begin()),
 			encoder.output_ptr() - encoder.output_begin());
-		CHECK(res == u8"String left untouched.String to \"shift fill\".");
+		CHECK(res == "String left untouched.String to \"shift fill\".");
 		
 		format = "{:x>10.6}";
 		encoder.reencode_tail_string(str_begin, format);
 		res = std::basic_string_view(
-			reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+			reinterpret_cast<const char*>(encoder.output_begin()),
 			encoder.output_ptr() - encoder.output_begin());
-		CHECK(res == u8"String left untouched.xxxxString");
+		CHECK(res == "String left untouched.xxxxString");
 		
 		if (stdformat_utf_fill_char) {
 			format = "{:¤>10.6}";
 			encoder.reencode_tail_string(str_begin, format);
 			res = std::basic_string_view(
-				reinterpret_cast<const utf8_char_lib*>(encoder.output_begin()),
+				reinterpret_cast<const char*>(encoder.output_begin()),
 				encoder.output_ptr() - encoder.output_begin());
-			CHECK(res == u8"String left untouched.¤¤¤¤xxxxSt");
+			CHECK(res == "String left untouched.¤¤¤¤xxxxSt");
 		}
 	}
 }

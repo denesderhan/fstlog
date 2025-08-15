@@ -38,32 +38,36 @@ namespace fstlog {
 			tz_format tz) noexcept
 		{
 			if (str.empty()) return false;
-			const unsigned char *pos = str.data_bytes();
-			const auto end{ pos + str.size_bytes() };
-			std::size_t num_sec_specifiers{ 0 };
-			while (pos < end) {
-				auto code_point = decode_utf8_char(pos, end);
-				if (!safe_utf_code_point(code_point)) return false;
+            bool has_second{ false };
+			while (!str.empty()) {
+				std::uint32_t code_point = detail::utf::decode_utf8_char(str);
+				if (!utf::safe_utf_code_point(code_point)) return false;
 				
 				// start of a conversion specifier
 				if (code_point == '%') {
-					if (pos == end) {
+					if (str.empty()) {
 						return false; // invalid '%' at end
 					}
 					// consume conversion specifier
-					unsigned char conv_spec = *pos++;
+					unsigned char conv_spec = str.template get<0>();
+                    str.template drop_front<1>();
 					if (conv_spec != '%' && !valid_strft_conv_spec(conv_spec)) {
 						return false; // invalid conversion specifier (%% is valid)
 					}
-					if (tz == tz_format::UTC && (conv_spec == 'z' || conv_spec == 'Z')) {
-						return false; // allow formatting local zone only when time is in local
+					if (tz == tz_format::UTC && conv_spec == 'z') {
+						return false; // if time is in UTC usage of %z is forbidden
 					}
 					if (conv_spec == 'S') {
-						num_sec_specifiers++; // count number of '%S' (only 1 is allowed)
+                        if (has_second) {
+                            return false; // only 1 %S allowed (cached time with second placeholder)
+                        }
+                        else {
+                            has_second = true;
+                        }
 					}
 				}
 			}
-			return num_sec_specifiers <= 1;
+			return true;
 		}
 	}
 }

@@ -7,7 +7,6 @@
 #include <limits>
 #include <string_view>
 #include <type_traits>
-#pragma intrinsic(memcpy)
 
 #include <fstlog/detail/rm_cvref_t.hpp>
 #include <detail/unaligned_span.hpp>
@@ -102,27 +101,18 @@ namespace fstlog {
             is_char_type_v<T>
             || std::is_same_v<const T, const unsigned char>
         >* = nullptr>
-        void encode(unaligned_span<T> data, format_type format) noexcept {
+        void encode(unaligned_span<const T> data, format_type format) noexcept {
 			FSTLOG_ASSERT(data.data_bytes() != nullptr);
-			
-            auto out_begin = safe_reinterpret_cast<unsigned char*>(&encoder_fmt_buffer_[0]);
-            auto out_end = out_begin + encoder_fmt_buffer_.size();
-            static_assert(std::numeric_limits<unsigned char>::digits == 8);
-            constexpr int bit_size{ sizeof(T) * std::numeric_limits<unsigned char>::digits };
-            std::size_t char_num{ (std::numeric_limits<std::size_t>::max)() };
-			const unsigned char* in_ptr{ data.data_bytes() };
-			const auto result = detail::utf8conv<bit_size, T>(
-				in_ptr,
-                in_ptr + data.size_bytes(),
-                out_begin,
-                out_end,
-                char_num);
+			constexpr int bit_size{ sizeof(T) * 8 };
+			unaligned_span output(
+				safe_reinterpret_cast<unsigned char*>(encoder_fmt_buffer_.data()),
+				encoder_fmt_buffer_.size());
+			const auto result = detail::utf::utf8conv<bit_size>(data, output);
             if (result.ec != error_code::none) {
                 this->set_error(__FILE__, __LINE__, result.ec);
-                return;
             }
 
-            std::size_t str_byte_size = static_cast<std::size_t>(result.ptr - out_begin);
+            std::size_t str_byte_size = encoder_fmt_buffer_.size() - output.size();
 			std::string_view str = std::string_view { encoder_fmt_buffer_.data(), str_byte_size};
 			try {
 				detail::checked_iterator it(
@@ -163,22 +153,18 @@ namespace fstlog {
             }
         }
 
-		void reencode_tail_string(unsigned char* str_begin, format_type format) noexcept {
-			FSTLOG_ASSERT(
-				str_begin >= this->output_begin() 
-				&& str_begin <= this->output_ptr());
+        void reencode_tail_string(unsigned char* str_begin, format_type format) noexcept {
+            FSTLOG_ASSERT(str_begin >= this->output_begin()	
+                && str_begin <= this->output_ptr());
             if (format == "{}" || format == "{:}") return;
-			const std::size_t str_byte_size = 
-				static_cast<std::size_t>(this->output_ptr() - str_begin);
-			if (str_byte_size <= encoder_fmt_buffer_.size()) {
-				memcpy(
-					&encoder_fmt_buffer_[0],
-					str_begin,
-					str_byte_size);
-				this->set_output_ptr_unchecked(str_begin);
-				encode(std::string_view{ &encoder_fmt_buffer_[0], str_byte_size }, format);
-			}
-		}
+            const std::size_t str_byte_size = 
+	            static_cast<std::size_t>(this->output_ptr() - str_begin);
+            if (str_byte_size <= encoder_fmt_buffer_.size()) {
+	            std::memcpy(&encoder_fmt_buffer_[0], str_begin, str_byte_size);
+	            this->set_output_ptr_unchecked(str_begin);
+	            encode(std::string_view{ &encoder_fmt_buffer_[0], str_byte_size }, format);
+            }
+        }
 
         private:
             std::array<char, 2048> encoder_fmt_buffer_{ 0 };

@@ -7,7 +7,6 @@
 #include <limits>
 #include <string_view>
 #include <type_traits>
-#pragma intrinsic(memcpy)
 
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
@@ -141,7 +140,7 @@ namespace fstlog {
             is_char_type_v<T>
             >* = nullptr>
         void encode(T data, format_type format) noexcept {
-            encode(unaligned_span<T>{ &data, 1 }, format);
+            encode(unaligned_span<const T>{ &data, 1 }, format);
         }
 
         // string in buffer
@@ -149,23 +148,15 @@ namespace fstlog {
             is_char_type_v<T>
             || std::is_same_v<std::remove_const_t<T>, unsigned char>
             >* = nullptr>
-        void encode(unaligned_span<T> data, [[maybe_unused]] format_type format) noexcept {
+        void encode(unaligned_span<const T> data, [[maybe_unused]] format_type format) noexcept {
 			FSTLOG_ASSERT(data.data_bytes() != nullptr);
-			static_assert(std::numeric_limits<unsigned char>::digits == 8);
-            constexpr int bit_size{ sizeof(T) * std::numeric_limits<unsigned char>::digits };
-            
-            const unsigned char* str_begin{ data.data_bytes() };
-            std::size_t char_num{ (std::numeric_limits<std::size_t>::max)() };
-            const auto result = detail::utf8conv<bit_size, T>(
-                str_begin,
-                str_begin + data.size_bytes(),
-                this->output_ptr(),
-                this->output_end(),
-                char_num);
-            if (result.ec == error_code::none) {
-                this->set_output_ptr_unchecked(result.ptr);
-            }
-            else {
+			constexpr int bit_size{ sizeof(T) * 8 };
+			unaligned_span output(
+				this->output_ptr(), 
+				static_cast<std::size_t>(this->output_end() - this->output_ptr()));
+			const auto result = detail::utf::utf8conv<bit_size>(data, output);
+			this->set_output_ptr_unchecked(output.data_bytes());
+			if (result.ec != error_code::none) {
                 this->set_error(__FILE__, __LINE__, result.ec);
             }
         }

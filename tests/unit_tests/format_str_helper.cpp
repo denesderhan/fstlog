@@ -3,8 +3,10 @@
 #include <catch2/catch_all.hpp>
 
 #include <vector>
+#include <string_view>
 
 #include <formatter/impl/detail/format_str_helper.hpp>
+#include <fstlog/detail/error_code.hpp>
 
 TEST_CASE("uint_fromchars_4digit") {
 	auto data = GENERATE(
@@ -38,7 +40,7 @@ TEST_CASE("uint_fromchars_4digit") {
 }
 
 TEST_CASE("parse_fmt_text") {
-	std::vector<unsigned char> out_buff(10);
+	std::vector<unsigned char> out_buff(100);
 	const unsigned char* out_end = out_buff.data() + out_buff.size();
 	SECTION("error_code::fmt_bad") {
 			
@@ -70,8 +72,9 @@ TEST_CASE("parse_fmt_text") {
 	SECTION("error_code::buff_full") {
 
 		std::tuple<std::string_view, std::string_view, int, int> test_dat = GENERATE(
-			std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "12345678901}" }, std::string_view{ "1234567890" }, 10, 10 },
-			std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "}}2345{{789}}{{" }, std::string_view{ "}2345{789}" }, 13, 10},
+            std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "12345678901}" }, std::string_view{ "1" }, 1, 1 },
+            std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "12345678901}" }, std::string_view{ "1234567890" }, 10, 10 },
+			std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "}}2345{{789}}{{" }, std::string_view{ "}2345{789}" }, 13, 19},
 			std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "}}2345{{789}}{{" }, std::string_view{ "" }, 0, 0},
 			std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "a" }, std::string_view{ "" }, 0, 0}
 		);
@@ -216,8 +219,8 @@ TEST_CASE("skip_fill_align") {
 		std::pair<std::string_view, int>{std::string_view{ ":>" }, 2 },
 		std::pair<std::string_view, int>{std::string_view{ ">>>>" }, 2 },
 		std::pair<std::string_view, int>{std::string_view{ "\xc2\xa9>>>1" }, 3 },
-		std::pair<std::string_view, int>{std::string_view{ "\xe0\xbc\x80>>>2" }, 4 },
-		std::pair<std::string_view, int>{std::string_view{ "\xf0\x90\xad\x80>>>3" }, 0 }, // '𐭀' non whitelisted U+10B40 char 
+		std::pair<std::string_view, int>{std::string_view{ "\xe0\xbc\x80>>>2" }, 0 }, // non whitelisted char
+		std::pair<std::string_view, int>{std::string_view{ "😉>>>3" }, 5 }, 
 		std::pair<std::string_view, int>{std::string_view{ "\xf8>>>4" }, 0 },
 		std::pair<std::string_view, int>{std::string_view{ "\xf8\x01>>>5" }, 0 },
 		std::pair<std::string_view, int>{std::string_view{ "\xf8\x01\x02>>>6" }, 0 },
@@ -466,8 +469,8 @@ TEST_CASE("valid_format_spec") {
 		std::make_tuple(std::string_view{ "}<" }, false),
 		std::make_tuple(std::string_view{ "\xf8<" }, false),
 		std::make_tuple(std::string_view{ "\xc2\xa9^" }, true),
-		std::make_tuple(std::string_view{ "\xe0\xbc\x80<" }, true),
-		std::make_tuple(std::string_view{ "\xf0\x90\xad\x80>" }, false), // '𐭀' non whitelisted U+10B40 char 
+		std::make_tuple(std::string_view{ "\xe0\xbc\x80<" }, false), // non whitelisted char
+		std::make_tuple(std::string_view{ "😉>" }, true),  
 		std::make_tuple(std::string_view{ "\xc2\x85<" }, false),
 		std::make_tuple(std::string_view{ "*> #020.34Ld" }, true),
 		std::make_tuple(std::string_view{ "*> #020.34L" }, true),
