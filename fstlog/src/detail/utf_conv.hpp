@@ -63,7 +63,8 @@ namespace fstlog::detail::utf {
                     && code_point <= utf::constants::max_code_p));
     }
 
-    // Determines if a valid utf code point is in the safe whitelist
+    // Determines if a valid utf code point is in the safe whitelist,
+    // exludes invalid out of range and surrogate values.
     constexpr bool safe_utf_code_point(std::uint32_t code_point) noexcept {
         // The array contains range boundaries between
         // unsafe/safe ranges at even indexes [0,2,4...] (first safe codepoint)

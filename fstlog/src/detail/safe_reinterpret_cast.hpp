@@ -11,7 +11,7 @@ namespace fstlog {
     using stripped_type_t = 
         std::remove_cv_t<std::remove_pointer_t<std::remove_reference_t<T>>>;
     
-    // Enforces safe casts in debug mode; in release mode, reinterpret_cast is unrestricted.
+    // Enforces safe casts.
     template<typename T, typename F>
     [[nodiscard]] constexpr auto safe_reinterpret_cast(F&& from) noexcept -> T {
         if constexpr (
