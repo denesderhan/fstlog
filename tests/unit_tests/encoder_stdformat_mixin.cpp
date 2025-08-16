@@ -16,23 +16,25 @@
 #include <detail/mixin/error_state_mixin.hpp>
 #include <formatter/impl/output_span_mixin.hpp>
 #include <formatter/impl/detail/encoder_stdformat_mixin.hpp>
+#include <formatter/impl/logfield_formspec_fmt_mixin.hpp>
 
 using enc_type = fstlog::encoder_stdformat_mixin<
+                    fstlog::logfield_formspec_fmt_mixin<
                     fstlog::error_state_mixin<
                     fstlog::output_span_mixin<
-                    fstlog::allocator_mixin>>>;
+                    fstlog::allocator_mixin>>>>;
 
 TEST_CASE("encoder_stdformat_mixin") {
     enc_type encoder;
-    std::vector<unsigned char> buffer(128, '!');
+    std::array<unsigned char, 128> buffer;
     encoder.clear_error();
     encoder.output_span_init(fstlog::byte_span(buffer.data(), buffer.size()));
     encoder.encode(std::string_view{ "string" }, enc_type::format_type{ "{:®<10}" });
     bool stdformat_utf_fill_char = !encoder.has_error();
     
     SECTION("no_space_in_buffer") {
-        buffer.resize(10, '!');
-        fstlog::byte_span out_buff(buffer.data(), buffer.size());
+        buffer.fill('!');
+        fstlog::byte_span out_buff(buffer.data(), 10);
 
         enc_type::format_type format{ "{}" };
 
@@ -83,7 +85,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 
         CAPTURE(to_encode, format);
 
-        buffer.resize(128, '!');
+        buffer.fill('!');
         fstlog::byte_span out_buff(buffer.data(), buffer.size());
         encoder.clear_error();
         encoder.output_span_init(out_buff);
@@ -109,7 +111,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 
         CAPTURE(to_encode, format);
 
-        buffer.resize(128, '!');
+        buffer.fill('!');
         fstlog::byte_span out_buff(buffer.data(), buffer.size());
         encoder.clear_error();
         encoder.output_span_init(out_buff);
@@ -146,7 +148,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 
         CAPTURE(to_encode, format);
 
-        buffer.resize(128, '!');
+        buffer.fill('!');
         fstlog::byte_span out_buff(buffer.data(), buffer.size());
         encoder.clear_error();
         encoder.output_span_init(out_buff);
@@ -186,7 +188,7 @@ TEST_CASE("encoder_stdformat_mixin") {
 
         CAPTURE(to_encode, format);
 
-        buffer.resize(128, '!');
+        buffer.fill('!');
         fstlog::byte_span out_buff(buffer.data(), buffer.size());
         encoder.clear_error();
         encoder.output_span_init(out_buff);
@@ -200,69 +202,63 @@ TEST_CASE("encoder_stdformat_mixin") {
     };
 
     SECTION("char") {
-        auto format = "{:}";
-        buffer.resize(256, '!');
-        fstlog::byte_span out_buff(buffer.data(), buffer.size());
-        
+        auto format = enc_type::format_type{"{:c}"};
+        buffer.fill('!');
+
         SECTION("default_format") {
             encoder.clear_error();
-            encoder.output_span_init(out_buff);
+            encoder.output_span_init({ buffer.data(), buffer.size() });
 
-            encoder.encode(char{ 'A' }, format);
+            encoder.encode(char{ 'A' }, "{}");
             encoder.encode(char{ 0 }, format);
+            unsigned char byte = 222;
+            encoder.encode(*reinterpret_cast<char*>(&byte), format);
             encoder.encode(char16_t{ 'B' }, format);
             encoder.encode(char16_t{ 0xFFFD }, format);
+            encoder.encode(char16_t{ 0xFFFF }, "{}");
             encoder.encode(char32_t{ 'C' }, format);
             encoder.encode(char32_t{ 0xD800 }, format);
+            encoder.encode(char32_t{ 0xFFFFFFFF }, "{}");
             auto res = std::basic_string_view(
                 reinterpret_cast<const char*>(encoder.output_begin()),
                 encoder.output_ptr() - encoder.output_begin());
             CHECK(!encoder.has_error());
-            CHECK(res == "A\\u0000B\\uFFFDC\\uFFFD");
+            CHECK(res == "A0deBfffdffffCd800ffffffff");
         }
 
-        if (stdformat_utf_fill_char) {
+        SECTION("char_format_type") {
+            encoder.clear_error();
+            auto data = GENERATE(
+                std::make_tuple(std::string_view{"{}"}, std::string_view{ "J" }),
+                std::make_tuple(std::string_view{ "{:c}" }, std::string_view{ "J" }),
+                std::make_tuple(std::string_view{ "{:d}" }, std::string_view{ "74" }),
+                std::make_tuple(std::string_view{ "{:o}" }, std::string_view{ "112" }),
+                std::make_tuple(std::string_view{ "{:x}" }, std::string_view{ "4a" }),
+                std::make_tuple(std::string_view{ "{:X}" }, std::string_view{ "4A" }),
+                std::make_tuple(std::string_view{ "{:b}" }, std::string_view{ "1001010" }),
+                std::make_tuple(std::string_view{ "{:B}" }, std::string_view{ "1001010" }),
+                std::make_tuple(std::string_view{ "{:#o}" }, std::string_view{ "0112" }),
+                std::make_tuple(std::string_view{ "{:#x}" }, std::string_view{ "0x4a" }),
+                std::make_tuple(std::string_view{ "{:#X}" }, std::string_view{ "0X4A" }),
+                std::make_tuple(std::string_view{ "{:#b}" }, std::string_view{ "0b1001010" }),
+                std::make_tuple(std::string_view{ "{:#B}" }, std::string_view{ "0B1001010" })
+            );
+            
+            buffer.fill('!');
+            encoder.output_span_init(buffer);
+            encoder.encode('J', std::get<0>(data));
+            auto res = std::string_view(
+                reinterpret_cast<char*>(encoder.output_begin()),
+                encoder.output_ptr() - encoder.output_begin());
+            CAPTURE(res);
+            CHECK(!encoder.has_error());
+            CHECK(res == std::get<1>(data));
+        };
 
-            SECTION("fill_align_utf") {
-                encoder.clear_error();
-                encoder.output_span_init(out_buff);
-                format = "{:₰^10}";
-
-                encoder.encode(char{ 'A' }, format);
-                encoder.encode(char{ 0 }, format);
-                encoder.encode(char16_t{ 'B' }, format);
-                encoder.encode(char16_t{ 0xFFFD }, format);
-                encoder.encode(char32_t{ 'C' }, format);
-                encoder.encode(char32_t{ 0xD800 }, format);
-                auto res = std::basic_string_view(
-                    reinterpret_cast<const char*>(encoder.output_begin()),
-                    encoder.output_ptr() - encoder.output_begin());
-                CHECK(!encoder.has_error());
-                CHECK(res == "₰₰₰₰A₰₰₰₰₰₰₰\\u0000₰₰₰₰₰₰B₰₰₰₰₰₰₰\\uFFFD₰₰₰₰₰₰C₰₰₰₰₰₰₰\\uFFFD₰₰");
-            }
-
-            SECTION("fill_align_precision_utf") {
-                encoder.clear_error();
-                encoder.output_span_init(out_buff);
-                format = "{:¤>4.5}";
-
-                encoder.encode(char{ 'A' }, format);
-                encoder.encode(char{ 0 }, format);
-                encoder.encode(char16_t{ u'§' }, format);
-                encoder.encode(char16_t{ 0xFFFD }, format);
-                encoder.encode(char32_t{ U'®' }, format);
-                encoder.encode(char32_t{ 0xD800 }, format);
-                auto res = std::basic_string_view(
-                    reinterpret_cast<const char*>(encoder.output_begin()),
-                    encoder.output_ptr() - encoder.output_begin());
-                CHECK(!encoder.has_error());
-                CHECK(res == "¤¤¤A\\u000¤¤¤§\\uFFF¤¤¤®\\uFFF");
-            }
-        }
-        
         SECTION("fill_align") {
             encoder.clear_error();
-            encoder.output_span_init(out_buff);
+            buffer.fill('!');
+            encoder.output_span_init(buffer);
             format = "{:x^10}";
 
             encoder.encode(char{ 'A' }, format);
@@ -275,12 +271,13 @@ TEST_CASE("encoder_stdformat_mixin") {
                 reinterpret_cast<const char*>(encoder.output_begin()),
                 encoder.output_ptr() - encoder.output_begin());
             CHECK(!encoder.has_error());
-            CHECK(res == "xxxxAxxxxxxx\\u0000xxxxxxBxxxxxxx\\uFFFDxxxxxxCxxxxxxx\\uFFFDxx");
+            CHECK(res == "xxxxAxxxxxxxxx0xxxxxxxxxBxxxxxxxxfffdxxxxxxxCxxxxxxxxd800xxx");
         }
 
         SECTION("fill_align_precision") {
             encoder.clear_error();
-            encoder.output_span_init(out_buff);
+            buffer.fill('!');
+            encoder.output_span_init(buffer);
             format = "{:x>4.5}";
 
             encoder.encode(char{ 'A' }, format);
@@ -293,13 +290,12 @@ TEST_CASE("encoder_stdformat_mixin") {
                 reinterpret_cast<const char*>(encoder.output_begin()),
                 encoder.output_ptr() - encoder.output_begin());
             CHECK(!encoder.has_error());
-            CHECK(res == "xxxA\\u000xxxq\\uFFFxxxw\\uFFF");
+            CHECK(res == "xxxAxxx0xxxqfffdxxxwd800");
         }
-        
     }
 
     SECTION("string") {
-        buffer.resize(128, '!');
+        buffer.fill('!');
         fstlog::byte_span out_buff(buffer.data(), buffer.size());
         auto format = "{:}";
         
@@ -398,7 +394,7 @@ TEST_CASE("encoder_stdformat_mixin") {
     }
 
     SECTION("reencode_tail_string") {
-        buffer.resize(128, '!');
+        buffer.fill('!');
         fstlog::byte_span out_buff(buffer.data(), buffer.size());
         auto format = "{:}";
         encoder.clear_error();

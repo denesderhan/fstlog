@@ -127,7 +127,7 @@ namespace fstlog {
             if (!this->has_error()) set_message_format_string();
             // set_message_format_string() can use this->output!!
             // we have to init output after calling set_message_format_string()
-            // we initialize it 1 byte less, leaving space for '\n'
+            // we initialize it 1 byte less, to always have space for '\n'
             this->output_span_init(
                 { out.data_bytes(),
                 static_cast<std::size_t>(out.size_bytes() - 1) });
@@ -288,6 +288,7 @@ namespace fstlog {
             if ( msg_type == ut_cast(log_element_type::String)
                 && (msg_meta == ut_cast(char_type::Char) || msg_meta == ut_cast(char_type::Char8)))
             {
+                // char, char8_t is reinterpreted to unsigned char
                 this->get_data(message_fmt_string_);
             }
             else {

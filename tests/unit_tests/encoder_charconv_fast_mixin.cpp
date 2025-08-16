@@ -276,7 +276,7 @@ TEST_CASE("encoder_charconv_fast_mixin") {
     SECTION("char") {
         enc_type encoder;
         auto format = enc_type::format_type{};
-        std::array<unsigned char, 1024> buffer;
+        std::array<unsigned char, 128> buffer;
 
         SECTION("default_format") {
             buffer.fill('!');
@@ -284,35 +284,57 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 
             encoder.encode(char{ 'A' }, format);
             encoder.encode(char{ 0 }, format);
+            unsigned char byte = 222;
+            encoder.encode(*reinterpret_cast<char*>(&byte), format);
             encoder.encode(char16_t{ 'B' }, format);
             encoder.encode(char16_t{ 0xFFFD }, format);
+            encoder.encode(char16_t{ 0xFFFF }, format);
             encoder.encode(char32_t{ 'C' }, format);
             encoder.encode(char32_t{ 0xD800 }, format);
+            encoder.encode(char32_t{ 0xFFFFFFFF }, format);
             auto res = std::basic_string_view(
                 reinterpret_cast<const char*>(encoder.output_begin()),
                 encoder.output_ptr() - encoder.output_begin());
             CHECK(!encoder.has_error());
-            CHECK(res == "A\\u0000B\\uFFFDC\\uFFFD");
+            CHECK(res == "A0x00xdeB0xfffd0xffffC0xd8000xffffffff");
         }
-    }
 
-    SECTION("char_format_type") {
-        enc_type encoder;
-        std::array<unsigned char, 8> buffer{ '!' };
-        fstlog::format_setting_txt_fast format{};
-        for (int i = 1; i < 256; i++) {
-            format.type = static_cast<unsigned char>(i);
-            buffer.fill('!');
-            encoder.output_span_init(buffer);
-            encoder.encode('A', format);
-            auto res = std::string_view(
-                reinterpret_cast<char*>(encoder.output_begin()),
-                encoder.output_ptr() - encoder.output_begin());
-            CAPTURE(res);
-            CHECK(!encoder.has_error());
-            CHECK(res == "A");
-        }
-    };
+        SECTION("char_format_type") {
+            format = fstlog::format_setting_txt_fast{};
+            for (int i = 1; i < 256; i++) {
+                format.type = static_cast<unsigned char>(i);
+                buffer.fill('!');
+                encoder.output_span_init(buffer);
+                encoder.encode('J', format);
+                auto res = std::string_view(
+                    reinterpret_cast<char*>(encoder.output_begin()),
+                    encoder.output_ptr() - encoder.output_begin());
+                CAPTURE(res);
+                CHECK(!encoder.has_error());
+                if (i == 0 || i == 'c') {
+                    CHECK(res == "J");
+                }
+                else if (i == 'b') {
+                    CHECK(res == "0b1001010");
+                }
+                else if (i == 'B') {
+                    CHECK(res == "0B1001010");
+                }
+                else if (i == 'x') {
+                    CHECK(res == "0x4a");
+                }
+                else if (i == 'X') {
+                    CHECK(res == "0X4A");
+                }
+                else if (i == 'o') {
+                    CHECK(res == "0112");
+                }
+                else {
+                    CHECK(res == "74");
+                }
+            }
+        };
+    }
 
     SECTION("string") {
         enc_type encoder;
@@ -324,9 +346,7 @@ TEST_CASE("encoder_charconv_fast_mixin") {
             encoder.output_span_init(buffer);
 
             encoder.encode(std::string_view("ASCII string\n"), format);
-            std::string_view str("UTF-8 string§©");
-            fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
-            encoder.encode(input, format);
+            encoder.encode(std::string_view("UTF-8 string§©"), format);
             encoder.encode(std::basic_string_view(u"UTF-16 string§©"), format);
             encoder.encode(std::basic_string_view(U"UTF-32 string§©"), format);
 

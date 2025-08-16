@@ -5,10 +5,11 @@
 #include <cstddef>
 
 #include <config_parser.hpp>
+#include <detail/safe_reinterpret_cast.hpp>
 #include <detail/unaligned_span.hpp>
-#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/aggregate_type.hpp>
 #include <fstlog/detail/char_type.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/hash_type.hpp>
 #include <fstlog/detail/log_element_type.hpp>
@@ -51,18 +52,11 @@ namespace fstlog {
         ~arg_parser_mixin() = default;
         
         void process_char(log_element_ut meta, format_type format) noexcept {
-            if (meta == ut_cast(char_type::Char)) {
+            if (meta == ut_cast(char_type::Char)
+                || meta == ut_cast(char_type::Char8))
+            {
+                // char8_t is reinterpreted to char
                 char to_encode{'!'};
-                this->get_data(to_encode);
-                if (!this->has_error())
-                    this->encode(to_encode, format);
-            }
-            else if (meta == ut_cast(char_type::Char8)) {
-#ifdef __cpp_char8_t
-                char8_t to_encode{u8'!'};
-#else
-                char to_encode{'!'};
-#endif
                 this->get_data(to_encode);
                 if (!this->has_error())
                     this->encode(to_encode, format);
@@ -87,24 +81,14 @@ namespace fstlog {
 
         void process_string(log_element_ut meta, format_type format) noexcept {
             if (meta == ut_cast(char_type::Char)
-#ifndef __cpp_char8_t
-                || meta == ut_cast(char_type::Char8)
-#endif
-                ) 
+                || meta == ut_cast(char_type::Char8))
             {
-                unaligned_span<const char> to_encode;
+                // char, char8_t is reinterpreted to unsigned char
+                byte_span_const to_encode;
                 this->get_data(to_encode);
                 if (!this->has_error())
                     this->encode(to_encode, format);
             }
-#ifdef __cpp_char8_t           
-            else if (meta == ut_cast(char_type::Char8)) {
-                unaligned_span<const char8_t> to_encode;
-                this->get_data(to_encode);
-                if (!this->has_error())
-                    this->encode(to_encode, format);
-            }
-#endif
             else if (meta == ut_cast(char_type::Char16)) {
                 unaligned_span<const char16_t> to_encode;
                 this->get_data(to_encode);
@@ -127,40 +111,46 @@ namespace fstlog {
             log_element_ut meta, 
             format_type format) noexcept 
         {
+            // char, is reinterpreted to unsigned char
             if (meta == 0) {
                 small_string<16> to_encode;
                 this->get_data(to_encode);
                 if(!this->has_error()) 
-                    this->encode(unaligned_span<const char>{ 
-                    to_encode.data(), to_encode.size() }, format);
+                    this->encode(byte_span_const { 
+                    safe_reinterpret_cast<const unsigned char*>(to_encode.data()), 
+                    to_encode.size() }, format);
             }
             else if (meta == 1) {
                 small_string<32> to_encode;
                 this->get_data(to_encode);
                 if (!this->has_error())
-                    this->encode(unaligned_span<const char>{ 
-                    to_encode.data(), to_encode.size() }, format);
+                    this->encode(byte_span_const{
+                    safe_reinterpret_cast<const unsigned char*>(to_encode.data()),
+                    to_encode.size() }, format);
             }
             else if (meta == 2) {
                 small_string<64> to_encode;
                 this->get_data(to_encode);
                 if (!this->has_error())
-                    this->encode(unaligned_span<const char>{ 
-                    to_encode.data(), to_encode.size() }, format);
+                    this->encode(byte_span_const{
+                    safe_reinterpret_cast<const unsigned char*>(to_encode.data()),
+                    to_encode.size() }, format);
             }
             else if (meta == 4) {
                 small_string<128> to_encode;
                 this->get_data(to_encode);
                 if (!this->has_error())
-                    this->encode(unaligned_span<const char>{ 
-                    to_encode.data(), to_encode.size() }, format);
+                    this->encode(byte_span_const{
+                     safe_reinterpret_cast<const unsigned char*>(to_encode.data()),
+                     to_encode.size() }, format);
             }
             else if (meta == 8) {
                 small_string<256> to_encode;
                 this->get_data(to_encode);
                 if (!this->has_error())
-                    this->encode(unaligned_span<const char>{ 
-                    to_encode.data(), to_encode.size() }, format);
+                    this->encode(byte_span_const{
+                    safe_reinterpret_cast<const unsigned char*>(to_encode.data()),
+                    to_encode.size() }, format);
             }
             else {
                 this->set_error(__FILE__, __LINE__, 

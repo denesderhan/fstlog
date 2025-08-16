@@ -1,22 +1,23 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 
-#include <iostream>
 #ifdef _WIN32
 #include <windows.h>
 #pragma execution_character_set( "utf-8" )
 #endif
 
-#include <vector>
-#include <utility>
+#include <iostream>
+#include <limits>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 #include <fstlog/core.hpp>
-#include <fstlog/logger/logger.hpp>
-#include <fstlog/logger/log_macro.hpp>
-#include <fstlog/sink/sink_sort.hpp>
 #include <fstlog/formatter/formatter_txt.hpp>
+#include <fstlog/logger/log_macro.hpp>
+#include <fstlog/logger/logger.hpp>
 #include <fstlog/output/output_console.hpp>
+#include <fstlog/sink/sink_sort.hpp>
 
 template<class C>
 class example_container {
@@ -43,6 +44,7 @@ int main()
         //create core
         fstlog::core my_core("my_core");
         std::cout << "fstlog version: " << my_core.version() << "\n\n";
+
         //create sink
         fstlog::sink my_sink = fstlog::sink_sort(
             fstlog::formatter_txt("{time} {level} {message}"),
@@ -54,20 +56,35 @@ int main()
         fstlog::logger my_logger(my_core);
 
         //fundamental types
+        LOG_INFO(my_logger, "Logging fundamental types.");
+        LOG_INFO(my_logger, "(unsigned/signed) char: {}/{}, short: {}/{}, int: {}/{}",
+            (std::numeric_limits<unsigned char>::max)(), (std::numeric_limits<signed char>::min)(), 
+            (std::numeric_limits<unsigned short>::max)(), (std::numeric_limits<signed short>::min)(),
+            (std::numeric_limits<unsigned int>::max)(), (std::numeric_limits<signed int>::min)());
+        LOG_INFO(my_logger, "(unsigned/signed) long: {}/{}, long long: {}/{}",
+            (std::numeric_limits<unsigned long>::max)(), (std::numeric_limits<signed long>::min)(),
+            (std::numeric_limits<unsigned long long>::max)(), (std::numeric_limits<signed long long>::min)());
+        LOG_INFO(my_logger, "float: {}, double: {}", 0.1f, 0.2);
+        
         void* ptr{ nullptr };
-        const unsigned long long num{ 1234 };
-        LOG_INFO(my_logger, "Logging fundamental types, int: {}, unsigned long long: {}, double: {}.", -1, num, 0.1);
-        LOG_INFO(my_logger, "Logging fundamental types, pointer: {}, bool: {}.", ptr, true);
-        LOG_INFO(my_logger, "Logging fundamental types, signed char: {}, unsigned char: {}, char: {}.",
-            (signed char)-128, (unsigned char)255, 'A');
-#ifdef __cpp_char8_t
-        LOG_INFO(my_logger, "Logging fundamental types, char8_t: {}, char8 string: {}.", char8_t(0x40), u8"¤$€£¥");
-#endif
-        LOG_INFO(my_logger, "Logging fundamental types, char16_t: {}, char32_t: {}.", char16_t('A'), char32_t('B'));
-        LOG_INFO(my_logger, "Logging strings: {} {}, {}.", "Hello", u"World ʘ", U"Hello ʘ");
+        LOG_INFO(my_logger, "pointer: {}, bool: {}", ptr, true);
+        
+        LOG_INFO(my_logger, "Logging characters as text, char (ASCII): {}, char16_t (unicode < 65536): {}, char32_t (unicode): {}",
+            char('A'), char16_t(u'¥'), char32_t(U'£'));
+        
+        LOG_INFO(my_logger, "Logging characters as bytes, char: {:#X}, char16_t: {:#X}, char32_t: {:#X}",
+            char('A'), char16_t(u'¥'), char32_t(U'£'));
+        
+        LOG_INFO(my_logger, "Escaping invalid/unsafe characters: char: {}, char16_t: {}, char32_t: {}",
+            char(0), char16_t(0xFFFD), char32_t(0x13000));
+        
+        LOG_INFO(my_logger, std::basic_string_view<char32_t>(U"Logging strings."));
 
-        using namespace std::string_literals;
-        LOG_INFO(my_logger, U"Logging string literals: {} {}."s, u"Hello ʘ"s, std::basic_string_view{U"World ʘ"});
+        LOG_INFO(my_logger, "utf-8 string in char type: {}.", "¤$€£¥");
+#ifdef __cpp_char8_t
+        LOG_INFO(my_logger, "urf-8 string in char8_t type: {}.", u8"¤$€£¥");
+#endif
+        LOG_INFO(my_logger, "char16_t, char32_t strings: {} {}", u"Hello ʘ", U"World ʘ");
 
         // logging works with arbitrary message types
         LOG_INFO(my_logger, 42);

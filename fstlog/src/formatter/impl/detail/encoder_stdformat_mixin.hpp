@@ -83,26 +83,87 @@ namespace fstlog {
             }
         }
 
-        // character
-        template<typename T, std::enable_if_t<
-            is_char_type_v<T>
-            >* = nullptr>
-        void encode(T data, format_type format) noexcept {
-            encode(unaligned_span<const T>{ &data, 1 }, format);
+        // char
+        void encode(char data, format_type format) noexcept {
+            auto form_str = small_string<24>(format);
+            const unsigned char byte = *safe_reinterpret_cast<const unsigned char*>(&data);
+            FSTLOG_ASSERT(format.size() >= 2);
+            const char form_type = *(form_str.data() + form_str.size() - 2);
+            const char* type_ptr = "xXdbBo";
+            while (*type_ptr != 0 && *type_ptr != form_type) type_ptr++;
+            // safe ASCII and formatted textually
+            if (*type_ptr == 0
+                && byte < 0x80 && detail::utf::safe_utf_code_point(byte))
+            {
+                // remove 'c' (we encode as a string)
+                // 'c' would cause problem
+                if (form_type == 'c') {
+                    form_str = this->get_format_align_width(form_str);
+                }
+                encode(byte_span_const{ &byte, 1 }, form_str);
+            }
+            // invalid, unsafe or formatted numerically
+            else {
+                // replace/add form_type (we encode as a number)
+                // 'c' would cause problem
+                if (*type_ptr == 0) {
+                    form_str = this->get_format_align_width(form_str, 'x');
+                }
+                encode(byte, form_str);
+            }
         }
 
+        // char16, char32
+        template<typename T, std::enable_if_t<
+            std::is_same_v<T, char16_t>
+            || std::is_same_v<T, char32_t>
+        >* = nullptr>
+        void encode(T data, format_type format) noexcept {
+            auto form_str = small_string<24>(format);
+            FSTLOG_ASSERT(format.size() >= 2);
+            const char form_type = *(form_str.data() + form_str.size() - 2);
+            const char* type_ptr = "xXdbBo";
+            while (*type_ptr != 0 && *type_ptr != form_type) type_ptr++;
+            // safe ASCII and formatted textually
+            if (*type_ptr == 0
+                && detail::utf::safe_utf_code_point(data))
+            {
+                if (form_type == 'c') {
+                    form_str = this->get_format_align_width(form_str);
+                }
+                encode(unaligned_span<const T>{ &data, 1 }, form_str);
+            }
+            else {
+                if (*type_ptr == 0) {
+                    form_str = this->get_format_align_width(form_str, 'x');
+                }
+                encode(static_cast<std::uintmax_t>(data), form_str);
+            }
+        }
+
+        // string_view
         template<typename T>
         void encode(std::basic_string_view<T> strv, format_type format) noexcept {
-            encode(unaligned_span<const T>{ strv.data(), strv.size() }, format);
+            if (strv.empty()) return;
+            if constexpr (std::is_same_v<std::remove_const_t<T>, char>) {
+                encode(unaligned_span<const unsigned char>{
+                    safe_reinterpret_cast<const unsigned char*>(strv.data()),
+                        strv.size() }
+                , format);
+            }
+            else {
+                encode(unaligned_span<const T>{ strv.data(), strv.size() }, format);
+            }
         }
 
         //string in buffer
         template<typename T, std::enable_if_t<
-            is_char_type_v<T>
-            || std::is_same_v<const T, const unsigned char>
+            std::is_same_v<std::remove_const_t<T>, unsigned char>
+            || (is_char_type_v<T> &&
+                !std::is_same_v<std::remove_const_t<T>, char>)
         >* = nullptr>
         void encode(unaligned_span<const T> data, format_type format) noexcept {
-            FSTLOG_ASSERT(data.data_bytes() != nullptr);
+            if (data.empty()) return;
             constexpr int bit_size{ sizeof(T) * 8 };
             unaligned_span output(
                 safe_reinterpret_cast<unsigned char*>(encoder_fmt_buffer_.data()),

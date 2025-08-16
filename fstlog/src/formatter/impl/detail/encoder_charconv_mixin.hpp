@@ -191,21 +191,58 @@ namespace fstlog {
             this->set_output_ptr_unchecked(str_end);
         }
 
-        // character
+        // char
+        void encode(char data, format_type format) noexcept {
+            const unsigned char byte = *safe_reinterpret_cast<const unsigned char*>(&data);
+            // safe ASCII and formatted textually
+            if ((format.type == 0 || format.type == 'c')
+                && byte < 0x80 && detail::utf::safe_utf_code_point(byte))
+            {
+                encode(byte_span_const{ &byte, 1 }, format);
+            }
+            // invalid, unsafe or formatted numerically
+            else {
+                if (format.type == 0 || format.type == 'c') {
+                    format.type = 'x';
+                    format.alternate = true;
+                }
+                encode(byte, format);
+            }
+        }
+
+        // char16_t, char32_t
         template<typename T, std::enable_if_t<
-            is_char_type_v<T>
-            >* = nullptr>
+            std::is_same_v<T, char16_t>
+            || std::is_same_v<T, char32_t>
+        >* = nullptr>
         void encode(T data, format_type format) noexcept {
-            encode(unaligned_span<const T>{ &data, 1 }, format);
+            if ((format.type == 0 || format.type == 'c')
+                && detail::utf::safe_utf_code_point(data))
+            {
+                encode(unaligned_span<const T>{ &data, 1 }, format);
+            }
+            else {
+                if (format.type == 0 || format.type == 'c') {
+                    format.type = 'x';
+                    format.alternate = true;
+                }
+                if constexpr (std::is_same_v<T, char32_t>) {
+                    encode(static_cast<std::uint_least32_t>(data), format);
+                }
+                else {
+                    encode(static_cast<std::uint_least16_t>(data), format);
+                }
+            }
         }
 
         // string in buffer
         template<typename T, std::enable_if_t<
-            is_char_type_v<T>
-            || std::is_same_v<std::remove_const_t<T>, unsigned char>
+            std::is_same_v<std::remove_const_t<T>, unsigned char>
+            || (is_char_type_v<T> &&
+                !std::is_same_v<std::remove_const_t<T>, char>)
             >* = nullptr>
         void encode(unaligned_span<const T> data, format_type format) noexcept {
-            FSTLOG_ASSERT(data.data_bytes() != nullptr);
+            if (data.empty()) return;
             constexpr int bit_size{ sizeof(T) * 8 };
             unaligned_span output(
                 this->output_ptr(),
@@ -233,7 +270,16 @@ namespace fstlog {
         // string_view
         template<typename T>
         void encode(std::basic_string_view<T> strv, format_type format) noexcept {
-            encode(unaligned_span<const T>{ strv.data(), strv.size() }, format);
+            if (strv.empty()) return;
+            if constexpr (std::is_same_v<std::remove_const_t<T>, char>) {
+                encode(unaligned_span<const unsigned char>{
+                    safe_reinterpret_cast<const unsigned char*>(strv.data()),
+                        strv.size() }
+                , format);
+            }
+            else {
+                encode(unaligned_span<const T>{ strv.data(), strv.size() }, format);
+            }
         }
 
         // pointer

@@ -4,7 +4,6 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
-#pragma intrinsic(memcpy)
 
 #include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
@@ -78,22 +77,34 @@ namespace fstlog {
         }
 
         static constexpr format_type get_format_align_width(
-            format_type format) noexcept 
+            format_type format, unsigned char type_char = 0) noexcept 
         {
-            if (format.size() <= 3) return get_default_format();
             std::array<unsigned char, 24> out{ "{:}}}}}}}}}}}}}}}}}}}}}" };
-            const auto form_beg{ safe_reinterpret_cast<const unsigned char*>(format.data()) };
-            const auto end{ form_beg + format.size() - 1 };
-            auto align_beg = form_beg + 2;
-            auto align_end = skip_fill_align(align_beg, end);
-            auto out_end_pos{ out.data() + 2 };
-            while (align_beg < align_end) {
-                *out_end_pos++ = *align_beg++;
+            // empty format spec
+            if (format.size() <= 3) {
+                if (type_char == 0) {
+                    return get_default_format();
+                }
+                else {
+                    out[2] = type_char;
+                    return format_type{ safe_reinterpret_cast<const char*>(out.data()),  4 };
+                }
             }
-            auto width_beg = skip_sign_alt_0(align_end, end);
-            auto width_end = skip_numbers(width_beg, end);
-            while (width_beg < width_end) {
-                *out_end_pos++ = *width_beg++;
+            const auto in_beg{ safe_reinterpret_cast<const unsigned char*>(format.data()) };
+            const auto in_end{ in_beg + format.size() - 1 };
+            auto out_end_pos{ out.data() + 2 }; // 2 byte
+            auto align_beg = in_beg + 2;
+            auto align_end = skip_fill_align(align_beg, in_end);
+            const auto align_len = static_cast<std::size_t>(align_end - align_beg);
+            std::memcpy(out_end_pos, align_beg, align_len);
+            out_end_pos += align_len; // max 5 byte
+            auto width_beg = skip_sign_alt_0(align_end, in_end);
+            auto width_end = skip_numbers(width_beg, in_end);
+            const auto width_len = static_cast<std::size_t>(width_end - width_beg);
+            std::memcpy(out_end_pos, width_beg, width_len);
+            out_end_pos += width_len; // max 4 byte
+            if (type_char != 0) {
+                *out_end_pos++ = type_char;
             }
             const std::size_t out_size = ++out_end_pos - out.data();
             return format_type{ safe_reinterpret_cast<const char*>(out.data()),  out_size };

@@ -1,7 +1,7 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <detail/unaligned_span.hpp>
+#include <string_view>
 #include <fstlog/detail/str_hash_fnv.hpp>
 
 namespace fstlog {
@@ -32,11 +32,10 @@ namespace fstlog {
         
         ~hash_converter_null_mixin() = default;
 
-        static unaligned_span<const char> convert_hash(
+        static std::string_view convert_hash(
             [[maybe_unused]] str_hash_fnv hash) noexcept 
         {
-            constexpr auto temp{""};
-            return unaligned_span<const char>{ temp, 0};
+            return std::string_view{};
         }
     };
 }
