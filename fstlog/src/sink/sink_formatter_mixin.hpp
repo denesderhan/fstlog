@@ -5,6 +5,7 @@
 #include <cstddef>
 
 #include <detail/unaligned_span.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/formatter/formatter.hpp>
 #include <formatter/formatter_interface.hpp>

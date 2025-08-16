@@ -10,6 +10,7 @@
 #include <detail/dyn_array.hpp>
 #include <fstlog/core.hpp>
 #include <fstlog/detail/constants.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_allocator.hpp>
 #include <fstlog/detail/small_string.hpp>
 #include <fstlog/sink/sink.hpp>

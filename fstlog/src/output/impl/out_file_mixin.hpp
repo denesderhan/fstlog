@@ -5,6 +5,7 @@
 
 #include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <output/impl/out_file_posix.hpp>
 
@@ -32,7 +33,7 @@ namespace fstlog {
         
         ~out_file_mixin() = default;
 
-        auto init_output(
+        error_code init_output(
             const char* file_path,
             bool truncate,
             std::uint32_t buffer_size) noexcept

@@ -4,6 +4,7 @@
 #include <output/output_interface.hpp>
 
 #include <detail/unaligned_span.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {

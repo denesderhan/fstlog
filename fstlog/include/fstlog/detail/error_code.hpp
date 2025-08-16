@@ -18,7 +18,8 @@ namespace fstlog {
         fmt_bad,
         core_null,
         buff_null,
-        path_bad
+        path_bad,
+        stream_bad
     };
 
     inline const char* error_message(error_code code) noexcept {
@@ -39,6 +40,7 @@ namespace fstlog {
             case error_code::core_null: return "fstlog error: Core not set!";
             case error_code::buff_null: return "fstlog error: Buffer not set!";
             case error_code::path_bad: return "fstlog error: Path invalid or too long!";
+            case error_code::stream_bad: return "fstlog error: The iostream had an error state!";
             default : return "fstlog error: Unknown error!";
         };
     };

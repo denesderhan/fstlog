@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <sink/sink_interface.hpp>
+#include <fstlog/detail/error_code.hpp>
 #include <detail/nothrow_allocate.hpp>
 
 namespace fstlog {
