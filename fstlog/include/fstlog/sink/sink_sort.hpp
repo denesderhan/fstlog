@@ -45,7 +45,7 @@ namespace fstlog {
         fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
     {
         sink out;
-        [[maybe_unused]] const auto error =
+        const auto error =
             sink_sort(out,formatter, output, allocator);
         handle_error(error);
         return out;
@@ -57,7 +57,7 @@ namespace fstlog {
         fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
     {
         sink out;
-        [[maybe_unused]] const auto error =
+        const auto error =
             sink_sort(out, formatter, output, filter, allocator);
         handle_error(error);
         return out;
@@ -70,7 +70,7 @@ namespace fstlog {
         fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
     {
         sink out;
-        [[maybe_unused]] const auto error =
+        const auto error =
             sink_sort(out, formatter, output, filter, flush_interval, allocator);
         handle_error(error);
         return out;
@@ -84,7 +84,7 @@ namespace fstlog {
         fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
     {
         sink out;
-        [[maybe_unused]] const auto error =
+        const auto error =
             sink_sort(out, formatter, output, filter, flush_interval, max_buffer_bytes, allocator);
         handle_error(error);
         return out;

@@ -17,7 +17,7 @@ namespace fstlog {
         FSTLOG_API formatter& operator=(formatter&& other) noexcept;
         FSTLOG_API formatter clone() const noexcept(noexcept(handle_error(error_code::none))) {
             formatter out{};
-            [[maybe_unused]] const auto error = clone(out);
+            const auto error = clone(out);
             handle_error(error);
             return out;
         }
@@ -25,7 +25,7 @@ namespace fstlog {
             fstlog_allocator const& allocator) const noexcept(noexcept(handle_error(error_code::none)))
         {
             formatter out{};
-            [[maybe_unused]] const auto error = clone(out, allocator);
+            const auto error = clone(out, allocator);
             handle_error(error);
             return out;
         }

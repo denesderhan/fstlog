@@ -25,14 +25,14 @@ namespace fstlog {
         FSTLOG_API explicit core(allocator_type const& allocator) noexcept(
             noexcept(handle_error(error_code::none)))
         {
-            [[maybe_unused]] const auto error = init(allocator);
+            const auto error = init(allocator);
             handle_error(error);
         }
         FSTLOG_API core(
             std::string_view name, 
             allocator_type const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
         {
-            [[maybe_unused]] const auto error = init(name, allocator);
+            const auto error = init(name, allocator);
             handle_error(error);
         }
         FSTLOG_API ~core() noexcept;

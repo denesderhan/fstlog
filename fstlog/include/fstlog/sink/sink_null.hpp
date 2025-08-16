@@ -14,7 +14,7 @@ namespace fstlog {
         fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
     {
         sink out;
-        [[maybe_unused]] const auto error = sink_null(out, allocator);
+        const auto error = sink_null(out, allocator);
         handle_error(error);
         return out;
     }

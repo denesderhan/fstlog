@@ -20,7 +20,7 @@ namespace fstlog {
         explicit FSTLOG_API filter(allocator_type const& allocator) noexcept(
             noexcept(handle_error(error_code::none)))
         {
-            [[maybe_unused]] const auto error = init(allocator);
+            const auto error = init(allocator);
             handle_error(error);
         }
         FSTLOG_API filter(
@@ -29,7 +29,7 @@ namespace fstlog {
             allocator_type const& allocator = {}) noexcept(
                 noexcept(handle_error(error_code::none)))
         {
-            [[maybe_unused]] const auto error = init(level, channel, allocator);
+            const auto error = init(level, channel, allocator);
             handle_error(error);
         }
         FSTLOG_API filter(
@@ -39,14 +39,14 @@ namespace fstlog {
             allocator_type const& allocator = {}) noexcept(
                 noexcept(handle_error(error_code::none)))
         {
-            [[maybe_unused]] const auto error = 
+            const auto error = 
                 init(level, first_channel, last_channel, allocator);
             handle_error(error);
         }
         FSTLOG_API filter(const filter& other) noexcept(
             noexcept(handle_error(error_code::none))) 
         {
-            [[maybe_unused]] const auto error = init(other);
+            const auto error = init(other);
             handle_error(error);
         }
         FSTLOG_API filter(
@@ -54,7 +54,7 @@ namespace fstlog {
             allocator_type const& allocator) noexcept(
                 noexcept(handle_error(error_code::none))) 
         {
-            [[maybe_unused]] const auto error = init(other, allocator);
+            const auto error = init(other, allocator);
             handle_error(error);
         }
         FSTLOG_API filter& operator=(const filter& other) noexcept;

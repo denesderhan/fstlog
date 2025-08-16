@@ -22,7 +22,7 @@ namespace fstlog {
         fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
     {
         output out;
-        [[maybe_unused]] const auto error = output_cstream(out, file, allocator);
+        const auto error = output_cstream(out, file, allocator);
         handle_error(error);
         return out;
     }

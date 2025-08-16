@@ -18,7 +18,7 @@ namespace fstlog {
         fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
     {
         output out;
-        [[maybe_unused]] const auto error = output_file(out, file_path, allocator);
+        const auto error = output_file(out, file_path, allocator);
         handle_error(error);
         return out;
     }
@@ -34,7 +34,7 @@ namespace fstlog {
         fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
     {
         output out;
-        [[maybe_unused]] const auto error = output_file(out, file_path, truncate, allocator);
+        const auto error = output_file(out, file_path, truncate, allocator);
         handle_error(error);
         return out;
     }
@@ -51,7 +51,7 @@ namespace fstlog {
         fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
     {
         output out;
-        [[maybe_unused]] const auto error = output_file(out, file_path, truncate, buffer_size, allocator);
+        const auto error = output_file(out, file_path, truncate, buffer_size, allocator);
         handle_error(error);
         return out;
     }
