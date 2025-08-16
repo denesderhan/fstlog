@@ -238,6 +238,7 @@ set(src_logger
 
 set(src_output
     "src/output/output.cpp"
+    "src/output/output_console.cpp"
     "src/output/output_cstream.cpp"
     "src/output/output_file.cpp"
     "src/output/output_interface.hpp"
@@ -249,6 +250,7 @@ set(src_output
 )
 
 set(src_output_impl
+    "src/output/impl/out_console_mixin.hpp"
     "src/output/impl/out_cstream_mixin.hpp"
     "src/output/impl/out_file_mixin.hpp"
     "src/output/impl/out_file_posix.hpp"

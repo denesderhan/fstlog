@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include <detail/unaligned_span.hpp>
+#include <fstlog/detail/error_code.hpp>
 
 namespace fstlog {
     template<class L>
@@ -32,6 +33,7 @@ namespace fstlog {
         }
 
         error_code set_stream(FILE* stream_ptr) noexcept {
+            if (stream_ != nullptr) return error_code::double_init;
             if (stream_ptr == nullptr) return error_code::obj_null;
             stream_ = stream_ptr;
             return error_code::none;

@@ -6,6 +6,7 @@
 #include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
+#include <fstlog/detail/error_code.hpp>
 
 namespace fstlog {
     template<class L>
@@ -35,8 +36,14 @@ namespace fstlog {
         }
 
         error_code set_stream(std::shared_ptr<std::ostream> stream_smart_ptr) noexcept {
-            if (stream_smart_ptr == nullptr || !stream_smart_ptr->good()) {
+            if (stream_ != nullptr) {
+                return error_code::double_init;
+            }
+            if (stream_smart_ptr == nullptr ){
                 return error_code::obj_null;
+            }
+            if (!stream_smart_ptr->good()) {
+                return error_code::stream_bad;
             }
             //this can not throw, stream was good() (no error state)
             stream_smart_ptr->exceptions(std::ios_base::iostate(0));

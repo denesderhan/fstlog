@@ -34,11 +34,11 @@ int main()
         // --------------------------------
         //    OUTPUT STDERR (SORTED SINK)
         // --------------------------------
-        // Create an output to stderr
-        fstlog::output out_error = fstlog::output_stderr();
+        // Create an output to std::cerr
+        fstlog::output out_error = fstlog::output_cerr();
         // Create a sink with sorted behavior
         fstlog::sink sink_error = fstlog::sink_sort(
-            fstlog::formatter_txt("sink_sort + output_stderr: {time} {level} {logger} {message}"),
+            fstlog::formatter_txt("sink_sort + output_cerr: {time} {level} {logger} {message}"),
             out_error);
         // Because the system operates asynchronously, some messages may appear out of order. 
         // While reading log buffers, new messages can still be added to these buffers.

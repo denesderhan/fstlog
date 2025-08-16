@@ -57,11 +57,11 @@ int main()
 
         //fundamental types
         LOG_INFO(my_logger, "Logging fundamental types.");
-        LOG_INFO(my_logger, "(unsigned/signed) char: {}/{}, short: {}/{}, int: {}/{}",
+        LOG_INFO(my_logger, "unsigned/signed char: {}/{}, short: {}/{}, int: {}/{}",
             (std::numeric_limits<unsigned char>::max)(), (std::numeric_limits<signed char>::min)(), 
             (std::numeric_limits<unsigned short>::max)(), (std::numeric_limits<signed short>::min)(),
             (std::numeric_limits<unsigned int>::max)(), (std::numeric_limits<signed int>::min)());
-        LOG_INFO(my_logger, "(unsigned/signed) long: {}/{}, long long: {}/{}",
+        LOG_INFO(my_logger, "unsigned/signed long: {}/{}, long long: {}/{}",
             (std::numeric_limits<unsigned long>::max)(), (std::numeric_limits<signed long>::min)(),
             (std::numeric_limits<unsigned long long>::max)(), (std::numeric_limits<signed long long>::min)());
         LOG_INFO(my_logger, "float: {}, double: {}", 0.1f, 0.2);
