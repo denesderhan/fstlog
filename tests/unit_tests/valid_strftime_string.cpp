@@ -40,7 +40,7 @@ TEST_CASE("valid_strftime_string") {
             fstlog::safe_reinterpret_cast<const unsigned char*>(str.data()), 
             str.size());
 
-        CHECK(fstlog::detail::valid_strftime_string(buff_sp, fstlog::tz_format::Local));
+        CHECK(fstlog::detail::valid_strftime_string(buff_sp));
     };
 
     SECTION("invalid") {
@@ -61,7 +61,6 @@ TEST_CASE("valid_strftime_string") {
             "%O!!",
             "%E",
             "%E!!!",
-            "%z",
             "%Z",
             "%S%z%Z",
             "%H:%M:%S %z %Z",
@@ -71,6 +70,6 @@ TEST_CASE("valid_strftime_string") {
         CAPTURE(str);
         fstlog::byte_span_const buff_sp(fstlog::safe_reinterpret_cast<const unsigned char*>(str.data()), str.size());
 
-        CHECK(!fstlog::detail::valid_strftime_string(buff_sp, fstlog::tz_format::UTC));
+        CHECK(!fstlog::detail::valid_strftime_string(buff_sp));
     };
 }

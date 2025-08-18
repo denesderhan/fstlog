@@ -352,14 +352,12 @@ TEST_CASE("get_zone") {
         std::tuple<std::string_view, fstlog::tz_format, int>{std::string_view{ "U" }, fstlog::tz_format::UTC, 1 },
         std::tuple<std::string_view, fstlog::tz_format, int>{std::string_view{ "U\xf8" }, fstlog::tz_format::UTC, 1 }
     );
-    auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-    auto in_end = in_beg + std::get<0>(test_dat).size();
-    auto pos = in_beg;
-    auto zone = fstlog::get_zone(pos, in_end);
-    std::string_view test_str = std::get<0>(test_dat);
-    INFO("The string was: " << test_str);
+    fstlog::byte_span_const input{
+        reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data()),
+        std::get<0>(test_dat).size()};
+    auto zone = fstlog::get_zone(input);
     CHECK(zone == std::get<1>(test_dat));
-    CHECK(pos == in_beg + std::get<2>(test_dat));
+    CHECK(std::get<0>(test_dat).size() - input.size() == std::get<2>(test_dat));
 }
 
 TEST_CASE("get_width") {

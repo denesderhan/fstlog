@@ -35,7 +35,7 @@ int main()
             "{timestamp:.2U} {level} {message}",
             // timestamp in UTC with strftime formatting (precision 2)
             // first U/L determines UTC/Local zone and is not printed
-            "{timestamp:.2UUTC:%H:%M:%S +0000} {level} {message}", 
+            "{timestamp:.2UUTC:%H:%M:%S %z} {level} {message}", 
             // seconds in 0 decimal precision
             "{timestamp:.0} {level} {message}",
             // fill align with timestamp (precision 3 custom strftime format)

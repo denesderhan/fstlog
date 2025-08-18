@@ -59,6 +59,33 @@ namespace fstlog {
 
         ~encoder_timestamp_mixin() = default;
 
+        /**
+         * @brief Initializes the timestamp encoder with the specified format string.
+         *
+         * @details
+         * - Checks if the encoder has already been initialized.
+         * - Decomposes the format string to extract fill, alignment, width, and precision settings.
+         * - Sets the internal time format string and validates it.
+         * - Applies fill and alignment to the time format string if required.
+         * - Prepares the seconds placeholder for efficient timestamp encoding.
+         *
+         * @param time_format The format string for timestamp encoding (byte_span_const).
+         * @return error_code
+         *     - error_code::none on success.
+         *     - error_code::double_init if already initialized.
+         *     - error_code::fmt_bad if the format string is invalid.
+         *     - error_code::str_long if the format string is too long.
+         *
+         * @note
+         * - This function should be called only once during encoder setup.
+         * - Internal state is updated to reflect the chosen format and settings.
+         * - Assumes that all dependencies and member variables are properly initialized.
+         *
+         * @see decompose_format
+         * @see set_time_format
+         * @see apply_fill_align
+         * @see prepare_seconds_placeholder
+         */
         error_code init_encoder_timestamp(byte_span_const time_format) noexcept {
             if (!time_format_.empty()) {
                 return error_code::double_init;
@@ -81,6 +108,25 @@ namespace fstlog {
             return error_code::none;
         }
 
+        /**
+         * @brief Encodes a timestamp into the output buffer using the configured format.
+         *
+         * @details
+         * - Validates the input timestamp and output buffer space.
+         * - Rounds the timestamp down to the nearest minute and extracts nanoseconds.
+         * - Attempts to retrieve a cached formatted time string for the minute.
+         * - If not cached, creates and stores the formatted time string.
+         * - Copies the formatted time string to the output buffer.
+         * - Replaces the seconds placeholder with the actual seconds value.
+         * - Advances the output buffer pointer.
+         *
+         * @param timestamp The timestamp to encode (stamp_type).
+         *
+         * @note
+         * - Sets error state if the timestamp is invalid or buffer is full.
+         * - Uses internal cache for efficient repeated formatting.
+         * - Assumes output buffer and format have been properly initialized.
+         */
         void encode_timestamp(stamp_type timestamp) noexcept {
             if (timestamp < std::chrono::system_clock::time_point{}) {
                 this->set_error(__FILE__, __LINE__, error_code::input_bad);
@@ -115,7 +161,26 @@ namespace fstlog {
 
     private:
 
-        // decompose fill-align, precision and time_format string
+        /**
+        * @brief Decomposes the format string for timestamp encoding.
+        *
+        * @details
+        * - Parses the input format string to extract fill characters, alignment, width, and precision.
+        * - Updates the format_setting_txt structure with parsed values.
+        * - Sets the second_precision_ member to control the precision of seconds in the timestamp.
+        * - Modifies the input time_format span to point to the actual time format substring.
+        *
+        * @param[in,out] time_format Reference to the format string span; updated to exclude fill/align/width/precision.
+        * @param[out] format Structure to receive fill, align, width, and precision settings.
+        * @return error_code
+        *     - error_code::none on success.
+        *     - error_code::fmt_bad if the format string is invalid.
+        *
+        * @note
+        * - Only called during initialization of the timestamp encoder.
+        * - Uses helper functions to skip and parse fill/align, sign, width, and precision.
+        * - Limits second precision to a maximum of 9.
+        */
         error_code decompose_format(
             byte_span_const& time_format,
             format_setting_txt& format) noexcept
@@ -150,50 +215,89 @@ namespace fstlog {
             return error_code::none;
         }
 
-        // setting the time format string
+        
+        /**
+        * @brief Sets the time format string for timestamp encoding.
+        *
+        * @details
+        * - Determines the timezone from the format string.
+        * - If no format string is provided, sets a default format based on the timezone.
+        * - Validates the format string using valid_strftime_string.
+        * - Preprocesses the format string to handle placeholders and timezone.
+        * - Attempts to create a sample timestamp string to determine the formatted length.
+        * - Returns an error if the format string is too long or invalid.
+        *
+        * @param format_string The input format string as a byte span.
+        * @return error_code
+        *     - error_code::none on success.
+        *     - error_code::str_long if the format string is too long.
+        *     - error_code::fmt_bad if the format string is invalid.
+        *
+        * @note
+        * - This function is called during initialization of the timestamp encoder.
+        * - The formatted string size is constant; variable length strftime specifiers are not allowed.
+        */
         error_code set_time_format(byte_span_const format_string) noexcept {
-            auto pos = format_string.data_bytes();
-            auto end = pos + format_string.size_bytes();
-            tzone_ = get_zone(pos, end);
+            tzone_ = get_zone(format_string);
             
             // no strftime string, set default
-            if (pos == end) {
-                if (tzone_ == tz_format::Local) {
-                    time_format_ = small_string<64>("%Y-%m-%d %H:%M:%S %z");
-                }
-                else {
-                    time_format_ = small_string<64>("%Y-%m-%d %H:%M:%S +0000");
-                }
+            if (format_string.empty()) {
+                std::string_view default_format = "%Y-%m-%d %H:%M:%S %z";
+                format_string = byte_span_const{
+                    safe_reinterpret_cast<const unsigned char*>(default_format.data()),
+                    default_format.size()};
             }
-            else {
-                std::size_t str_len = static_cast<std::size_t>(end - pos);
-                if(str_len > time_format_.capacity()) return error_code::str_long;
-                time_format_ = small_string<64>(
-                    safe_reinterpret_cast<const char*>(pos),
-                    str_len);
+            
+            if(format_string.size() > small_string<64>::capacity()) {
+                return error_code::str_long;
             }
-            if (!detail::valid_strftime_string(
-                    byte_span_const(
-                        safe_reinterpret_cast<const unsigned char*>(time_format_.data()),
-                        time_format_.size()), tzone_))
-            {
+
+            if (!detail::valid_strftime_string(format_string)) {
                 return error_code::fmt_bad;
             }
 
-            auto error = add_second_placeholder();
+            time_format_ = small_string<64>(
+                safe_reinterpret_cast<const char*>(format_string.data_bytes())
+                , format_string.size());
+
+            auto error = preformat_time_format();
             if (error != error_code::none) return error;
 
             // try to format a timestamp ( without replacing the seconds placeholder )
             auto stamp_str = create_time_string(stamp_type{});
             // if empty, there was not enough space (string size can grow do to formatting)
-            if (stamp_str.empty()) return error_code::str_long;
+            if (stamp_str.empty()) {
+                return error_code::str_long;
+            }
             // the formatted string size will be a constant ( no variable length strftime format specifiers are allowed)
             formatted_length_ = static_cast<unsigned char>(stamp_str.size());
                                     
             return error_code::none;
         }
 
-        // compute second offset and fill it with '0'-s
+        /**
+         * @brief Prepares the timestamp format by finding and updating the seconds placeholder
+         * 
+         * @details This function performs two main tasks:
+         * 1. Locates the position of the seconds placeholder (marked by 0x1 bytes) in the formatted timestamp
+         * 2. Updates the format string by replacing all 0x1 placeholder bytes with '0' characters
+         * 
+         * The function first creates a sample timestamp string to find where the seconds should be.
+         * It searches for the first occurrence of the value 1 (0x1) which marks the seconds position.
+         * If no seconds placeholder is found, sets second_pos_ to 255 (invalid position).
+         * Finally replaces all placeholder bytes (0x1) in time_format_ with '0' characters.
+         * 
+         * @note This function is called during initialization after the time format string has been set
+         * and preprocessed by preformat_time_format(). The seconds position is later used by write_second()
+         * to efficiently insert the actual seconds value.
+         * 
+         * @warning The function assumes that time_format_ has been properly initialized and preprocessed
+         * 
+         * @post The second_pos_ member will be set to either:
+         *       - The byte offset of the seconds field
+         *       - 255 if no seconds field exists in the format
+         * @post All 0x1 bytes in time_format_ will be replaced with '0' characters
+         */
         void prepare_seconds_placeholder() noexcept {
             auto stamp_str = create_time_string(stamp_type{});
             std::size_t sec_pos = 0;
@@ -208,7 +312,24 @@ namespace fstlog {
             time_format_ = small_string<64>(temp.data(), time_format_.size());
         }
 
-        // pre formatting the format string with fill-align
+        /**
+         * @brief Applies fill and alignment to the time format string for timestamp encoding.
+         *
+         * @details
+         * - Computes the formatted string length for the timestamp.
+         * - If the formatted length is less than the specified width, attempts to append fill characters.
+         * - Uses the formatted character count rather than the format string character count for fill.
+         * - Updates the internal time_format_ string and formatted_length_ if fill is applied.
+         * - Returns error_code::str_long if the new length exceeds the capacity.
+         *
+         * @param format The format settings including fill character, alignment, and width.
+         * @return error_code
+         *     - error_code::none on success.
+         *     - error_code::str_long if the filled string exceeds capacity.
+         *
+         * @note
+         * This function is noexcept and modifies internal state.
+         */
         error_code apply_fill_align(format_setting_txt format) noexcept {
             if constexpr (use_fill_align) {
                 // compute string lengths for the formatted timestamp
@@ -216,7 +337,7 @@ namespace fstlog {
                 const detail::utf8_len formatted_len =
                     detail::utf::utf8_str_trim(unaligned_span{ stamp_str.data(), stamp_str.size() });
 
-                // do not truncate
+                // we can only do fill-align if length < width
                 if (formatted_len.char_len < format.width) {
                     const std::size_t time_format_bytes = time_format_.size();
                     std::array<unsigned char, small_string<64>::capacity()> temp{};
@@ -230,7 +351,9 @@ namespace fstlog {
                     // replace time_format_ if appending succeded
                     if (result_len.byte_len > time_format_bytes) {
                         std::size_t new_length = formatted_length_ + (result_len.byte_len - time_format_bytes);
-                        if (new_length > time_format_.capacity()) return error_code::str_long;
+                        if (new_length > time_format_.capacity()) {
+                            return error_code::str_long;
+                        }
                         formatted_length_ = static_cast<unsigned char>(new_length);
                         time_format_ = small_string<64>(
                             safe_reinterpret_cast<const char*>(temp.data()), result_len.byte_len);
@@ -239,65 +362,138 @@ namespace fstlog {
             }
             return error_code::none;
         }
-
-        // in time_format_ replaces %S with 0x1-s
-        error_code add_second_placeholder() noexcept {
-            auto str_len = time_format_.size();
-            std::size_t sec_pos = 0;
-            while (sec_pos + 1 < str_len
-                && !(*(time_format_.data() + sec_pos) == '%'
-                    && *(time_format_.data() + sec_pos + 1) == 'S'))
-            {
-                sec_pos++;
-            }
-
-            // if format string has %S 
-            if (sec_pos + 1 < str_len) {
-                if (second_precision_ != 0) {
-                    // %S (length 2) -> "ss" or "ss.fffff"
-                    // length grow of string: 1('.') + fraqtional digits
-                    str_len += 1ULL + second_precision_;
+                
+        /**
+        * @brief Preformats the time_format_ string for timestamp encoding.
+        *
+        * @details
+        * - Replaces %S with a placeholder (0x1 bytes) and sets the position for seconds.
+        * - Replaces %z with "+0000" if the timezone is UTC.
+        * - Copies other characters as-is.
+        * - Updates the internal time_format_ string.
+        * - Returns error_code::str_long if there is not enough space in the output buffer.
+        *
+        * @return error_code
+        *     - error_code::none on success.
+        *     - error_code::str_long if output buffer is too small.
+        *
+        * @note
+        * This function is noexcept and modifies internal state.
+        */
+        error_code preformat_time_format() noexcept {
+            unaligned_span<const char> input{
+                time_format_.data(),
+                time_format_.size() };
+            std::array<char, time_format_.capacity()> temp{0};
+            unaligned_span<char> output{
+                temp.data(),
+                temp.size() };
+            while (input.size() > 1) {
+                // replace %S conversion specifier
+                if (input.template get<0>() == '%' 
+                    && input.template get<1>() == 'S')
+                {
+                    second_pos_ = static_cast<unsigned char>(temp.size() - output.size());
+                    const std::size_t second_charnum = second_precision_ == 0 ? 2 : second_precision_ + 3;
+                    if(output.size() < second_charnum) {
+                        return error_code::str_long; // not enough space
+                    }
+                    std::memset(output.data_bytes(), 1, second_charnum);
+                    output.drop_front(second_charnum);
+                    input.template drop_front<2>();
                 }
-                if (str_len > static_cast<int>(small_string<64>::capacity())) {
-                    return error_code::str_long;
+                // replace %z conversion specifier only if tzone_ is UTC
+                else if (input.template get<0>() == '%'
+                    && input.template get<1>() == 'z'
+                    && tzone_ == tz_format::UTC)
+                {
+                    if (output.size() < 5) {
+                        return error_code::str_long; // not enough space
+                    }
+                    std::memcpy(output.data_bytes(), "+0000", 5);
+                    output.template drop_front<5>();
+                    input.template drop_front<2>();
                 }
-                std::array<char, 64> buff{ 0 };
-                auto dest_ptr{ buff.data() };
-                auto src_ptr{ time_format_.data() };
-                std::memcpy(dest_ptr, src_ptr, sec_pos);
-                dest_ptr += sec_pos;
-                std::size_t second_char_num = second_precision_ == 0 ? 2 : 3ULL + second_precision_;
-                std::memset(dest_ptr, 1, second_char_num);
-                dest_ptr += second_char_num;
-                const auto post_sec_pos{ sec_pos + 2 };
-                src_ptr += post_sec_pos;
-                std::memcpy(dest_ptr, src_ptr, time_format_.size() - post_sec_pos);
-                // replace time_format_
-                time_format_ = small_string<64>(buff.data(), str_len);
+                else {
+                    if (output.empty()){
+                        return error_code::str_long; // not enough space
+                    }
+                    output.template set<0>(input. template get<0>());
+                    input.template drop_front<1>();
+                    output.template drop_front<1>();
+                }
             }
+            // copy the remaining character if any
+            if(!input.empty()) {
+                if(output.empty()){
+                    return error_code::str_long; // not enough space
+                }
+                else {
+                    output.template set<0>(input.template get<0>());
+                    output.template drop_front<1>();
+                }
+            }
+            time_format_ = small_string<64>(temp.data(), temp.size() - output.size());
             return error_code::none;
         }
 
-        // returns the formatted time local/UTC according to tzone_
-        // or empty string on error/not enough space
-        // does not fill the seconds place
+        /**
+         * @brief Creates a formatted time string with "00....0" second placeholder for the given timestamp.
+         *
+         * @details
+         * - Converts the input timestamp to a time_t value.
+         * - Retrieves the corresponding tm structure in either UTC or local time, based on tzone_.
+         * - Returns an empty small_string<64> if conversion fails.
+         * - Calls format_time() to generate the formatted time string.
+         *
+         * @param minutes The timestamp (rounded to minutes) to format.
+         * @return small_string<64> The formatted time string, or empty on error/not enough space.
+         *
+         * @note
+         * - The seconds field is not filled in the returned string.
+         * - Handles platform-specific differences for time conversion (Windows vs POSIX).
+         * - Used internally for timestamp formatting and caching.
+         */
         small_string<64> create_time_string(stamp_type minutes) noexcept {
             time_t const t{ std::chrono::system_clock::to_time_t(minutes) };
             tm time;        
-#ifdef _WIN32
+        #ifdef _WIN32
             errno_t error{};
             if (tzone_ == tz_format::UTC) error = gmtime_s(&time, &t);
             else error = localtime_s(&time, &t);
             if (error != 0) return small_string<64>{};
-#else        
+        #else        
             tm* error{};
             if (tzone_ == tz_format::UTC) error = gmtime_r(&t, &time);
             else error = localtime_r(&t, &time);
             if (error == nullptr) return small_string<64>{};
-#endif
+        #endif
             return format_time(time);
         }
 
+        /**
+         * @brief Formats a time structure into a timestamp string using the configured format.
+         *
+         * @details
+         * - Uses the internal time_format_ string to format the provided std::tm structure.
+         * - Supports a subset of strftime specifiers: %% (percent), %Y (year), %m (month), %d (day),
+         *   %H (hour), %M (minute), %z (UTC offset), %y (2-digit year), %a (abbreviated weekday).
+         * - Unsupported specifiers are copied as-is with a leading '%'.
+         * - Numeric fields are zero-padded to two digits.
+         * - The output is written to a fixed-size buffer and returned as a small_string<64>.
+         * - If the formatted string exceeds the buffer capacity, returns an empty small_string<64>.
+         *
+         * @param[in] time The std::tm structure representing the time to format.
+         * @return small_string<64> The formatted timestamp string, or empty if formatting fails.
+         *
+         * @note
+         * - The function assumes time_format_ is properly initialized and non-empty.
+         * - The output buffer size is statically checked to be sufficient for worst-case expansion.
+         * - Used internally for timestamp encoding and caching.
+         *
+         * @see small_string
+         * @see std::tm
+         */
         small_string<64> format_time(std::tm const& time) {
             if (time_format_.empty()) return small_string<64>();
             std::array<char, 160> buff{ 0 };
@@ -403,6 +599,26 @@ namespace fstlog {
             }
         }
 
+        /**
+         * @brief Writes the seconds and fractional seconds into the formatted timestamp string.
+         *
+         * @details
+         * - Checks if the seconds field exists in the format string (second_pos_ != 255).
+         * - Converts nanoseconds to the required precision and inserts the digits into the output buffer.
+         * - Uses a lookup table for efficient two-digit conversion.
+         * - Handles both whole seconds and fractional seconds, inserting a decimal point if needed.
+         *
+         * @param nanoseconds The seconds.fraq part of the timestamp in nanoseconds.
+         * @param timestring_begin Pointer to the beginning of the output timestamp string buffer.
+         *
+         * @note
+         * - Assumes the output buffer has enough space for the seconds field.
+         * - The function is called during timestamp encoding to fill in the seconds value.
+         * - The seconds field position and precision are determined during initialization.
+         *
+         * @see prepare_seconds_placeholder
+         * @see encode_timestamp
+         */
         inline void write_second(
             std::chrono::nanoseconds nanoseconds, 
             unsigned char* timestring_begin)

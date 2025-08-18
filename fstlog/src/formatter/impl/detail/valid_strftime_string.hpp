@@ -5,12 +5,19 @@
 #include <cstdint>
 
 #include <detail/unaligned_span.hpp>
-#include <formatter/impl/detail/tz_format.hpp>
 #include <detail/utf_conv.hpp>
 
 namespace fstlog {
     namespace detail{
-        // validate a limited set of strftime conversion specifiers
+        /**
+         * @brief Validates if the given character is a supported strftime conversion specifier.
+         * 
+         * @param spec The conversion specifier character to validate.
+         * @return true if the specifier is valid, false otherwise.
+         * 
+         * @note Supported specifiers: H, M, S, Y, a, d, m, y, z. Also allows '%%'.
+         * @details Uses a lookup table for efficient validation. Only specifiers in the range [64, 127] are checked.
+         */
         inline constexpr bool valid_strft_conv_spec(unsigned char spec) noexcept {
             constexpr std::uint64_t valid_conv_spec_lut =
                 //    hour 00-23            minute 00-59       second 00-60 
@@ -30,13 +37,26 @@ namespace fstlog {
             return (valid_conv_spec_lut >> bit_pos) & 1;
         }
 
-        // Validate time string for strftime call,
-        // with a limited set of conversion specifiers
-        // for maximum compatibility.
-        inline constexpr bool valid_strftime_string(
-            byte_span_const str,
-            tz_format tz) noexcept
-        {
+        /**
+         * @brief Validates a strftime format string for compatibility.
+         * 
+         * @param str The input UTF-8 string as a byte_span_const to validate.
+         * @return true if the string is valid for strftime, false otherwise.
+         * 
+         * @details
+         * - Returns false for empty input.
+         * - Returns false if invalid or unsafe (unprintable) UTF-8 sequence found.
+         * - Only allows a limited set of conversion specifiers: 
+         *      %H, %M, %S, %Y, %a, %d, %m, %y, %z, and %%.
+         * - Only one %S specifier is allowed.
+         * 
+         * @note
+         * - The allowed specifers ensure, that the format string produces a formatted timestamp,
+         *   combined from constant length elements with fixed positions in the timestamp.
+         *   (%Y -> always 4 char, %H -> always 2 char, ...) 
+         * - The formatter relies on the fixed length and %S position to reuse cached strings.
+         */
+        inline constexpr bool valid_strftime_string(byte_span_const str) noexcept {
             if (str.empty()) return false;
             bool has_second{ false };
             while (!str.empty()) {
@@ -54,12 +74,9 @@ namespace fstlog {
                     if (conv_spec != '%' && !valid_strft_conv_spec(conv_spec)) {
                         return false; // invalid conversion specifier (%% is valid)
                     }
-                    if (tz == tz_format::UTC && conv_spec == 'z') {
-                        return false; // if time is in UTC usage of %z is forbidden
-                    }
                     if (conv_spec == 'S') {
                         if (has_second) {
-                            return false; // only 1 %S allowed (cached time with second placeholder)
+                            return false; // only one %S allowed (formatter precondition)
                         }
                         else {
                             has_second = true;

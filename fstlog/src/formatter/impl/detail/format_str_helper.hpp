@@ -198,18 +198,15 @@ namespace fstlog {
             return out;
         }
 
-        inline tz_format get_zone(
-            const unsigned char*& begin,
-            const unsigned char* end) noexcept
-        {
+        inline tz_format get_zone(byte_span_const &format_str) noexcept {
             tz_format out{ tz_format::Local };
-            if (begin < end) {
-                if (*begin == 'L') {
-                    begin++;
+            if (!format_str.empty()) {
+                if (format_str.template get<0>() == 'L') {
+                    format_str.template drop_front<1>();
                 }
-                else if (*begin == 'U') {
+                else if (format_str.template get<0>() == 'U') {
                     out = tz_format::UTC;
-                    begin++;
+                    format_str.template drop_front<1>();
                 }
             }
             return out;
