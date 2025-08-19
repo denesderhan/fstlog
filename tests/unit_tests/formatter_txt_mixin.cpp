@@ -11,7 +11,7 @@
 #include <vector>
 
 #include <fstlog/core.hpp>
-#include <fstlog/logger/logger.hpp>
+#include <fstlog/logger/logger_st.hpp>
 #include <fstlog/logger/log_macro.hpp>
 #include <fstlog/sink/sink_unsort.hpp>
 #include <fstlog/formatter/formatter_txt.hpp>
@@ -71,8 +71,10 @@ namespace fstlog {
     }
 }
 
+//for each SECTION the TEST_CASE is executed from the start! (preventing multiple core constructs)
+inline fstlog::core core;
+
 TEST_CASE("formatter_txt_mixin") {
-    
     SECTION("init") {
         auto test_dat = GENERATE(
             std::make_tuple(std::string_view{ "" }, fstlog::error_code::none),
@@ -111,8 +113,8 @@ TEST_CASE("formatter_txt_mixin") {
     }
 
     SECTION("non_matching_repl_fields_data") {
-        fstlog::core core;
-        fstlog::logger logger(core);
+        fstlog::logger_st logger(core);
+        CHECK(logger.good());
         auto out_str = std::make_shared<std::ostringstream>(std::stringstream::binary);
         
         auto test_dat = GENERATE(
@@ -140,8 +142,9 @@ TEST_CASE("formatter_txt_mixin") {
     }
 
     SECTION("fields") {
-        fstlog::core core;
-        fstlog::logger logger(core, "test_logger");
+        fstlog::logger_st logger(core, "test_logger");
+        logger.set_thread("thread_x");
+        CHECK(logger.good());
         auto out_str = std::make_shared<std::ostringstream>(std::stringstream::binary);
         auto sink = fstlog::sink_unsort(
             fstlog::formatter_txt(
@@ -167,8 +170,7 @@ TEST_CASE("formatter_txt_mixin") {
         CHECK(fields[1] == "INFO");
         CHECK(fields[2] == "Guaranteed");
         CHECK(fields[3] == "1");
-        auto thread_str = fstlog::this_thread::get_str();
-        CHECK(fields[4] == std::string_view(thread_str));
+        CHECK(fields[4] == std::string_view("thread_x"));
         CHECK(fields[5] == "test_logger");
         CHECK(std::regex_match(fields[6], std::regex(R"(.*formatter_txt_mixin.cpp)")));
         CHECK(std::regex_match(fields[7], std::regex(R"(\d+)")));
@@ -177,7 +179,6 @@ TEST_CASE("formatter_txt_mixin") {
     }
 
     SECTION("no_space_in_buffer") {
-        fstlog::core core;
         fstlog::sink out_sink;
         auto out_str = std::make_shared<std::ostringstream>(std::stringstream::binary);
         auto output = fstlog::output_stream(out_str);
@@ -190,8 +191,8 @@ TEST_CASE("formatter_txt_mixin") {
             fstlog::fstlog_allocator{});
         CHECK(sink_error == fstlog::error_code::none);
         core.add_sink(out_sink);
-        fstlog::logger logger(core);
-
+        fstlog::logger_st logger(core);
+        CHECK(logger.good());
         LOG_INFO(logger, "This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer of size 128 bytes!");
         core.flush();
         CHECK(out_str->str() == "This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer of size 12\n");
@@ -207,7 +208,7 @@ TEST_CASE("formatter_txt_mixin") {
         LOG_INFO(logger, "String: {}", "This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer of size 128 bytes!");
         core.flush();
         CHECK(out_str->str() == "String: This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer of\n");
-
+        core.release_sink(out_sink);
     };
     
 }
