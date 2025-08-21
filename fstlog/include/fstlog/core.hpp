@@ -41,11 +41,6 @@ namespace fstlog {
         FSTLOG_API core(core&& other) noexcept;
         FSTLOG_API core& operator=(core&& other) noexcept;
 
-        FSTLOG_API error_code init(allocator_type const& allocator = {}) noexcept;
-        FSTLOG_API error_code init(
-            std::string_view name,
-            allocator_type const& allocator = {}) noexcept;
-
         FSTLOG_API bool start() noexcept;
         FSTLOG_API bool stop() noexcept;
         FSTLOG_API bool restart() noexcept;
@@ -63,13 +58,18 @@ namespace fstlog {
         FSTLOG_API static int version_patch() noexcept;
         FSTLOG_API std::uintmax_t id() const noexcept;
 
-        FSTLOG_API void notify_data_ready() const noexcept;
-        FSTLOG_API log_buffer get_buffer(std::uint32_t buffer_size) noexcept;
+        FSTLOG_API void detail_notify_data_ready() const noexcept;
+        FSTLOG_API log_buffer detail_get_buffer(std::uint32_t buffer_size) noexcept;
         FSTLOG_API log_buffer& detail_tls_buffer() noexcept;
         FSTLOG_API explicit core(core_impl* pimpl)  noexcept;
         
         core_impl* pimpl() const noexcept;
     private:
+        FSTLOG_API error_code init(allocator_type const& allocator = {}) noexcept;
+        FSTLOG_API error_code init(
+            std::string_view name,
+            allocator_type const& allocator = {}) noexcept;
+        
         core_impl* pimpl_{ nullptr };
     };
 }

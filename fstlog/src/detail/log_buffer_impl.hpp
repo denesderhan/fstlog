@@ -73,7 +73,7 @@ namespace fstlog {
             }
             else if (half_full()) {
                 flush_requested_.store(true, std::memory_order_release);
-                core.notify_data_ready();
+                core.detail_notify_data_ready();
             }
         }
 

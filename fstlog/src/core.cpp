@@ -167,13 +167,13 @@ namespace fstlog {
         return pimpl_ != nullptr;
     }
 
-    void core::notify_data_ready() const noexcept {
+    void core::detail_notify_data_ready() const noexcept {
         if (good()) {
             pimpl_->notify_data_ready();
         }
     }
 
-    log_buffer core::get_buffer(std::uint32_t buffer_size) noexcept {
+    log_buffer core::detail_get_buffer(std::uint32_t buffer_size) noexcept {
         if (good()) {
             return pimpl_->get_buffer(buffer_size);
         }
@@ -190,12 +190,12 @@ namespace fstlog {
             return 0;
         }
     }
-    
+
     log_buffer& core::detail_tls_buffer() noexcept {
         assert(pimpl_ != nullptr);
         return pimpl_->tls_buffer();
     }
-    
+
     core_impl* core::pimpl() const noexcept {
         return pimpl_;
     }

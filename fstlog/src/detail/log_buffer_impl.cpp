@@ -101,7 +101,7 @@ namespace fstlog {
     void log_buffer_impl::wait_for_buffer_flush(core const& core) noexcept {
         std::unique_lock<std::mutex> lock{ buffer_mutex_ };
         flush_requested_.store(true, std::memory_order_release);
-        core.notify_data_ready();
+        core.detail_notify_data_ready();
         do {
 #ifdef FSTLOG_DEBUG
             buff_cond_var_.wait(lock);

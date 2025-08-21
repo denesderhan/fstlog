@@ -10,7 +10,7 @@ namespace fstlog {
     public:
         void notify_core() noexcept {
             FSTLOG_ASSERT(is_core_set() && "Core was not set!");
-            core_.notify_data_ready();
+            core_.detail_notify_data_ready();
         }
 
         core const& get_core() noexcept {
@@ -26,7 +26,7 @@ namespace fstlog {
         }
 
         log_buffer get_buffer(std::uint32_t buffer_size) noexcept {
-            return core_.get_buffer(buffer_size);
+            return core_.detail_get_buffer(buffer_size);
         }
         
         core core_{ nullptr };
