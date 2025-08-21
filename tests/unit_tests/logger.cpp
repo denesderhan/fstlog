@@ -24,7 +24,7 @@ TEST_CASE("logger") {
         CHECK(logger.good() == false);
         logger.set_core(core);
         CHECK(logger.get_core().pimpl() == core.pimpl());
-        CHECK(logger.good() == true);
+        CHECK(logger.good() == false);
         logger.new_buffer(1024);
         CHECK(logger.good() == true);
 
@@ -122,7 +122,7 @@ TEST_CASE("logger") {
             CHECK(temp_core.id() == first_id + i);
             fstlog::logger temp_logger(temp_core);
             CHECK(temp_logger.get_core().pimpl() == temp_core.pimpl());
-            CHECK(temp_logger.good() == true);
+            CHECK(temp_logger.good() == false);
             temp_logger.new_buffer(1024);
             CHECK(temp_logger.good() == true);
         }

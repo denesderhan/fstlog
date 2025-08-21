@@ -533,12 +533,10 @@ namespace fstlog {
             && tls_buffer_index_ < tls_buffers_.size());
         log_buffer& buffer = tls_buffers_[tls_buffer_index_].second;
         auto& stored_id = tls_buffers_[tls_buffer_index_].first;
-        // if buffer is uninitialized (stored_id == 0)
-        // or a previous, already destructed core 
-        // had left a buffer in the store
-        // we get a new buffer from this core
+        // if this is the first access, we clear the buffer slot
+        // before returning it, initialization is the callers task.
         if (id_ != stored_id) {
-            buffer = get_buffer(config::default_ringbuffer_size);
+            buffer = log_buffer{};
             stored_id = id_;
         }
         return buffer;
