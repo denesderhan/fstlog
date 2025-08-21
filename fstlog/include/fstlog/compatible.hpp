@@ -5,14 +5,32 @@
 #include <fstlog/core.hpp>
 
 namespace fstlog {
-    inline bool compatible(core const& core_) noexcept {
-        if (FSTLOG_VERSION_MAJOR != 0) {
-            return (core_.version_major() == FSTLOG_VERSION_MAJOR &&
-                core_.version_minor() >= FSTLOG_VERSION_MINOR);
+    /*
+    * @brief Checks API compatibility between headers and library binary using Semantic Versioning.
+    *
+    * @details
+    * This function verifies that the compiled library binary is API-compatible with the headers
+    * used at compile time. It follows Semantic Versioning (SemVer) rules:
+    * - For pre-release versions (major == 0), exact version match is required (major.minor.patch).
+    * - For stable releases (major >= 1), only major version must match, and library minor version
+    *   must be equal or greater than header minor version (backward compatibility).
+    *
+    * Note: ABI compatibility is NOT guaranteed by this function. To ensure ABI compatibility,
+    * use the same toolchain (compiler, stdlib, config) for application, fstlog library, and all dependencies.
+    *
+    * @return bool true if API compatible, false otherwise.
+    */
+    inline bool compatible() noexcept {
+        // alpha, beta versions have to match exactly
+        if constexpr (FSTLOG_VERSION_MAJOR == 0) {
+            return core::version_major() == FSTLOG_VERSION_MAJOR
+                && core::version_minor() == FSTLOG_VERSION_MINOR
+                && core::version_patch() == FSTLOG_VERSION_PATCH;
         }
+        // backwards compatibility
         else {
-            return core_.version_minor() == FSTLOG_VERSION_MINOR &&
-                core_.version_patch() == FSTLOG_VERSION_PATCH;
+            return core::version_major() == FSTLOG_VERSION_MAJOR
+                && core::version_minor() >= FSTLOG_VERSION_MINOR;
         }
     }
 }
