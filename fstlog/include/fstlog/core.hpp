@@ -65,6 +65,7 @@ namespace fstlog {
 
         FSTLOG_API void notify_data_ready() const noexcept;
         FSTLOG_API log_buffer get_buffer(std::uint32_t buffer_size) noexcept;
+        FSTLOG_API log_buffer& detail_tls_buffer() noexcept;
         FSTLOG_API explicit core(core_impl* pimpl)  noexcept;
         
         core_impl* pimpl() const noexcept;

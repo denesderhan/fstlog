@@ -71,10 +71,9 @@ namespace fstlog {
     }
 }
 
-//for each SECTION the TEST_CASE is executed from the start! (preventing multiple core constructs)
-inline fstlog::core core;
-
 TEST_CASE("formatter_txt_mixin") {
+    //for each SECTION the TEST_CASE is executed from the start! 
+    fstlog::core core;
     SECTION("init") {
         auto test_dat = GENERATE(
             std::make_tuple(std::string_view{ "" }, fstlog::error_code::none),
@@ -210,5 +209,4 @@ TEST_CASE("formatter_txt_mixin") {
         CHECK(out_str->str() == "String: This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer of\n");
         core.release_sink(out_sink);
     };
-    
 }

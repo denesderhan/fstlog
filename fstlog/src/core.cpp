@@ -204,10 +204,15 @@ namespace fstlog {
             return pimpl_->id();
         }
         else {
-            return (std::numeric_limits<std::uintmax_t>::max)();
+            return 0;
         }
     }
-
+    
+    log_buffer& core::detail_tls_buffer() noexcept {
+        assert(pimpl_ != nullptr);
+        return pimpl_->tls_buffer();
+    }
+    
     core_impl* core::pimpl() const noexcept {
         return pimpl_;
     }

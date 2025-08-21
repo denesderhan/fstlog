@@ -6,13 +6,13 @@
 #include <fstlog/logger/log_macro.hpp>
 #include <fstlog/logger/logger.hpp>
 
-//for each SECTION the TEST_CASE is executed from the start! (preventing multiple core constructs)
-inline fstlog::core core;
-
 TEST_CASE("logger") {
+    //for each SECTION the TEST_CASE is executed from the start!
+    fstlog::core core;
     core.poll_interval(std::chrono::milliseconds{0});
 
     SECTION("construct") {
+        
         fstlog::logger logger;
         CHECK(logger.get_core().pimpl() == nullptr);
         CHECK(logger.name() == fstlog::small_string<32>{"Unnamed"});
@@ -24,8 +24,8 @@ TEST_CASE("logger") {
         CHECK(logger.good() == false);
         logger.set_core(core);
         CHECK(logger.get_core().pimpl() == core.pimpl());
-        CHECK(logger.good() == false);
-        logger.new_buffer(core, 1024);
+        CHECK(logger.good() == true);
+        logger.new_buffer(1024);
         CHECK(logger.good() == true);
 
         logger.set_name("logger_1");
@@ -115,21 +115,16 @@ TEST_CASE("logger") {
 
     SECTION("multi_core") {
         fstlog::core temp_core0;
-        auto last_id{ temp_core0.id() };
-        for (auto i = last_id + 1; i <= 32; i++) {
+        auto first_id{ temp_core0.id() + 1 };
+        
+        for (auto i = 0; i < 10; i++) {
             fstlog::core temp_core;
-            CHECK(temp_core.id() == i);
+            CHECK(temp_core.id() == first_id + i);
             fstlog::logger temp_logger(temp_core);
-            if (i != 32) {
-                CHECK(temp_logger.get_core().pimpl() == temp_core.pimpl());
-                CHECK(temp_logger.good() == false);
-                temp_logger.new_buffer(temp_core, 1024);
-                CHECK(temp_logger.good() == true);
-            }
-            else {
-                CHECK(temp_logger.get_core().pimpl() == nullptr);
-                CHECK(temp_logger.good() == false);
-            }
+            CHECK(temp_logger.get_core().pimpl() == temp_core.pimpl());
+            CHECK(temp_logger.good() == true);
+            temp_logger.new_buffer(1024);
+            CHECK(temp_logger.good() == true);
         }
     };
     

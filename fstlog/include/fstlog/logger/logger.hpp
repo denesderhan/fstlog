@@ -178,27 +178,22 @@ namespace fstlog {
         }
         // thread safe, all loggers with the same core in the same thread
         // share the same buffer, this will affect all of them.  
-        static void new_buffer(core& core) noexcept {
-            logger_impl::new_buffer(core);
-        }
-        static void new_buffer(core&& core) noexcept {
-            logger_impl::new_buffer(core);
+        void new_buffer() noexcept {
+            logger_impl::new_buffer();
         }
         // thread safe, all loggers with the same core in the same thread
         // share the same buffer, this will affect all of them. 
-        static void new_buffer(core& core, std::uint32_t buffer_size) noexcept {
-            logger_impl::new_buffer(core, buffer_size);
-        }
-        static void new_buffer(core&& core, std::uint32_t buffer_size) noexcept {
-            logger_impl::new_buffer(core, buffer_size);
+        void new_buffer(std::uint32_t buffer_size) noexcept {
+            logger_impl::new_buffer(buffer_size);
         }
         // thread safe, all loggers with the same core in the same thread
         // share the same buffer, this will affect all of them.  
-        static void release_buffer(const core& core) noexcept {
-            logger_impl::release_buffer(core);
+        void release_buffer() noexcept {
+            logger_impl::release_buffer();
         }
+
         // thread safe
-        bool good() const noexcept {
+        bool good() noexcept {
             return is_core_set() && is_buffer_set();
         }
     };

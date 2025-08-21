@@ -2,7 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <core_impl.hpp>
 
-#include <config_core.hpp>
+#include <config_buffer.hpp>
 #include <detail/log_buffer_impl.hpp>
 #include <detail/log_buffer_unread_data.hpp>
 #include <detail/make_allocated.hpp>
@@ -17,12 +17,8 @@
 namespace fstlog {
     core_impl::core_impl(std::string_view name, allocator_type const& allocator) noexcept
         : name_(name),
-        id_{next_id_.fetch_add(1, std::memory_order_relaxed)},
         bufferstore_(64, allocator),
-        sinkstore_(8, allocator),
-        next_buffer_poll_{ std::chrono::time_point_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() + config::default_polling_interval) },
-        buffer_poll_interval_{ config::default_polling_interval }
+        sinkstore_(8, allocator)
     {
         if (buffer_poll_interval_ == std::chrono::milliseconds{0})
             next_buffer_poll_ = (steady_msec::max)();
@@ -30,12 +26,39 @@ namespace fstlog {
 
     core_impl::~core_impl() noexcept {
         stop();
-        std::lock_guard<std::mutex> s_guard(sinkstore_mutex_);
-        for (auto& sink : sinkstore_)
-            sink.pimpl()->release();
+        {
+            std::lock_guard<std::mutex> s_guard(sinkstore_mutex_);
+            for (auto& sink : sinkstore_)
+                sink.pimpl()->release();
+        }
+        if(id_ != 0) {
+            std::lock_guard<std::mutex> grd(init_mutex_);
+            FSTLOG_ASSERT(tls_buffer_index_ >= 0 && tls_buffer_index_ < tls_buffer_index_used_.size());
+            tls_buffer_index_used_[tls_buffer_index_] = false;
+            tls_buffer_index_ = -1;
+            id_ = 0;
+        }
     }
 
     error_code core_impl::init() {
+        {
+            std::lock_guard<std::mutex> grd(init_mutex_);
+            if (next_id_ == (std::numeric_limits<decltype(next_id_)>::max)()) {
+                return error_code::obj_limit;
+            }
+            for (int index = 0; index < tls_buffer_index_used_.size(); index++) {
+                if (!tls_buffer_index_used_[index]) {
+                    tls_buffer_index_used_[index] = true;
+                    tls_buffer_index_ = index;
+                    id_ = next_id_++;
+                    break;
+                }
+            }
+            // if we could not get a tls_buffer_index_
+            if (id_ == 0) {
+                return error_code::core_limit;
+            }
+        }
         bool self_buffer_good = true;
         // if there is no self logging, no need to init self buffer
         if constexpr (level::FSTLOG_COMPILETIME_LOGLEVEL != level::None) {
@@ -503,6 +526,22 @@ namespace fstlog {
             read_buffers(flush_all_buffers, sink_flush_needed);
             flush_sinks(true, current_time);
         }
+    }
+
+    log_buffer& core_impl::tls_buffer() noexcept {
+        FSTLOG_ASSERT(tls_buffer_index_ >= 0
+            && tls_buffer_index_ < tls_buffers_.size());
+        log_buffer& buffer = tls_buffers_[tls_buffer_index_].second;
+        auto& stored_id = tls_buffers_[tls_buffer_index_].first;
+        // if buffer is uninitialized (stored_id == 0)
+        // or a previous, already destructed core 
+        // had left a buffer in the store
+        // we get a new buffer from this core
+        if (id_ != stored_id) {
+            buffer = get_buffer(config::default_ringbuffer_size);
+            stored_id = id_;
+        }
+        return buffer;
     }
 
     std::string_view core_impl::version() noexcept {

@@ -384,7 +384,7 @@ namespace fstlog {
             unaligned_span<const char> input{
                 time_format_.data(),
                 time_format_.size() };
-            std::array<char, time_format_.capacity()> temp{0};
+            std::array<char, decltype(time_format_)::capacity()> temp{0};
             unaligned_span<char> output{
                 temp.data(),
                 temp.size() };

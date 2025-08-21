@@ -6,10 +6,11 @@
 #include <fstlog/logger/log_macro.hpp>
 #include <fstlog/logger/logger_mt.hpp>
 
-//for each SECTION the TEST_CASE is executed from the start! (preventing multiple core constructs)
-inline fstlog::core core;
+
 
 TEST_CASE("logger_mt") {
+    //for each SECTION the TEST_CASE is executed from the start!
+    fstlog::core core;
     core.poll_interval(std::chrono::milliseconds{0});
 
     SECTION("construct") {

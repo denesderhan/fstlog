@@ -19,7 +19,9 @@ namespace fstlog {
         core_null,
         buff_null,
         path_bad,
-        stream_bad
+        stream_bad,
+        core_limit,
+        obj_limit
     };
 
     inline const char* error_message(error_code code) noexcept {
@@ -41,6 +43,8 @@ namespace fstlog {
             case error_code::buff_null: return "fstlog error: Buffer not set!";
             case error_code::path_bad: return "fstlog error: Path invalid or too long!";
             case error_code::stream_bad: return "fstlog error: The iostream had an error state!";
+            case error_code::core_limit: return "fstlog error: The concurrent core instance limit is reached!";
+            case error_code::obj_limit: return "fstlog error: Object creation limit reached (unique id exhaustion)!";
             default : return "fstlog error: Unknown error!";
         };
     };
