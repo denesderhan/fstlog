@@ -8,6 +8,7 @@
 #include <config_core.hpp>
 #include <core_impl.hpp>
 #include <detail/make_allocated.hpp>
+#include <fstlog/version.hpp>
 
 namespace fstlog {
     error_code core::init(allocator_type const& allocator) noexcept {
@@ -148,38 +149,20 @@ namespace fstlog {
             return std::string_view{ "" };
         }
     }
-    std::string_view core::version() const noexcept {
-        if (good()) {
-            return pimpl_->version();
-        }
-        else {
-            return std::string_view{ "0.0.0" };
-        }
+
+    std::string_view core::version() noexcept {
+        return FSTLOG_VERSION;
     }
-    int core::version_major() const noexcept {
-        if (good()) {
-            return pimpl_->version_major();
-        }
-        else {
-            return -1;
-        }
+    int core::version_major() noexcept {
+        return FSTLOG_VERSION_MAJOR;
     }
-    int core::version_minor() const noexcept {
-        if (good()) {
-            return pimpl_->version_minor();
-        }
-        else {
-            return -1;
-        }
+    int core::version_minor() noexcept {
+        return FSTLOG_VERSION_MINOR;
     }
-    int core::version_patch() const noexcept {
-        if (good()) {
-            return pimpl_->version_patch();
-        }
-        else {
-            return -1;
-        }
+    int core::version_patch() noexcept {
+        return FSTLOG_VERSION_PATCH;
     }
+
     bool core::good() const noexcept {
         return pimpl_ != nullptr;
     }

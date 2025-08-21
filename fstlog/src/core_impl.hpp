@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <limits>
 #include <mutex>
+#include <string_view>
 #include <thread>
 #include <utility>
 
@@ -78,11 +79,6 @@ namespace fstlog {
         allocator_type const& get_allocator() const noexcept {
             return bufferstore_.get_allocator();
         }
-
-        static std::string_view version() noexcept;
-        static int version_major() noexcept;
-        static int version_minor() noexcept;
-        static int version_patch() noexcept;
 
         std::uintmax_t id() const noexcept {
             return id_;

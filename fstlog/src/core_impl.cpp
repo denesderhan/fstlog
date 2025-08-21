@@ -430,7 +430,7 @@ namespace fstlog {
     {
         LOG_LL_INFO(logger_, 
             "fstlog v{}, core: {} started a background thread, thread id: {}, polling interval: {} millisec.", 
-            version(), name(), this_thread::get_id(), poll_interval().count());
+            FSTLOG_VERSION, name(), this_thread::get_id(), poll_interval().count());
         
         steady_msec current_time;
         std::uintmax_t cycle_count = 0;
@@ -519,7 +519,7 @@ namespace fstlog {
             LOG_LL_DEBUG(logger_, "Core: {}, dropped {} self log messages.",
                 name(), logger_.dropped());
             LOG_LL_DEBUG(logger_, "fstlog: v{}, core: {} stopping, background thread main loop run {} times.", 
-                version(), name(), cycle_count);
+                FSTLOG_VERSION, name(), cycle_count);
             //all buffers and sinks are flushed (flushing again ensuring these logs are written to sinks)
             bool flush_all_buffers{ true };
             bool sink_flush_needed{ true };
@@ -542,19 +542,6 @@ namespace fstlog {
             stored_id = id_;
         }
         return buffer;
-    }
-
-    std::string_view core_impl::version() noexcept {
-        return FSTLOG_VERSION;
-    }
-    int core_impl::version_major() noexcept {
-        return FSTLOG_VERSION_MAJOR;
-    }
-    int core_impl::version_minor() noexcept {
-        return FSTLOG_VERSION_MINOR;
-    }
-    int core_impl::version_patch() noexcept {
-        return FSTLOG_VERSION_PATCH;
     }
 
     void core_impl::add_reference() noexcept {
