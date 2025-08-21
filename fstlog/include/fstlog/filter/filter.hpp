@@ -62,6 +62,18 @@ namespace fstlog {
         FSTLOG_API filter& operator=(filter&& other) noexcept;
         FSTLOG_API ~filter() noexcept;
 
+        FSTLOG_API bool good() const noexcept;
+        
+        FSTLOG_API void add_level(level level) noexcept;
+        FSTLOG_API void add_level(level first, level last) noexcept;
+        FSTLOG_API void add_channel(channel_type channel) noexcept;
+        FSTLOG_API void add_channel(channel_type first, channel_type last) noexcept;
+        FSTLOG_API bool filter_msg(level level, channel_type channel) const noexcept;
+
+        FSTLOG_API filter(filter_impl* pimpl) noexcept;
+        
+        filter_impl* pimpl() const noexcept;
+    private:
         FSTLOG_API error_code init(allocator_type const& allocator) noexcept;
         FSTLOG_API error_code init(
             level level,
@@ -74,18 +86,7 @@ namespace fstlog {
             allocator_type const& allocator = {}) noexcept;
         FSTLOG_API error_code init(const filter& other) noexcept;
         FSTLOG_API error_code init(const filter& other, allocator_type const& allocator) noexcept;
-        
-        FSTLOG_API bool good() const noexcept;
-        
-        FSTLOG_API void add_level(level level) noexcept;
-        FSTLOG_API void add_level(level first, level last) noexcept;
-        FSTLOG_API void add_channel(channel_type channel) noexcept;
-        FSTLOG_API void add_channel(channel_type first, channel_type last) noexcept;
-        FSTLOG_API bool filter_msg(level level, channel_type channel) const noexcept;
 
-        FSTLOG_API filter(filter_impl* pimpl) noexcept;
-        filter_impl* pimpl() const noexcept;
-    private:
         filter_impl* pimpl_{ nullptr };
     };
 }
