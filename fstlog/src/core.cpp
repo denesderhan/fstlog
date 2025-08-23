@@ -18,8 +18,15 @@ namespace fstlog {
         if (pimpl_ != nullptr) return error_code::double_init;
         pimpl_ = make_allocated<core_impl>(allocator, name);
         if (pimpl_ == nullptr) return error_code::alloc_fail;
-        pimpl_->add_reference();
         const auto error = pimpl_->init();
+        if (error != error_code::none) {
+            pimpl_->~core_impl();
+            nothrow_deallocate(pimpl_, allocator);
+            pimpl_ = nullptr;
+        }
+        else {
+            pimpl_->add_reference();
+        }
         return error;
     }
 
@@ -189,6 +196,10 @@ namespace fstlog {
         else {
             return 0;
         }
+    }
+
+    std::size_t core::limit() noexcept {
+        return config::core_instance_limit;
     }
 
     log_buffer& core::detail_tls_buffer() noexcept {

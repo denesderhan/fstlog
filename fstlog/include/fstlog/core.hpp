@@ -57,6 +57,7 @@ namespace fstlog {
         FSTLOG_API static int version_minor() noexcept;
         FSTLOG_API static int version_patch() noexcept;
         FSTLOG_API std::uintmax_t id() const noexcept;
+        FSTLOG_API static std::size_t limit() noexcept;
 
         FSTLOG_API void detail_notify_data_ready() const noexcept;
         FSTLOG_API log_buffer detail_get_buffer(std::uint32_t buffer_size) noexcept;
