@@ -54,7 +54,7 @@ namespace fstlog {
     {
     public:
         logger_mt() noexcept = default;
-
+        
         explicit logger_mt(
             core core,
             std::string_view logger_name = "",
@@ -68,7 +68,8 @@ namespace fstlog {
             logger_mt_impl::set_channel(channel);
             logger_mt_impl::set_level(level);
         }
-
+        
+        ~logger_mt() noexcept = default;
 
         template<
             fstlog::level level,

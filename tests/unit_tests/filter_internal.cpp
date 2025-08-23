@@ -44,7 +44,7 @@ TEST_CASE("filter_internal") {
         CHECK(filt.filter_msg(fstlog::level::Fatal, 0) == false);
     }
     
-    SECTION("01") {
+    SECTION("02") {
         fstlog::filter_internal filt;
 
         filt.add_level(fstlog::level::All, fstlog::level::None);
@@ -65,7 +65,7 @@ TEST_CASE("filter_internal") {
         CHECK(filt.filter_msg(fstlog::level::Info, 200) == false);
     };
     
-    SECTION("02") {
+    SECTION("03") {
         fstlog::filter_internal filt;
         filt.add_level(fstlog::level::All, fstlog::level::None);
         unsigned char channel{ 0 };
@@ -87,7 +87,7 @@ TEST_CASE("filter_internal") {
         }
     }
 
-    SECTION("03") {
+    SECTION("04") {
         auto extent = GENERATE(table<int, int>({
             std::tuple<int, int>{0, 30},
             std::tuple<int, int>{0, 31},
@@ -133,7 +133,7 @@ TEST_CASE("filter_internal") {
         }        
     };
 
-    SECTION("04") {
+    SECTION("05") {
         fstlog::filter_internal filt;
         filt.add_level(fstlog::level::All, fstlog::level::None);
         filt.add_channel(20, 50);
@@ -147,7 +147,7 @@ TEST_CASE("filter_internal") {
         }
     }
 
-    SECTION("05") {
+    SECTION("06") {
         fstlog::filter_internal filt;
         filt.add_level(fstlog::level::All, fstlog::level::None);
         filt.add_channel(0, 255);

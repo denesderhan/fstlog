@@ -4,9 +4,11 @@
 #if not defined(__cpp_lib_format) && (defined(__cplusplus) && __cplusplus >= 202000L)
 #include <format> // __cpp_lib_format is defined here in gcc if __cplusplus >= 202000L
 #endif
+
+#include <catch2/catch_all.hpp>
+
 #include <fstlog/detail/noexceptions.hpp>
 #if defined(__cpp_lib_format) && !defined(FSTLOG_NOEXCEPTIONS)
-#include <catch2/catch_all.hpp>
 
 #include <vector>
 #include <cstdint>
@@ -424,5 +426,9 @@ TEST_CASE("encoder_stdformat_mixin") {
             CHECK(res == "String left untouched.¤¤¤¤xxxxSt");
         }
     }
+}
+#else
+TEST_CASE("encoder_stdformat_mixin") {
+    SKIP("std::format is unavailable or exceptions are disabled!");
 }
 #endif
