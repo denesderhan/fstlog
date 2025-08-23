@@ -4,13 +4,12 @@
 
 #include <cassert>
 
-#include <fstlog/detail/fstlog_assert.hpp>
 #include <detail/make_allocated.hpp>
 #include <filter/filter_impl.hpp>
 
 namespace fstlog {
     error_code filter::init(allocator_type const& allocator) noexcept {
-        FSTLOG_ASSERT(pimpl_ == nullptr);
+        if (pimpl_ != nullptr) return error_code::double_init;
         pimpl_ = make_allocated<filter_impl>(allocator);
         if (pimpl_ == nullptr) return error_code::alloc_fail;
         return error_code::none;
@@ -49,11 +48,7 @@ namespace fstlog {
     error_code filter::init(const filter& other) noexcept {
         if (pimpl_ != nullptr) return error_code::double_init;
         if (other.pimpl_ == nullptr) return error_code::none;
-        pimpl_ = make_allocated<filter_impl>(
-            other.pimpl_->get_allocator(),
-            *other.pimpl_);
-        if (pimpl_ == nullptr) return error_code::alloc_fail;
-        return error_code::none;
+        return init(other, other.pimpl_->get_allocator());
     }
     error_code filter::init(const filter& other, allocator_type const& allocator) noexcept {
         if (pimpl_ != nullptr) return error_code::double_init;
