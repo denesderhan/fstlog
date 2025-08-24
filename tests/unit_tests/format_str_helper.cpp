@@ -40,10 +40,10 @@ TEST_CASE("uint_fromchars_4digit") {
 }
 
 TEST_CASE("parse_fmt_text") {
-    std::vector<unsigned char> out_buff(100);
-    const unsigned char* out_end = out_buff.data() + out_buff.size();
+    std::vector<unsigned char> out_buff;
+    
     SECTION("error_code::fmt_bad") {
-            
+        out_buff.resize(100);
         std::tuple<std::string_view, std::string_view, int> test_dat = GENERATE(
             std::tuple<std::string_view, std::string_view, int>{std::string_view{ "}" }, std::string_view{ "" }, 0 },
             std::tuple<std::string_view, std::string_view, int>{std::string_view{ ":}" }, std::string_view{ ":" }, 1 },
@@ -53,55 +53,46 @@ TEST_CASE("parse_fmt_text") {
             std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abc}" }, std::string_view{ "abc" }, 3},
             std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abc}xyz" }, std::string_view{ "abc" }, 3}
         );
-        auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-        auto in_pos = in_beg;
-        auto in_end = in_beg + std::get<0>(test_dat).size();
-        auto out_pos = out_buff.data();
-
-        auto error = fstlog::parse_fmt_text(in_pos, in_end, out_pos, out_end);
+        fstlog::byte_span_const input(
+            reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data()),
+            std::get<0>(test_dat).size());
+        fstlog::byte_span output(out_buff.data(), out_buff.size());
+        
+        auto error = fstlog::parse_fmt_text(input, output);
         CHECK(error == fstlog::error_code::fmt_bad);
-        CHECK(in_pos <= in_end);
-        CHECK(out_pos <= out_end);
         std::string_view repl_out{ 
             reinterpret_cast<const char*>(out_buff.data()),
-            static_cast<std::size_t>(out_pos - out_buff.data()) };
+            static_cast<std::size_t>(out_buff.size() - output.size()) };
         CHECK(repl_out == std::get<1>(test_dat));
-        CHECK(in_pos == in_beg + std::get<2>(test_dat));
+        CHECK(std::get<0>(test_dat).size() - input.size() == std::get<2>(test_dat));
     };
 
     SECTION("error_code::buff_full") {
-
+        out_buff.resize(100);
         std::tuple<std::string_view, std::string_view, int, int> test_dat = GENERATE(
             std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "12345678901}" }, std::string_view{ "1" }, 1, 1 },
             std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "12345678901}" }, std::string_view{ "1234567890" }, 10, 10 },
-            std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "}}2345{{789}}{{" }, std::string_view{ "}2345{789}" }, 13, 19},
+            std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "}}2345{{789}}a" }, std::string_view{ "}2345{789}" }, 13, 19},
             std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "}}2345{{789}}{{" }, std::string_view{ "" }, 0, 0},
             std::tuple<std::string_view, std::string_view, int, int>{std::string_view{ "a" }, std::string_view{ "" }, 0, 0}
         );
-        auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-        auto in_pos = in_beg;
-        auto in_end = in_beg + std::get<0>(test_dat).size();
-        out_buff.resize(std::get<3>(test_dat));
-        auto out_pos = out_buff.data();
-        out_end = out_pos + out_buff.size();
+        
+        fstlog::byte_span_const input(
+            reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data()),
+            std::get<0>(test_dat).size());
+        fstlog::byte_span output(out_buff.data(), std::get<3>(test_dat));
             
-        auto error = fstlog::parse_fmt_text(in_pos, in_end, out_pos, out_end);
+        auto error = fstlog::parse_fmt_text(input, output);
         CHECK(error == fstlog::error_code::buff_full);
-        CHECK(in_pos <= in_end);
-        CHECK(out_pos <= out_end);
         std::string_view repl_out{
             reinterpret_cast<const char*>(out_buff.data()),
-            static_cast<std::size_t>(out_pos - out_buff.data()) };
+            static_cast<std::size_t>(std::get<3>(test_dat) - output.size()) };
         CHECK(repl_out == std::get<1>(test_dat));
-        CHECK(in_pos == in_beg + std::get<2>(test_dat));
+        CHECK(std::get<0>(test_dat).size() - input.size() == std::get<2>(test_dat));
     };
 
-    out_buff.resize(512);
-    out_end = out_buff.data() + out_buff.size();
-
-
     SECTION("error_code::none") {
-
+        out_buff.resize(512);
         std::tuple<std::string_view, std::string_view, int> test_dat = GENERATE(
             std::tuple<std::string_view, std::string_view, int>{std::string_view{ "{" }, std::string_view{ "" }, 0 },
             std::tuple<std::string_view, std::string_view, int>{std::string_view{ ":{" }, std::string_view{ ":" }, 1 },
@@ -119,20 +110,18 @@ TEST_CASE("parse_fmt_text") {
             std::tuple<std::string_view, std::string_view, int>{std::string_view{ "\x01\x02\x03""abxyz}}{{{" }, std::string_view{ "\\u0001\\u0002\\u0003abxyz}{" }, 12},
             std::tuple<std::string_view, std::string_view, int>{std::string_view{ "abc\x01\x02:}}{{{abc" }, std::string_view{ "abc\\u0001\\u0002:}{" }, 10 }
         );
-        auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-        auto in_pos = in_beg;
-        auto in_end = in_beg + std::get<0>(test_dat).size();
-        auto out_pos = out_buff.data();
-
-        auto error = fstlog::parse_fmt_text(in_pos, in_end, out_pos, out_end);
+        fstlog::byte_span_const input(
+            reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data()),
+            std::get<0>(test_dat).size());
+        fstlog::byte_span output(out_buff.data(), out_buff.size());
+        
+        auto error = fstlog::parse_fmt_text(input, output);
         CHECK(error == fstlog::error_code::none);
-        CHECK(in_pos <= in_end);
-        CHECK(out_pos <= out_end);
-        std::string_view repl_out{
+        std::string_view repl_out{ 
             reinterpret_cast<const char*>(out_buff.data()),
-            static_cast<std::size_t>(out_pos - out_buff.data()) };
+            static_cast<std::size_t>(out_buff.size() - output.size()) };
         CHECK(repl_out == std::get<1>(test_dat));
-        CHECK(in_pos == in_beg + std::get<2>(test_dat));
+        CHECK(std::get<0>(test_dat).size() - input.size() == std::get<2>(test_dat));
     };
 }
 
@@ -147,13 +136,13 @@ TEST_CASE("parse_fmt_repl_field") {
             std::tuple<std::string_view, std::string_view, std::string_view, int>{std::string_view{ "{abcd" }, std::string_view{ "" }, std::string_view{ "" }, 5 },
             std::tuple<std::string_view, std::string_view, std::string_view, int>{std::string_view{ "{abcd:xyz" }, std::string_view{ "" }, std::string_view{ "" }, 9 }
         );
-        auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-        auto in_pos = in_beg;
-        auto in_end = in_beg + std::get<0>(test_dat).size();
+        fstlog::byte_span_const input(
+            reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data()),
+            std::get<0>(test_dat).size());
             
         fstlog::byte_span_const field_name;
         fstlog::byte_span_const format_spec;
-        auto error = fstlog::parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
+        auto error = fstlog::parse_fmt_repl_field(input, field_name, format_spec);
         std::string_view name{
             reinterpret_cast<const char*>(field_name.data_bytes()),
             static_cast<std::size_t>(field_name.size_bytes()) };
@@ -161,10 +150,9 @@ TEST_CASE("parse_fmt_repl_field") {
             reinterpret_cast<const char*>(format_spec.data_bytes()),
             static_cast<std::size_t>(format_spec.size_bytes()) };
         CHECK(error == fstlog::error_code::fmt_bad);
-        CHECK(in_pos <= in_end);
         CHECK(name == std::get<1>(test_dat));
         CHECK(spec == std::get<2>(test_dat));
-        CHECK(in_pos == in_beg + std::get<3>(test_dat));
+        CHECK(std::get<0>(test_dat).size() - input.size() == std::get<3>(test_dat));
     };
 
     SECTION("error_code::none") {
@@ -179,13 +167,13 @@ TEST_CASE("parse_fmt_repl_field") {
             std::tuple<std::string_view, std::string_view, std::string_view, int>{std::string_view{ "{::}}" }, std::string_view{ "" }, std::string_view{ ":" }, 4 },
             std::tuple<std::string_view, std::string_view, std::string_view, int>{std::string_view{ "{abcd:xy:z}" }, std::string_view{ "abcd" }, std::string_view{ "xy:z" }, 11 }
         );
-        auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-        auto in_pos = in_beg;
-        auto in_end = in_beg + std::get<0>(test_dat).size();
+        fstlog::byte_span_const input(
+            reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data()),
+            std::get<0>(test_dat).size());
             
         fstlog::byte_span_const field_name;
         fstlog::byte_span_const format_spec;
-        auto error = fstlog::parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
+        auto error = fstlog::parse_fmt_repl_field(input, field_name, format_spec);
         std::string_view name{
             reinterpret_cast<const char*>(field_name.data_bytes()),
             static_cast<std::size_t>(field_name.size_bytes()) };
@@ -193,10 +181,9 @@ TEST_CASE("parse_fmt_repl_field") {
             reinterpret_cast<const char*>(format_spec.data_bytes()),
             static_cast<std::size_t>(format_spec.size_bytes()) };
         CHECK(error == fstlog::error_code::none);
-        CHECK(in_pos <= in_end);
         CHECK(name == std::get<1>(test_dat));
         CHECK(spec == std::get<2>(test_dat));
-        CHECK(in_pos == in_beg + std::get<3>(test_dat));
+        CHECK(std::get<0>(test_dat).size() - input.size() == std::get<3>(test_dat));
     };
 }
 

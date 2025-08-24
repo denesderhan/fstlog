@@ -35,91 +35,96 @@ namespace fstlog {
         }
                 
         // write the text part of the fmt format string in to out
-        inline error_code parse_fmt_text(
-            unsigned char const*& in_pos, unsigned char const* in_end,
-            unsigned char*& out_pos, unsigned char const* out_end) noexcept
-        {
-            FSTLOG_ASSERT(in_pos != nullptr && out_pos != nullptr);
-            // fast path (ASCII + no special {, })
-            auto fast_end = in_pos;
-            while (fast_end < in_end
-                && ((*fast_end >= 0x20) & (*fast_end < 0x7F)
-                    & (*fast_end != '}') & (*fast_end != '{')) != 0)
-            {
-                fast_end++;
+        inline error_code parse_fmt_text(byte_span_const& input, byte_span& output) noexcept {
+            // fast path (ASCII no special {, })
+            std::size_t char_num{ 0 };
+            const std::size_t input_size = input.size();
+            const std::size_t output_size = output.size();
+            const std::size_t max_char_num = input_size < output_size ? input_size : output_size;
+            while (char_num < max_char_num) {
+                const auto c = input.get(char_num);
+                if (c == '{' || c == '}') break; // special cases
+                if (c < 0x20 || c >= 0x7F) break; // not in safe ASCII range
+                char_num++;
             }
-            auto fast_len = static_cast<std::size_t>(fast_end - in_pos);
-            if (fast_len > static_cast<std::size_t>(out_end - out_pos)) fast_len = static_cast<std::size_t>(out_end - out_pos);
-            std::memcpy(out_pos, in_pos, fast_len);
-            in_pos += fast_len;
-            out_pos += fast_len;
+            memcpy(output.data_bytes(), input.data_bytes(), char_num);
+            input.drop_front(char_num);
+            output.drop_front(char_num);
 
             error_code error = error_code::none;
-            while (in_pos < in_end) {
-                bool skip = false;
-                if (*in_pos == '{' || *in_pos == '}') {
-                    if (in_end - in_pos > 1 && *(in_pos + 1) == *in_pos) {
-                        // skip the duplicated '{' or '}'
-                        skip = true;
-                    }
-                    else {
-                        // we got '}' instead of '{'
-                        if (*in_pos == '}') {
-                            error = error_code::fmt_bad;
+            while (!input.empty()) {
+                // special cases double, begin, end
+                if (input.template get<0>() == '{' || input.template get<0>() == '}') {
+                    // double "{{" or "}}" written as single "{" or "}"
+                    if (input.size() > 1 && input.template get<0>() == input.template get<1>()) {
+                        if (output.empty()) {
+                            error = error_code::buff_full;
+                            break;
                         }
-                        // break if '{' OR '}' (end of text OR error)
+                        output.template set<0>(input.template get<0>());
+                        input.template drop_front<2>();
+                        output.template drop_front<1>();
+                    }
+                    // "}" error end marker not expected
+                    else if (input.template get<0>() == '}') {
+                        error = error_code::fmt_bad;
+                        break;
+                    }
+                    // "{" end of text
+                    else {
                         break;
                     }
                 }
-                byte_span_const input(in_pos, static_cast<std::size_t>(in_end - in_pos));
-                byte_span output(out_pos, static_cast<std::size_t>(out_end - out_pos));
-                if (output.size() < 10) {
-                    error = error_code::buff_full;
-                    break;
+                else {
+                    if (output.size() < 10) {
+                        error = error_code::buff_full;
+                        break;
+                    }
+                    const auto codepoint = detail::utf::decode_utf8_char(input);
+                    detail::utf::encode_safe_utf8_char(codepoint, output);
                 }
-                std::uint32_t code_point = detail::utf::decode_utf8_char(input);
-                detail::utf::encode_safe_utf8_char(code_point, output);
-                out_pos = output.data_bytes();
-                in_pos = input.data_bytes();
-                if (skip) in_pos++;
             }
             return error;
         }
 
         // parse the replacement field part of the fmt format string in to out
         inline error_code parse_fmt_repl_field(
-            unsigned char const*& in_pos, unsigned char const* in_end,
+            byte_span_const& input,
             byte_span_const& field_name,
             byte_span_const& format_spec) noexcept
         {
-            FSTLOG_ASSERT(in_pos != nullptr && in_pos < in_end && *in_pos == '{');
-            in_pos++;
+            FSTLOG_ASSERT(
+                input.data_bytes() != nullptr 
+                && !input.empty()
+                && input.template get<0>() == '{');
+            input.template drop_front<1>();
             bool name_set = false;
-            const auto name_begin = in_pos;
+            const auto name_begin = input.data_bytes();
             auto name_end = name_begin;
-            auto spec_begin = in_pos;
+            auto spec_begin = name_begin;
             auto spec_end = spec_begin;
             error_code error = error_code::fmt_bad;
-            while (in_pos < in_end) {
-                if (*in_pos == '}') {
+            while (!input.empty()) {
+                if (input.template get<0>() == '}') {
                     if (!name_set) {
-                        name_end = in_pos;
-                        spec_begin = in_pos;
+                        name_end = input.data_bytes();
+                        spec_begin = name_end;
                     }
-                    spec_end = in_pos++;
+                    spec_end = input.data_bytes();
+                    input.template drop_front<1>();
                     error = error_code::none;
                     break;
                 }
-                else if (*in_pos == '{') {
+                else if (input.template get<0>() == '{') {
                     // error unmatched '{'
                     break;
                 }
-                else if (!name_set && *in_pos == ':') {
-                    name_end = in_pos;
-                    spec_begin = in_pos + 1;
+                else if (!name_set && input.template get<0>() == ':') {
+                    name_end = input.data_bytes();
+                    spec_begin = input.data_bytes() + 1;
                     name_set = true;
                 }
-                in_pos++;
+                input.template drop_front<1>();
             }
 
             if (error != error_code::none) {

@@ -67,25 +67,22 @@ namespace fstlog {
         }
 
         inline error_code parse_format_string(byte_span_const format_string) {
-            auto in_pos = format_string.data_bytes();
-            const auto in_end = in_pos + format_string.size_bytes();
-            auto out_pos = formatting_buffer_.data();
-            const auto out_end = out_pos + formatting_buffer_.size();
+            byte_span output(formatting_buffer_);
             bool has_message_field = false;
             while (true) {
-                auto error = parse_fmt_text(in_pos, in_end, out_pos, out_end);
+                auto error = parse_fmt_text(format_string, output);
                 if (error != error_code::none) return error;
-                if (in_pos == in_end) break;
+                if (format_string.empty()) break;
                 byte_span_const field_name;
                 byte_span_const format_spec;
-                error = parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
+                error = parse_fmt_repl_field(format_string, field_name, format_spec);
                 if (error != error_code::none) return error;
                 const auto field_id = get_repl_field_id(field_name);
                 if (field_id == logfield::Invalid) return error_code::fmt_bad;
                 else if (field_id == logfield::Message) has_message_field = true;
-                if (out_pos == out_end) return error_code::buff_full;
-                *out_pos++ = ut_cast(field_id);
-
+                if (output.empty()) return error_code::buff_full;
+                output.template set<0>(ut_cast(field_id));
+                output.template drop_front<1>();
                 if (field_id == logfield::Timestamp) {
                     error = this->init_encoder_timestamp(format_spec);
                     if (error != error_code::none) return error;
@@ -99,7 +96,7 @@ namespace fstlog {
             if (!has_message_field) return error_code::fmt_bad;
 
             log_fmt_str_len_ =
-                static_cast<std::uint32_t>(out_pos - formatting_buffer_.data());
+                static_cast<std::uint32_t>(formatting_buffer_.size() - output.size());
             msg_fmt_str_start_ =
                 padded_size<constants::cache_ls_nosharing>(log_fmt_str_len_);
             msg_fmt_str_cap_ =
@@ -212,22 +209,21 @@ namespace fstlog {
         }
 
         void write_message_field() noexcept {
-            const unsigned char* in_pos = message_fmt_string_.data_bytes();
-            const unsigned char* const in_end = in_pos + message_fmt_string_.size_bytes();
-            write_message_text(in_pos, in_end);
+            write_message_text(message_fmt_string_);
             if (this->has_error()) return;
             bool has_data = this->seek_field(logfield::Args);
             // message is only a simple text
-            if ((!has_data && in_pos == in_end)) return;
+            if (!has_data && message_fmt_string_.empty()) return;
             // no data with replacement field or data without replacement field
-            if (!has_data || in_pos == in_end) {
+            if (!has_data || message_fmt_string_.empty()) {
                 this->set_error(__FILE__, __LINE__, error_code::fmt_bad);
                 return;
             }
-            while (in_pos < in_end) {
+            while (!message_fmt_string_.empty()) {
                 byte_span_const field_name;
                 byte_span_const format_spec;
-                auto error = parse_fmt_repl_field(in_pos, in_end, field_name, format_spec);
+                auto error = parse_fmt_repl_field(message_fmt_string_, field_name, format_spec);
+                
                 if (error != error_code::none) {
                     this->set_error(__FILE__, __LINE__, error);
                     return;
@@ -235,7 +231,7 @@ namespace fstlog {
                 write_message_data(format_spec);
                 if (this->has_error()) return;
                 
-                write_message_text(in_pos, in_end);
+                write_message_text(message_fmt_string_);
                 if (this->has_error()) return;
             }
             // more data than replacement field
@@ -244,10 +240,10 @@ namespace fstlog {
             }
         }
 
-        void write_message_text(const unsigned char* &in_pos, const unsigned char* in_end) {
-            auto out_pos = this->output_ptr();
-            auto error = parse_fmt_text(in_pos, in_end, out_pos, this->output_end());
-            this->set_output_ptr_unchecked(out_pos);
+        void write_message_text(byte_span_const& input) {
+            byte_span output(this->output_ptr(), static_cast<std::size_t>(this->output_end() - this->output_ptr()));
+            auto error = parse_fmt_text(input, output);
+            this->set_output_ptr_unchecked(output.data_bytes());
             if (error != error_code::none) {
                 this->set_error(__FILE__, __LINE__, error);
             }
