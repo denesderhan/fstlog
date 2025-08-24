@@ -15,17 +15,21 @@ TEST_CASE("filter") {
 
     SECTION("construct") {
         fstlog::filter filt1;
+        CHECK(filt1.good());
         CHECK(filt1.pimpl() != nullptr);
         const auto filt1_ptr = reinterpret_cast<std::uintptr_t>(filt1.pimpl());
 
         fstlog::filter filt2(filt1);
         CHECK(filt1.pimpl() != nullptr);
         CHECK(reinterpret_cast<std::uintptr_t>(filt1.pimpl()) == filt1_ptr);
+        CHECK(filt2.good());
         CHECK(filt2.pimpl() != nullptr);
         CHECK(filt1.pimpl() != filt2.pimpl());
 
         fstlog::filter filt3(std::move(filt1));
         CHECK(filt1.pimpl() == nullptr);
+        CHECK(!filt1.good());
+        CHECK(filt3.good());
         CHECK(filt3.pimpl() != nullptr);
         CHECK(reinterpret_cast<std::uintptr_t>(filt3.pimpl()) == filt1_ptr);
         

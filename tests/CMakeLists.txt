@@ -42,6 +42,7 @@ set(src_unit_tests
     "unit_tests/logger_mt.cpp"
     "unit_tests/logger_st.cpp"
     "unit_tests/nearest_pow2.cpp"
+    "unit_tests/output.cpp"
     "unit_tests/padded_size.cpp"
     "unit_tests/shift_fill.cpp"
     "unit_tests/small_string.cpp"

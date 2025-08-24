@@ -35,8 +35,8 @@ namespace fstlog {
             bool truncate,
             std::size_t buffer_size) noexcept
         {
-            if (file_path == nullptr) return error_code::obj_null;
             if (handle_ != nullptr) return error_code::double_init;
+            if (file_path == nullptr) return error_code::path_bad;
             unaligned_span<const unsigned char> input(
                 safe_reinterpret_cast<const unsigned char*>(file_path), 
                 std::strlen(file_path));
@@ -106,7 +106,7 @@ namespace fstlog {
             FSTLOG_ASSERT(handle_ != nullptr);
             
             FILE* temp{ nullptr };
-            unaligned_span input(
+            unaligned_span<const unsigned char> input(
                 safe_reinterpret_cast<const unsigned char*>(file_path),
                 std::strlen(file_path));
 #if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
