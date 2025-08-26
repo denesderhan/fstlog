@@ -16,22 +16,25 @@
 
 namespace fstlog {
     namespace {
-        inline void uint_fromchars_4digit(
-            int& number,
-            const unsigned char*& begin,
-            const unsigned char* end) noexcept
-        {
-            // there is no number
-            if (begin >= end || !(*begin <= '9' && *begin >= '0')) return;
+        template<std::uint16_t default_value = 0>
+        inline std::uint16_t uint_fromchars_4digit(byte_span_const &input) noexcept {
+            if (input.empty()) return default_value;
+            auto digit = input.template get<0>();
+            if (digit > '9' || digit < '0') return default_value;
 
-            number = *begin++ - '0';
-            while (begin < end && *begin <= '9' && *begin >= '0') {
+            std::uint16_t number = digit - '0';
+            input.template drop_front<1>();
+
+            while (!input.empty()) {
+                digit = input.template get<0>();
+                if (digit > '9' || digit < '0') break;
+                input.template drop_front<1>();
                 if (number <= 999) {
                     number *= 10;
-                    number += *begin - '0';
+                    number += digit - '0';
                 }
-                begin++;
             }
+            return number;
         }
                 
         // write the text part of the fmt format string in to out
@@ -136,18 +139,13 @@ namespace fstlog {
             return error;
         }
 
-        inline const unsigned char* skip_fill_align(
-            const unsigned char* begin,
-            const unsigned char* end) noexcept
-        {
-            if (begin >= end) return begin;
-            auto pos = begin;
-            unaligned_span<const unsigned char> input(pos, static_cast<std::size_t>(end - pos));
-            std::uint32_t first_char = detail::utf::decode_utf8_char(input);
-            pos = input.data_bytes();
+        inline byte_span_const skip_fill_align(byte_span_const input) noexcept {
+            if (input.empty()) return input;
+            auto temp{ input };
+            std::uint32_t first_char = detail::utf::decode_utf8_char(temp);
             // check if there is a good fill char (first_char) + align char
-            if (pos < end) {
-                const unsigned char align_char{ *pos };
+            if (!temp.empty()) {
+                const unsigned char align_char{ temp.template get<0>() };
                 if (align_char == '<' ||
                     align_char == '>' ||
                     align_char == '^')
@@ -156,11 +154,12 @@ namespace fstlog {
                         && detail::utf::safe_utf_code_point(first_char))
                     {
                         // skip align char (and fill char)
-                        return pos + 1;
+                        temp.template drop_front<1>();
+                        return temp;
                     }
                     else {
                         // do not skip invalid/unsafe fill char (+ align char)
-                        return begin;
+                        return input;
                     }
                 }
             }
@@ -171,36 +170,31 @@ namespace fstlog {
                 first_char == '^')
             {
                 // skip single align char
-                return pos;
+                return temp;
             }
             // nothing to skip
-            return begin;
+            return input;
         }
 
-        inline const unsigned char* skip_sign_alt_0(
-            const unsigned char* begin,
-            const unsigned char* end) noexcept
-        {
-            auto out = begin;
-            if (out < end
-                && ((*out == '+') | (*out == '-') | (*out == ' ')) == 1) 
-            {
-                out++;
+        inline byte_span_const skip_sign_alt_0(byte_span_const input) noexcept {
+            std::size_t size = input.size();
+            if (size == 0) return input;
+            std::size_t skip{ 0 };
+            auto next_c = input.template get<0>();
+            if (next_c == '+' || next_c == '-' || next_c == ' ') {
+                if (size == 1) return input.template drop_front<1>();
+                skip = 1;
+                next_c = input.template get<1>();
             }
-            if (out < end && *out == '#') out++;
-            if (out < end && *out == '0') out++;
-            return out;
-        }
-
-        inline const unsigned char* skip_numbers(
-            const unsigned char* begin,
-            const unsigned char* end) noexcept
-        {
-            auto out = begin;
-            while (out != end && *out >= '0' && *out <= '9') {
-                out++;
+            if (next_c == '#') {
+                skip++;
+                if (size == skip) return input.drop_front(skip);
+                next_c = input.get(skip);
             }
-            return out;
+            if (next_c == '0') {
+                skip++;
+            }
+            return input.drop_front(skip);
         }
 
         inline tz_format get_zone(byte_span_const &format_str) noexcept {
@@ -217,23 +211,33 @@ namespace fstlog {
             return out;
         }
 
-        inline int get_width(
-            const unsigned char*& begin,
-            const unsigned char* end) noexcept
-        {
-            int width{ 0 };
-            uint_fromchars_4digit(width, begin, end);
-            return width;
+        inline std::uint16_t get_width(byte_span_const &input) noexcept {
+            return uint_fromchars_4digit<0>(input);
         }
 
-        inline void get_precision(
-            int &precision,
-            const unsigned char*& begin,
-            const unsigned char* end) noexcept
-        {
-            if (begin < end && *begin == '.') {
-                uint_fromchars_4digit(precision, ++begin, end);
+        inline std::uint16_t get_precision(byte_span_const& input) noexcept {
+            constexpr std::uint16_t default_value = 0xffff;
+            if (input.empty() || input.template get<0>() != '.') return default_value;
+            input.template drop_front<1>();
+            return uint_fromchars_4digit<default_value>(input);
+        }
+
+        // skips a valid format spec. number (max 4 digits, if starts with 0 max 1 digit)
+        inline byte_span_const skip_valid_fmt_number(byte_span_const input) noexcept {
+            if (input.empty()) return input;
+            auto digit = input.template get<0>();
+            if (digit == '0') return input.template drop_front<1>();
+
+            auto max_digits = input.size();
+            if (max_digits > 4) max_digits = 4;
+            std::size_t digits = 0;
+            while (true) {
+                if (digit > '9' || digit < '0') break;
+                digits++;
+                if (digits == max_digits) break;
+                digit = input.get(digits);
             }
+            return input.drop_front(digits);
         }
 
         inline error_code time_format(
@@ -245,19 +249,16 @@ namespace fstlog {
                 time_fmt = form_spec;
                 return error;
             }
-            const auto begin = form_spec.data_bytes();
-            const auto end = begin + form_spec.size_bytes();
-            auto pos = begin;
-            pos = skip_fill_align(pos, end);
-            const auto pos_0{ pos };
-            pos = skip_sign_alt_0(pos, end);
-            if (pos != pos_0) {
-                // "[sign][#][0] not supported in timestamp formatting (format string)!"
+            auto res = skip_fill_align(form_spec);
+            // "[sign][#][0] not supported in timestamp formatting (format string)!"
+            auto skip = skip_sign_alt_0(res);
+            if (skip.data_bytes() != res.data_bytes()) {
+                res = skip;
                 error = error_code::fmt_bad;
             }
-            pos = skip_numbers(pos, end);
-            form_spec = byte_span_const{ begin, static_cast<std::size_t>(pos - begin) };
-            time_fmt = byte_span_const{ pos, static_cast<std::size_t>(end - pos) };
+            res = skip_valid_fmt_number(res);
+            form_spec.drop_back(res.size());
+            time_fmt = res;
             return error;
         }
 
@@ -317,58 +318,36 @@ namespace fstlog {
             return (valid_type_spec_lut >> bit_pos) & 1;
         }
 
-        // if a number begins at pos 'begin' skips the digits
-        // and checks if it is valid
-        inline bool skip_valid_fmt_number(
-            const unsigned char* &begin,
-            const unsigned char* end) noexcept
-        {
-            FSTLOG_ASSERT(begin <= end);
-            constexpr int max_digits = 4;
-            // no number to skip
-            if (begin == end || *begin < '0' || *begin > '9') return true;
-            // valid number can not begin with '0'
-            if (*begin++ == '0') return false;
-            int digits = 1;
-            while (digits <= max_digits && begin < end
-                && *begin >= '0' && *begin <= '9') 
-            {
-                begin++;
-                digits++;
-            }
-            return (digits <= max_digits);
-        }
-
         inline bool valid_format_spec(byte_span_const format_spec) {
             if (format_spec.empty()) return true;
-            auto pos = format_spec.data_bytes();
-            const auto end = pos + format_spec.size_bytes();
-            
+                        
             // skip the fill_char AND the alignment specifier if valid + safe
-            pos = skip_fill_align(pos, end);
+            format_spec = skip_fill_align(format_spec);
             // if not the following checks will fail 
                         
             // sign '#' '0'
-            pos = skip_sign_alt_0(pos, end);
+            format_spec = skip_sign_alt_0(format_spec);
             // width
-            if(!skip_valid_fmt_number(pos, end)) return false;
-            if (pos == end) return true;
+            format_spec = skip_valid_fmt_number(format_spec);
+            if (format_spec.empty()) return true;
             // if there is a precision specifier
-            if (*pos == '.') {
-                pos++; // skip dot
-                const auto prec_begin = pos;
-                if (!skip_valid_fmt_number(pos, end)) return false;
+            if (format_spec.template get<0>() == '.') {
+                format_spec.template drop_front<1>();
+                const auto temp = format_spec;
+                format_spec = skip_valid_fmt_number(format_spec);
                 // number is mandatory after a '.'
-                if (prec_begin == pos) return false;
+                if (temp.data_bytes() == format_spec.data_bytes()) return false;
             }
-            if (pos == end) return true;
-            // 'L' use local decimal separator specifier
-            if (*pos == 'L') pos++;
+            if (format_spec.empty()) return true;
+            // 'L' local decimal separator usage specifier
+            if (format_spec.template get<0>() == 'L') {
+                format_spec.template drop_front<1>();
+            }
             // type is not mandatory
-            if (pos == end) return true;
+            if (format_spec.empty()) return true;
             // type must be 1 char
-            if (end - pos != 1) return false;
-            return valid_fmt_type_spec(*pos);
+            if (format_spec.size() != 1) return false;
+            return valid_fmt_type_spec(format_spec.template get<0>());
         }
     }
 }

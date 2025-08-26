@@ -90,24 +90,33 @@ namespace fstlog {
                     return format_type{ safe_reinterpret_cast<const char*>(out.data()),  4 };
                 }
             }
-            const auto in_beg{ safe_reinterpret_cast<const unsigned char*>(format.data()) };
-            const auto in_end{ in_beg + format.size() - 1 };
-            auto out_end_pos{ out.data() + 2 }; // 2 byte
-            auto align_beg = in_beg + 2;
-            auto align_end = skip_fill_align(align_beg, in_end);
-            const auto align_len = static_cast<std::size_t>(align_end - align_beg);
-            std::memcpy(out_end_pos, align_beg, align_len);
-            out_end_pos += align_len; // max 5 byte
-            auto width_beg = skip_sign_alt_0(align_end, in_end);
-            auto width_end = skip_numbers(width_beg, in_end);
-            const auto width_len = static_cast<std::size_t>(width_end - width_beg);
-            std::memcpy(out_end_pos, width_beg, width_len);
-            out_end_pos += width_len; // max 4 byte
+            byte_span_const input(
+                safe_reinterpret_cast<const unsigned char*>(format.data()) + 2,
+                format.size() - 3);
+            byte_span output(out.data() + 2, out.size() - 3); // 21 bytes
+            // copy fill-align
+            auto temp = input;
+            input = skip_fill_align(input);
+            const auto align_len = temp.size() - input.size();
+            FSTLOG_ASSERT(align_len <= 5);
+            std::memcpy(output.data_bytes(), temp.data_bytes(), align_len);
+            output.drop_front(align_len); // max 5 byte
+            // skip
+            input = skip_sign_alt_0(input);
+            // copy width
+            temp = input;
+            input = skip_valid_fmt_number(input);
+            const auto width_len = static_cast<std::size_t>(temp.size() - input.size());
+            std::memcpy(output.data_bytes(), temp.data_bytes(), width_len);
+            output.drop_front(width_len); // max 4 bytes
+
             if (type_char != 0) {
-                *out_end_pos++ = type_char;
+                output.template set<0>(type_char);
+                output.template drop_front<1>();
             }
-            const std::size_t out_size = ++out_end_pos - out.data();
-            return format_type{ safe_reinterpret_cast<const char*>(out.data()),  out_size };
+            return format_type{ 
+                safe_reinterpret_cast<const char*>(out.data()),  
+                static_cast<std::size_t>(output.data_bytes() - out.data()) + 1};
         }
 
     private:

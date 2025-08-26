@@ -9,9 +9,9 @@
 #include <fstlog/detail/error_code.hpp>
 
 TEST_CASE("uint_fromchars_4digit") {
-    auto data = GENERATE(
-        std::make_tuple(std::string_view(""), 12345678, 0),
-        std::make_tuple(std::string_view("a"), 12345678, 0),
+    auto test_dat = GENERATE(
+        std::make_tuple(std::string_view(""), 1000, 0),
+        std::make_tuple(std::string_view("a"), 1000, 0),
         std::make_tuple(std::string_view("0"), 0, 1),
         std::make_tuple(std::string_view("0a"), 0, 1),
         std::make_tuple(std::string_view("123"), 123, 3),
@@ -29,14 +29,13 @@ TEST_CASE("uint_fromchars_4digit") {
         std::make_tuple(std::string_view("00999000a"), 9990, 8)
     );
 
-    auto str = std::get<0>(data);
-    const auto begin = reinterpret_cast<const unsigned char*>(str.data());
-    const auto end = begin + str.size();
-    auto ptr = begin;
-    int number = 12345678;
-    fstlog::uint_fromchars_4digit(number, ptr, end);
-    CHECK(number == std::get<1>(data));
-    CHECK(std::get<2>(data) == ptr - begin);
+    auto str = std::get<0>(test_dat);
+    CAPTURE(str);
+    fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    auto temp = input;
+    auto number = fstlog::uint_fromchars_4digit<1000>(input);
+    CHECK(number == std::get<1>(test_dat));
+    CHECK(temp.size() - input.size() == std::get<2>(test_dat));
 }
 
 TEST_CASE("parse_fmt_text") {
@@ -222,11 +221,9 @@ TEST_CASE("skip_fill_align") {
     );
     auto str = std::get<0>(test_dat);
     CAPTURE(str);
-    auto in_beg = reinterpret_cast<const unsigned char*>(str.data());
-    auto in_end = in_beg + str.size();
-
-    auto pos = fstlog::skip_fill_align(in_beg, in_end);
-    CHECK(pos == in_beg + std::get<1>(test_dat));
+    fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    auto res = fstlog::skip_fill_align(input);
+    CHECK(input.size() - res.size() == std::get<1>(test_dat));
 }
 
 
@@ -281,45 +278,11 @@ TEST_CASE("skip_sign_alt_0") {
         std::pair<std::string_view, int>{std::string_view{ "0-#" }, 1 }
 
     );
-    auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-    auto in_end = in_beg + std::get<0>(test_dat).size();
-    auto pos = fstlog::skip_sign_alt_0(in_beg, in_end);
-    std::string_view test_str = std::get<0>(test_dat);
-    INFO("The string was: " << test_str);
-    CHECK(pos == in_beg + std::get<1>(test_dat));
-}
-
-TEST_CASE("skip_numbers") {
-    std::pair<std::string_view, int> test_dat = GENERATE(
-        std::pair<std::string_view, int>{std::string_view{ "" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ "abcd" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ ".123" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ "<1234" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ ">1234" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ "^1234" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ ":>" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ "\xf8\x01\x02>>>" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ " " }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ " 0.123" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ "+0ddd" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ "-0LL" }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ "#0  " }, 0 },
-        std::pair<std::string_view, int>{std::string_view{ "0-#" }, 1 },
-        std::pair<std::string_view, int>{std::string_view{ "000123" }, 6 },
-        std::pair<std::string_view, int>{std::string_view{ "000123abc" }, 6 },
-        std::pair<std::string_view, int>{std::string_view{ "000123 abc" }, 6 },
-        std::pair<std::string_view, int>{std::string_view{ "000123\xf8" }, 6 },
-        std::pair<std::string_view, int>{std::string_view{ "0123456789abc" }, 10 },
-        std::pair<std::string_view, int>{std::string_view{ "0123456789abc" }, 10 },
-        std::pair<std::string_view, int>{std::string_view{ "012/" }, 3 },
-        std::pair<std::string_view, int>{std::string_view{ "012:" }, 3 }
-    );
-    auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-    auto in_end = in_beg + std::get<0>(test_dat).size();
-    auto pos = fstlog::skip_numbers(in_beg, in_end);
-    std::string_view test_str = std::get<0>(test_dat);
-    INFO("The string was: " << test_str);
-    CHECK(pos == in_beg + std::get<1>(test_dat));
+    auto str = std::get<0>(test_dat);
+    CAPTURE(str);
+    fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    auto res = fstlog::skip_sign_alt_0(input);
+    CHECK(input.size() - res.size() == std::get<1>(test_dat));
 }
 
 TEST_CASE("get_zone") {
@@ -366,46 +329,43 @@ TEST_CASE("get_width") {
         std::tuple<std::string_view, int, int> {std::string_view{ "00010000" }, 1000, 8 },
         std::tuple<std::string_view, int, int> {std::string_view{ "10  " }, 10, 2 }
     );
-    auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-    auto in_end = in_beg + std::get<0>(test_dat).size();
-    auto pos = in_beg;
-    int width = fstlog::get_width(pos, in_end);
-    std::string_view test_str = std::get<0>(test_dat);
-    INFO("The string was: " << test_str);
+    auto str = std::get<0>(test_dat);
+    CAPTURE(str);
+    fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    auto temp = input;
+    auto width = fstlog::get_width(input);
     CHECK(width == std::get<1>(test_dat));
-    CHECK(pos == in_beg + std::get<2>(test_dat));
+    CHECK(temp.size() - input.size() == std::get<2>(test_dat));
 }
 
 TEST_CASE("get_precision") {
-    std::tuple<std::string_view, int, int, int> test_dat = GENERATE(
-        std::tuple<std::string_view, int, int, int> {std::string_view{ "" }, 0xffff, 0xffff, 0 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ " 0123" }, 0, 0, 0 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ "#012" }, 1, 1, 0 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ "\xf8""012" }, 0xffff, 0xffff, 0 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ "\xc2\xa9""012" }, 0xffff, 0xffff, 0 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ "123 acc" }, 0xffff, 0xffff, 0 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ "00001234abcd" }, 0xffff, 0xffff, 0 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ "9999abcd" }, 0xffff, 0xffff, 0 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ ".123 acc" }, 0xffff, 123, 4 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ ".00001234abcd" }, 0xffff, 1234, 9 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ ".000012340abcd" }, 0xffff, 1234, 10 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ ".00000abcd" }, 0xffff, 0, 6 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ ".9999abcd" }, 0xffff, 9999, 5 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ ".09999abcd" }, 0xffff, 9999, 6 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ ".1abcd" }, 0xffff, 1, 2 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ ".999" }, 0xffff, 999, 4 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ ".00010000" }, 0xffff, 1000, 9 },
-        std::tuple<std::string_view, int, int, int> {std::string_view{ ".10  " }, 0xffff, 10, 3 }
+    std::tuple<std::string_view, int, int> test_dat = GENERATE(
+        std::tuple<std::string_view, int, int> {std::string_view{ "" }, 0xffff, 0 },
+        std::tuple<std::string_view, int, int> {std::string_view{ " 0123" }, 0xffff, 0 },
+        std::tuple<std::string_view, int, int> {std::string_view{ "#012" }, 0xffff, 0 },
+        std::tuple<std::string_view, int, int> {std::string_view{ "\xf8""012" }, 0xffff, 0 },
+        std::tuple<std::string_view, int, int> {std::string_view{ "\xc2\xa9""012" }, 0xffff, 0 },
+        std::tuple<std::string_view, int, int> {std::string_view{ "123 acc" }, 0xffff, 0 },
+        std::tuple<std::string_view, int, int> {std::string_view{ "00001234abcd" }, 0xffff, 0 },
+        std::tuple<std::string_view, int, int> {std::string_view{ "9999abcd" }, 0xffff, 0 },
+        std::tuple<std::string_view, int, int> {std::string_view{ ".123 acc" }, 123, 4 },
+        std::tuple<std::string_view, int, int> {std::string_view{ ".00001234abcd" }, 1234, 9 },
+        std::tuple<std::string_view, int, int> {std::string_view{ ".000012340abcd" }, 1234, 10 },
+        std::tuple<std::string_view, int, int> {std::string_view{ ".00000abcd" }, 0, 6 },
+        std::tuple<std::string_view, int, int> {std::string_view{ ".9999abcd" }, 9999, 5 },
+        std::tuple<std::string_view, int, int> {std::string_view{ ".09999abcd" }, 9999, 6 },
+        std::tuple<std::string_view, int, int> {std::string_view{ ".1abcd" }, 1, 2 },
+        std::tuple<std::string_view, int, int> {std::string_view{ ".999" }, 999, 4 },
+        std::tuple<std::string_view, int, int> {std::string_view{ ".00010000" }, 1000, 9 },
+        std::tuple<std::string_view, int, int> {std::string_view{ ".10  " }, 10, 3 }
     );
-    auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-    auto in_end = in_beg + std::get<0>(test_dat).size();
-    auto pos = in_beg;
-    int precision = std::get<1>(test_dat);
-    fstlog::get_precision(precision, pos, in_end);
-    std::string_view test_str = std::get<0>(test_dat);
-    INFO("The string was: " << test_str);
-    CHECK(precision == std::get<2>(test_dat));
-    CHECK(pos == in_beg + std::get<3>(test_dat));
+    auto str = std::get<0>(test_dat);
+    CAPTURE(str);
+    fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    auto temp = input;
+    auto precision = fstlog::get_precision(input);
+    CHECK(precision == std::get<1>(test_dat));
+    CHECK(temp.size() - input.size() == std::get<2>(test_dat));
 }
 
 TEST_CASE("time_format") {
@@ -514,28 +474,27 @@ TEST_CASE("valid_fmt_type_spec") {
 
 TEST_CASE("skip_valid_fmt_number") {
     auto test_dat = GENERATE(
-        std::make_tuple(std::string_view{ "" }, true, 0),
-        std::make_tuple(std::string_view{ "abcd" }, true, 0),
-        std::make_tuple(std::string_view{ "1abc" }, true, 1),
-        std::make_tuple(std::string_view{ "12a3abc" }, true, 2),
-        std::make_tuple(std::string_view{ "123abc" }, true, 3),
-        std::make_tuple(std::string_view{ "1000abc" }, true, 4),
-        std::make_tuple(std::string_view{ "9123abc" }, true, 4),
-        std::make_tuple(std::string_view{ "0abc" }, false, 1),
-        std::make_tuple(std::string_view{ "00abc" }, false, 1),
-        std::make_tuple(std::string_view{ "0123abc" }, false, 1),
-        std::make_tuple(std::string_view{ "80000dsf" }, false, 5),
-        std::make_tuple(std::string_view{ "80000234dsf" }, false, 5),
-        std::make_tuple(std::string_view{ "1" }, true, 1),
-        std::make_tuple(std::string_view{ "12" }, true, 2),
-        std::make_tuple(std::string_view{ "123" }, true, 3),
-        std::make_tuple(std::string_view{ "1000" }, true, 4),
-        std::make_tuple(std::string_view{ "9123" }, true, 4)
+        std::make_tuple(std::string_view{ "" }, 0),
+        std::make_tuple(std::string_view{ "abcd" }, 0),
+        std::make_tuple(std::string_view{ "1abc" }, 1),
+        std::make_tuple(std::string_view{ "12a3abc" }, 2),
+        std::make_tuple(std::string_view{ "123abc" }, 3),
+        std::make_tuple(std::string_view{ "1000abc" }, 4),
+        std::make_tuple(std::string_view{ "9123abc" }, 4),
+        std::make_tuple(std::string_view{ "0abc" }, 1),
+        std::make_tuple(std::string_view{ "00abc" }, 1),
+        std::make_tuple(std::string_view{ "0123abc" }, 1),
+        std::make_tuple(std::string_view{ "80000dsf" }, 4),
+        std::make_tuple(std::string_view{ "80000234dsf" }, 4),
+        std::make_tuple(std::string_view{ "1" }, 1),
+        std::make_tuple(std::string_view{ "12" }, 2),
+        std::make_tuple(std::string_view{ "123" }, 3),
+        std::make_tuple(std::string_view{ "1000" }, 4),
+        std::make_tuple(std::string_view{ "9123" }, 4)
     );
-    const auto in_beg = reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data());
-    auto pos = in_beg;
-    auto in_end = in_beg + std::get<0>(test_dat).size();
-
-    CHECK(fstlog::skip_valid_fmt_number(pos, in_end) == std::get<1>(test_dat));
-    CHECK(pos - in_beg == std::get<2>(test_dat));
+    auto str = std::get<0>(test_dat);
+    CAPTURE(str);
+    fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    auto res = fstlog::skip_valid_fmt_number(input);
+    CHECK(input.size() - res.size() == std::get<1>(test_dat));
 }

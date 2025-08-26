@@ -67,47 +67,48 @@ namespace fstlog {
         {
             format_type out;
             if (form_spec.empty()) return out;
-            auto pos = form_spec.data_bytes();
-            const auto end = pos + form_spec.size_bytes();
             // fill align
-            auto align_pos = pos;
-            pos = skip_fill_align(pos, end);
-            auto align_end = pos;
-            if (pos == end) return out;
+            auto align_pos = form_spec.data_bytes();
+            form_spec = skip_fill_align(form_spec);
+            auto align_end = form_spec.data_bytes();
             // sign
-            if (*pos == '-' || *pos == ' ' || *pos == '+') {
-                out.sign = *pos++;
-                if (pos == end) return out;
+            if (form_spec.empty()) return out;
+            auto fmt_c = form_spec.template get<0>();
+            if (fmt_c == '-' || fmt_c == ' ' || fmt_c == '+') {
+                out.sign = fmt_c;
+                form_spec.template drop_front<1>();
+                if (form_spec.empty()) return out;
+                fmt_c = form_spec.template get<0>();
             }
             // alternate
-            if (*pos == '#') {
+            if (fmt_c == '#') {
                 out.alternate = true;
-                pos++;
-                if (pos == end) return out;
+                form_spec.template drop_front<1>();
+                if (form_spec.empty()) return out;
+                fmt_c = form_spec.template get<0>();
             }
             //skip ["0"]
-            if (*pos == '0') {
-                pos++;
-                if (pos == end) return out;
+            if (fmt_c == '0') {
+                form_spec.template drop_front<1>();
+                if (form_spec.empty()) return out;
             }
             // get width
-            out.width = static_cast<std::uint16_t>(get_width(pos, end));
+            out.width = get_width(form_spec);
             // set fill align
             if (out.width != 0 && align_pos < align_end) {
                 out.align = *--align_end;
-                FSTLOG_ASSERT(align_end - align_pos <= 4);
-                memcpy(out.fill_char.data(), align_pos, static_cast<std::size_t>(align_end - align_pos));
+                const std::size_t utf8_seq_len = static_cast<std::size_t>(align_end - align_pos);
+                FSTLOG_ASSERT(utf8_seq_len <= out.fill_char.size());
+                memcpy(out.fill_char.data(), align_pos, utf8_seq_len);
             }
-            if (pos == end) return out;
+            if (form_spec.empty()) return out;
             
             // precision
-            int precision = static_cast<int>(out.precision);
-            get_precision(precision, pos, end);
-            out.precision = static_cast<std::uint16_t>(precision);
-            if (pos == end) return out;
+            out.precision = get_precision(form_spec);
+            if (form_spec.empty()) return out;
             
             // type
-            out.type = *(end - 1);
+            out.type = *(form_spec.data_bytes() + form_spec.size() - 1);
             
             return out;
         }

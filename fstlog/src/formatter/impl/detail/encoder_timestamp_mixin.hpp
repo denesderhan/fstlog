@@ -185,33 +185,29 @@ namespace fstlog {
             byte_span_const& time_format,
             format_setting_txt& format) noexcept
         {
-            const auto begin = time_format.data_bytes();
-            const auto end = begin + time_format.size_bytes();
-            auto pos = begin;
-
-            pos = skip_fill_align(pos, end);
+            auto temp = time_format;
+            time_format = skip_fill_align(time_format);
             if constexpr (use_fill_align) {
-                auto fill_begin = begin;
-                auto align_end = pos;
-                if (fill_begin < align_end) format.align = *--align_end;
-                std::memcpy(format.fill_char.data(), fill_begin, static_cast<std::size_t>(align_end - fill_begin));
+                auto fill_begin = temp.data_bytes();
+                auto align_end = time_format.data_bytes();
+                if (fill_begin < align_end) {
+                    format.align = *--align_end;
+                }
+                const std::size_t utf8_seq_len = static_cast<std::size_t>(align_end - fill_begin);
+                FSTLOG_ASSERT(utf8_seq_len <= format.fill_char.size());
+                std::memcpy(format.fill_char.data(), fill_begin, utf8_seq_len);
             }
-
-            auto pos0 = pos;
-            // sign, alt '0' is ignored
-            pos = skip_sign_alt_0(pos, end);
-            if (pos != pos0) {
+            temp = skip_sign_alt_0(time_format);
+            // usage of sign, alt '0' is an error
+            if (temp.data_bytes() != time_format.data_bytes()) {
                 return error_code::fmt_bad;
             }
 
-            format.width = static_cast<std::uint16_t>(get_width(pos, end));
+            format.width = get_width(time_format);
             // precision is the precision of seconds (precision 0: "30" precision 2 : "30.44")
-            int precision = 6;
-            get_precision(precision, pos, end);
+            auto precision = get_precision(time_format);
             if (precision > 9) precision = 9;
             second_precision_ = static_cast<unsigned char>(precision);
-            
-            time_format = byte_span_const(pos, static_cast<std::size_t>(end - pos));
             return error_code::none;
         }
 

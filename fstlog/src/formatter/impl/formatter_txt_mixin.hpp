@@ -253,11 +253,7 @@ namespace fstlog {
             auto type_signature = L::get_signature_skip_arg_header();
             // no data
             if (this->has_error()) return;
-#ifndef NDEBUG
-            if (!valid_format_spec(format_spec)) {
-                this->set_error(__FILE__, __LINE__, error_code::fmt_bad);
-            }
-#endif
+
             auto form = this->get_format(format_spec);
             // non aggregate
             if (type_signature.size_bytes() <= 1) {
