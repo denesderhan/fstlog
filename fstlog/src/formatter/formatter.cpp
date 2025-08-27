@@ -41,7 +41,12 @@ namespace fstlog {
         other.pimpl_ = nullptr;
         return *this;
     }
-
+    bool formatter::operator==(const formatter& other) const noexcept {
+        return pimpl_ == other.pimpl_;
+    }
+    bool formatter::operator!=(const formatter& other) const noexcept {
+        return !(*this == other);
+    }
     error_code formatter::clone(formatter& out) const noexcept {
         if (pimpl_ == nullptr) {
             out = formatter{};

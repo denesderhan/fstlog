@@ -15,9 +15,10 @@ namespace fstlog {
         FSTLOG_API log_buffer& operator=(const log_buffer& other) noexcept;
         FSTLOG_API log_buffer(log_buffer&& other) noexcept;
         FSTLOG_API log_buffer& operator=(log_buffer&& other) noexcept;
-        
-        FSTLOG_API bool good() const noexcept;
+        FSTLOG_API bool operator==(const log_buffer& other) const noexcept;
+        FSTLOG_API bool operator!=(const log_buffer& other) const noexcept;
 
+        FSTLOG_API bool good() const noexcept;
         FSTLOG_API std::uint32_t size() const noexcept;
         FSTLOG_API std::uint32_t max_message_size() const noexcept;
         FSTLOG_API std::uint32_t writeable_size() const noexcept;

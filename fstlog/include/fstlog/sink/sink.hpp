@@ -13,6 +13,8 @@ namespace fstlog {
         FSTLOG_API sink& operator=(const sink& other) noexcept;
         FSTLOG_API sink(sink&& other) noexcept;
         FSTLOG_API sink& operator=(sink&& other) noexcept;
+        FSTLOG_API bool operator==(const sink& other) const noexcept;
+        FSTLOG_API bool operator!=(const sink& other) const noexcept;
         FSTLOG_API bool good() const noexcept;
         
         explicit sink(sink_interface* pimpl) noexcept;

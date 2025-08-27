@@ -79,6 +79,12 @@ namespace fstlog {
         other.pimpl_ = nullptr;
         return *this;
     }
+    bool core::operator==(const core& other) const noexcept {
+        return pimpl_ == other.pimpl_;
+    }
+    bool core::operator!=(const core& other) const noexcept {
+        return !(*this == other);
+    }
 
     bool core::start() noexcept {
         if (good()) { 

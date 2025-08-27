@@ -37,6 +37,12 @@ namespace fstlog {
         other.pimpl_ = nullptr;
         return *this;
     }
+    bool sink::operator==(const sink& other) const noexcept {
+        return pimpl_ == other.pimpl_;
+    }
+    bool sink::operator!=(const sink& other) const noexcept {
+        return !(*this == other);
+    }
     sink::~sink()  noexcept {
         if (pimpl_ != nullptr)
             pimpl_->release_referred();

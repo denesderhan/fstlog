@@ -23,8 +23,10 @@ TEST_CASE("core") {
         fstlog::core core_2{ "core_2" };
         fstlog::core core_3{ nullptr };
         fstlog::core core_4{ nullptr };
+        CHECK(core_1 != core_2);
         CHECK(core_1.id() != core_2.id());
         CHECK(core_1.id() != core_3.id());
+        CHECK(core_3 == core_4);
         CHECK(core_3.id() == core_4.id());
 
         core_3 = fstlog::core{ "core_3" };
@@ -33,6 +35,7 @@ TEST_CASE("core") {
         
         core_4 = core_3;
         CHECK(core_3.pimpl() == core_4.pimpl());
+        CHECK(core_4 == core_3);
     };
 
     SECTION("core_limit") {    

@@ -40,6 +40,8 @@ namespace fstlog {
         FSTLOG_API core& operator=(const core& other) noexcept;
         FSTLOG_API core(core&& other) noexcept;
         FSTLOG_API core& operator=(core&& other) noexcept;
+        FSTLOG_API bool operator==(const core& other) const noexcept;
+        FSTLOG_API bool operator!=(const core& other) const noexcept;
 
         FSTLOG_API bool start() noexcept;
         FSTLOG_API bool stop() noexcept;

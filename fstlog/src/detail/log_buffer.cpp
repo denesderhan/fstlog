@@ -53,6 +53,12 @@ namespace fstlog {
         other.pimpl_ = nullptr;
         return *this;
     }
+    bool log_buffer::operator==(const log_buffer& other) const noexcept {
+        return pimpl_ == other.pimpl_;
+    }
+    bool log_buffer::operator!=(const log_buffer& other) const noexcept {
+        return !(*this == other);
+    }
     bool log_buffer::good() const noexcept {
         return pimpl_ != nullptr && pimpl_->good();
     }

@@ -37,6 +37,12 @@ namespace fstlog {
         other.pimpl_ = nullptr;
         return *this;
     }
+    bool output::operator==(const output& other) const noexcept {
+        return pimpl_ == other.pimpl_;
+    }
+    bool output::operator!=(const output& other) const noexcept {
+        return !(*this == other);
+    }
     output::~output() noexcept {
         if (pimpl_ != nullptr)
             pimpl_->release_referred();
