@@ -7,6 +7,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -207,6 +208,29 @@ TEST_CASE("formatter_txt_mixin") {
         LOG_INFO(logger, "String: {}", "This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer of size 128 bytes!");
         core.flush();
         CHECK(out_str->str() == "String: This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer of\n");
+        core.release_sink(out_sink);
+    };
+
+    SECTION("empty_string") {
+        fstlog::sink out_sink;
+        auto out_str = std::make_shared<std::ostringstream>(std::stringstream::binary);
+        auto output = fstlog::output_stream(out_str);
+        auto sink_error = fstlog::sink_small(
+            out_sink,
+            fstlog::formatter_txt("{message}"),
+            output,
+            fstlog::filter_internal{ fstlog::level::All, 1, 255 },
+            fstlog::config::default_sink_flush_interval,
+            fstlog::fstlog_allocator{});
+        CHECK(sink_error == fstlog::error_code::none);
+        core.add_sink(out_sink);
+        fstlog::logger_st logger(core);
+        CHECK(logger.good());
+        LOG_INFO(logger, "{}{}{}{}{}{}{}", "", std::string{}, std::u16string{}, std::u32string{}, std::string_view{}, std::basic_string_view<char16_t>{}, std::basic_string_view<char32_t>{});
+        core.flush();
+        std::string control;
+        control += '\n';
+        CHECK(out_str->str() == control);
         core.release_sink(out_sink);
     };
 }
