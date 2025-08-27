@@ -64,7 +64,7 @@ namespace fstlog {
         FSTLOG_API log_buffer& detail_tls_buffer() noexcept;
         FSTLOG_API explicit core(core_impl* pimpl)  noexcept;
         
-        core_impl* pimpl() const noexcept;
+        FSTLOG_API core_impl* pimpl() const noexcept;
     private:
         FSTLOG_API error_code init(allocator_type const& allocator = {}) noexcept;
         FSTLOG_API error_code init(

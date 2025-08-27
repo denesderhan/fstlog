@@ -31,7 +31,7 @@ namespace fstlog {
         FSTLOG_API void advance_write_pos(std::uint32_t adv_size) noexcept;
 
         explicit log_buffer(log_buffer_impl* pimpl) noexcept;
-        log_buffer_impl* pimpl() const noexcept;
+        FSTLOG_API log_buffer_impl* pimpl() const noexcept;
     private:
         log_buffer_impl* pimpl_{ nullptr };
     };
