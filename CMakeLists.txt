@@ -16,24 +16,12 @@ set(CMAKE_DEBUG_POSTFIX d CACHE STRING "Debug filename postfix.")
 option(FSTLOG_DEBUG "MSVC setting for Debug config (Non optimized build for Debug.)" OFF)
 mark_as_advanced(FORCE FSTLOG_DEBUG CMAKE_DEBUG_POSTFIX CMAKE_EXPORT_COMPILE_COMMANDS)
 
-#--------------------
-# shared lib/tests check
-#--------------------
-if (BUILD_SHARED_LIBS AND FSTLOG_TESTS)
-        message( FATAL_ERROR "Can not build tests project with shared library. (set -DFSTLOG_TESTS=OFF)" )
-endif()
-
 #----------------------
 # C++ standard setting
 #----------------------
 set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ standard version")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-if( CMAKE_CXX_STANDARD VERSION_LESS 17 )
-  message( FATAL_ERROR "Minimum C++17 required!" )
-else()
-    message(STATUS "C++ Standard = ${CMAKE_CXX_STANDARD}")
-endif()
 
 #----------------------------------------
 # Hiding non API symbols from shared lib
@@ -68,12 +56,12 @@ if(is_multi_config)
         set(CMAKE_CONFIGURATION_TYPES Release;Debug CACHE STRING "Multi-config configurations." FORCE)
     endif()
     set(BUILD_TYPE_MSG "Multi-config (${CMAKE_CONFIGURATION_TYPES})")
-    message(STATUS "Genearator: ${CMAKE_GENERATOR} (multi-config).")
+    set(GENERATOR_MSG "${CMAKE_GENERATOR} (multi-config)")
 else()
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type, Release/Debug/..." FORCE)
     endif()
-    message(STATUS "Genearator: ${CMAKE_GENERATOR} (single-config).") 
+    set(GENERATOR_MSG "${CMAKE_GENERATOR} (single-config)") 
     set(BUILD_TYPE_MSG ${CMAKE_BUILD_TYPE})
 endif()
 
@@ -84,7 +72,28 @@ set(STAT_OR_SHARE Static)
 if(BUILD_SHARED_LIBS)
     set(STAT_OR_SHARE Shared)
 endif()
-message(STATUS "PROJECT ${CMAKE_PROJECT_NAME} ${CMAKE_PROJECT_VERSION} ${STAT_OR_SHARE} ${BUILD_TYPE_MSG}")
+message(STATUS "=================================================================================")
+message(STATUS "${CMAKE_PROJECT_NAME} ${CMAKE_PROJECT_VERSION} ${STAT_OR_SHARE} ${BUILD_TYPE_MSG} C++${CMAKE_CXX_STANDARD}")
+message(STATUS "---------------------------------------------------------------------------------")
+if( CMAKE_CXX_STANDARD VERSION_LESS 17 )
+  message( FATAL_ERROR "Minimum C++17 required to build fstlog!" )
+endif()
+set(FSTLOG_TARGETS_BUILT "fstlog")
+if (FSTLOG_TESTS)
+    set(FSTLOG_TARGETS_BUILT "${FSTLOG_TARGETS_BUILT}, tests")
+endif()
+if (FSTLOG_EXAMPLES)
+    set(FSTLOG_TARGETS_BUILT "${FSTLOG_TARGETS_BUILT}, examples")
+endif()
+message(STATUS "Targets: ${FSTLOG_TARGETS_BUILT}.")
+message(STATUS "Generator: ${GENERATOR_MSG}.")
+
+#-------------------------------
+# shared lib/tests target check
+#-------------------------------
+if (BUILD_SHARED_LIBS AND FSTLOG_TESTS)
+        message( FATAL_ERROR "Can not build tests project with shared library. (disable tests target with -DFSTLOG_TESTS=OFF)" )
+endif()
 
 #-----------------
 # Output dirs 
@@ -123,7 +132,10 @@ if(MSVC)
             /sdl-               #disable additional security checks
         )
         if(is_multi_config OR (CMAKE_BUILD_TYPE MATCHES "^([Dd][Ee][Bb][Uu][Gg])$"))
-            message(STATUS "Configuring optimized Debug, to debug fstlog, use -DFSTLOG_DEBUG=ON.")
+            message(STATUS "Windows Debug Build Configuration: -DFSTLOG_DEBUG=OFF")
+            message(STATUS "    Making optimized debug build (debug CRT + optimizations).")
+            message(STATUS "    This provides better performance while debugging your code.")
+            message(STATUS "    Only use -DFSTLOG_DEBUG=ON if you need to debug fstlog's internal code.")
         endif()
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_RELEASE}")
         set(CMAKE_C_FLAGS_FLAGS_DEBUG "${CMAKE_C_FLAGS_RELEASE}" CACHE STRING "Flags used by the C compiler during DEBUG builds." FORCE)
@@ -137,7 +149,9 @@ if(MSVC)
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}" CACHE STRING "Flags used by the CXX compiler during DEBUG builds." FORCE)
     else()
         if(is_multi_config OR (CMAKE_BUILD_TYPE MATCHES "^([Dd][Ee][Bb][Uu][Gg])$"))
-            message(STATUS "Configuring Debug to debug fstlog, to make optimized Debug, use -DFSTLOG_DEBUG=OFF")
+            message(STATUS "Windows Debug Build Configuration: -DFSTLOG_DEBUG=ON")
+            message(STATUS "    Making usual debug build (debug CRT with no optimizitions).")
+            message(STATUS "    Only use -DFSTLOG_DEBUG=ON if you need to debug fstlog's internal code.")
         endif()
     endif()
 else()
@@ -147,17 +161,17 @@ else()
     )
 endif()
 
+message(STATUS "=================================================================================")
+
 #----------------------
 #fstlog library target
 #----------------------
-message(STATUS "Generating fstlog library.")
 add_subdirectory(fstlog)
 
 #----------------------
 # tests target
 #----------------------
 if (FSTLOG_TESTS)
-    message(STATUS "Generating tests.")
     add_subdirectory(tests)
 endif()
 
@@ -165,6 +179,6 @@ endif()
 # examples target
 #----------------------
 if (FSTLOG_EXAMPLES)
-    message(STATUS "Generating examples.")
     add_subdirectory(examples)
 endif()
+

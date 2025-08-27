@@ -119,7 +119,8 @@ See examples: log_calls.cpp; formatter_config.cpp
 
 ## Object lifetime and resource management
 The core, sink, formatter, output instances are reference counting smart pointer like objects.
-The constructor/factory function allocates and constructs the underlying implementation object. Lifetime and resource management is taken care of by the library. 
+The constructor/factory function allocates and constructs the underlying implementation object. 
+Lifetime and resource management is taken care of by the library. 
 
 ## fstlog::core
 ```c++
@@ -127,8 +128,9 @@ The constructor/factory function allocates and constructs the underlying impleme
 ```
 The fstlog::core class is the central part of the system, it collects, formats 
 and transmits the log messages to the destinations.
-There can be multiple cores in a program but they are separated from each other.
-Every core starts a background thread at construction, this thread asynchronously 
+There can be a limited number of concurrent cores in a process, the default limit is 16.
+The cores are separated from each other and every core starts
+a background thread at construction. This thread asynchronously 
 processes the log messages. The processing is done by the use of sinks, 
 a core can have multiple sinks, but a sink can be assigned only to one core at a time.
 
@@ -141,7 +143,7 @@ if there is work to do.
 
 - Every logger has a log level to filter messages early, the log level can be set 
 at runtime or compile time depending on the logger's type.
-- Every logger has a channel, there are 256 channels, the default is '1' 
+- Every logger has a channel, there are 256 channels (0-255), the default is '1' 
 the '0' channel is used by fstlog for self logging.
 - The logger's name and the thread's name can be set to provide information in the logs,
 these names are not used for any other purpose and are not unique.
@@ -155,7 +157,6 @@ This logger uses thread_local storage to provide thread safe logging.
 All instances of the class use the same thread_local buffer, if they are 
 logging in the same thread and are bound to the same core.
 (One common buffer per thread per core for all fstlog::logger instances.)
-With the limitation that only the first created 32 cores can be used.
 
 ### fstlog::logger_mt
 ```c++
@@ -188,9 +189,15 @@ Formatters are initialized with a format pattern, using the std::format syntax
 with the following differences:
 - Argument id {arg_id:} is mandatory, only the following id-s can be used:
     message, level/severity, time/timestamp, logger, thread, policy, channel, file, line, function
-- The precision in the replacement field for the timestamp, is used for seconds precision.
-    The time is formatted in the local zone by default, if the first character of the strftime
-    string is 'U' or 'L' it is used for determining UTC / local time zone formatting.
+- For the timestamp replacement field, a custom syntax is used:
+    [[fill]align][width]["."precision][zone][time_format_string]
+    ["."precision] is used for the seconds precision (the timestamp string can not be trimmed).
+    [zone] can be "L" for local time or "U" for UTC (default is local time).
+    [time_format_string] is an strftime format string with limited set of specifiers:
+        %H, %M, %S, %Y, %a, %d, %m, %y, %z, %%
+        %S can only be used once in the string.
+    If the [time_format_string] starts with "L" or "U" the [zone] is mandatory 
+        (or the first character will be interpreted as [zone])
 
 See example: formatter_config.cpp
 
@@ -385,7 +392,15 @@ This blocking flush can also be made, calling the core::flush() method.
 ```
 -DFSTLOG_DEBUG=ON
 ```
-- Used only on windows and affects only Debug builds. In windows release and debug binaries are incompatible. To provide better performance in debug builds, fstlog's Debug build on windows is an optimized build by default, This option switches to the unoptimized build to debug fstlog itself.
+- (Windows Debug builds only)
+    On Windows, Release and Debug binaries are incompatible. By default (-DFSTLOG_DEBUG=OFF), fstlog's Debug build is an **optimized Debug build** (uses the Debug C Runtime but enables compiler optimizations) to provide better performance while debugging your *own application*.
+    Set this option to switch to a **standard, unoptimized Debug build**. This makes it significantly easier to step through fstlog's source code in a debugger, but will slow down logging performance.
+    *Recommendation:* Only use this option if you need to debug fstlog itself. For debugging your application, the default is preferred.
+
+```
+-DFSTLOG_CORELIMIT=16
+```
+- Sets the concurrent core instance limit.
 
 ```
 -DFSTLOG_DEFAULT_BUFFERSIZE=16*1024
