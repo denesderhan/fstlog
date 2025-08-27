@@ -4,7 +4,6 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
-#pragma intrinsic(memcpy, memset, memmove)
 
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <formatter/impl/detail/format_setting_txt.hpp>
@@ -25,13 +24,13 @@ namespace fstlog::detail {
             if (to_fill.empty()) return;
 
             if (pattern_bytes == 1) {
-                memset(to_fill.data_bytes(), pattern[0], to_fill.size_bytes());
+                std::memset(to_fill.data_bytes(), pattern[0], to_fill.size_bytes());
             }
             else {
                 auto pos = to_fill.data_bytes();
                 auto end = to_fill.data_bytes() + to_fill.size_bytes();
                 while (pos < end) {
-                    memcpy(pos, pattern.data(), pattern_bytes);
+                    std::memcpy(pos, pattern.data(), pattern_bytes);
                     pos += pattern_bytes;
                 }
             }
@@ -62,7 +61,7 @@ namespace fstlog::detail {
         
         if (fmt.align == '>') {
             const auto dest_ptr{ buffer.data_bytes() + length_grow_in_bytes};
-            memmove(dest_ptr, buffer.data_bytes(), str_len.byte_len);
+            std::memmove(dest_ptr, buffer.data_bytes(), str_len.byte_len);
             fill_with_pattern(
                 { buffer.data_bytes(), length_grow_in_bytes },
                 fmt.fill_char, 
@@ -72,7 +71,7 @@ namespace fstlog::detail {
             const auto left_fill_bytes = (length_grow_in_chars / 2) * fill_char_bytes;
             const auto right_fill_bytes = length_grow_in_bytes - left_fill_bytes;
             const auto shifted_str_begin{ buffer.data_bytes() + left_fill_bytes };
-            memmove(shifted_str_begin, buffer.data_bytes(), str_len.byte_len);
+            std::memmove(shifted_str_begin, buffer.data_bytes(), str_len.byte_len);
             fill_with_pattern(
                 { buffer.data_bytes(), left_fill_bytes },
                 fmt.fill_char, 

@@ -3,10 +3,8 @@
 #pragma once
 #include <array>
 #include <cstddef>
-#include <cstring>
 #include <limits>
 #include <string_view>
-#pragma intrinsic(memcpy)
 
 #include <detail/unaligned_span.hpp>
 #include <detail/error.hpp>

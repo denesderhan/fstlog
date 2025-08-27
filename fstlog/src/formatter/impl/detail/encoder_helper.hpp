@@ -1,11 +1,10 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <cstdint>
 #include <cstring>
 #include <limits>
-#include <cstdint>
 #include <type_traits>
-#pragma intrinsic(memcpy)
 
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -21,7 +20,7 @@ namespace fstlog {
             else {
                 static_assert((-1 & 3) == 3, "Not twos complement!");
                 std::make_unsigned_t<T> data_bits{ 0 };
-                memcpy(&data_bits, &data, sizeof(T));
+                std::memcpy(&data_bits, &data, sizeof(T));
                 // calculate  two's complement
                 if (data < 0) return ~data_bits + 1;
                 else return data_bits;

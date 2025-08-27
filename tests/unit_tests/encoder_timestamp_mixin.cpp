@@ -4,6 +4,7 @@
 
 #include <array>
 #include <chrono>
+#include <cstring>
 #include <string_view>
 
 #include <formatter/impl/detail/encoder_timestamp_mixin.hpp>
@@ -346,7 +347,7 @@ TEST_CASE("encoder_timestamp_mixin") {
         auto nanosec = std::chrono::system_clock::time_point(
             std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::nanoseconds(std::get<2>(data))));
         std::array<unsigned char, 64> control{ 0 };
-        memcpy(control.data(), std::get<3>(data).data(), std::get<3>(data).size());
+        std::memcpy(control.data(), std::get<3>(data).data(), std::get<3>(data).size());
         
         // zeroing out digits (chrono resolution precision loss)
         int digits_to_zero = zeroed_digits - (9 - precision);

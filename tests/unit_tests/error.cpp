@@ -103,7 +103,7 @@ TEST_CASE("fstlog_error") {
         auto contrl_str = std::get<1>(test_dat);
         CAPTURE(contrl_str);
         CHECK(static_cast<std::size_t>(str_end - buffer.data()) == contrl_str.size());
-        CHECK(!memcmp(contrl_str.data(), buffer.data(), str_end - buffer.data()));
+        CHECK(!std::memcmp(contrl_str.data(), buffer.data(), str_end - buffer.data()));
     };
 
 }

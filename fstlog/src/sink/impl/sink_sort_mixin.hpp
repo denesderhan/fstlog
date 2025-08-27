@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
-#pragma intrinsic(memcpy)
 
 #include <detail/unaligned_span.hpp>
 #include <detail/dyn_array.hpp>
@@ -62,7 +61,7 @@ namespace fstlog {
             const auto msg_size = message.size_bytes();
             const auto msg_ptr = message.data_bytes();
             stamp_type::rep timestamp;
-            memcpy(
+            std::memcpy(
                 &timestamp,
                 msg_ptr + offsetof(internal_msg_header, timestamp),
                 sizeof(internal_msg_header::timestamp));

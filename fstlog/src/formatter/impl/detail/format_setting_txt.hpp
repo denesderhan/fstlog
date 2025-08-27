@@ -4,7 +4,6 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
-#pragma intrinsic(memcmp)
 
 namespace fstlog {
     struct alignas(4) format_setting_txt {
@@ -21,7 +20,7 @@ namespace fstlog {
         format_setting_txt lhs, 
         format_setting_txt rhs) noexcept 
     {
-        return 0 == memcmp(&lhs, &rhs, sizeof(format_setting_txt));
+        return 0 == std::memcmp(&lhs, &rhs, sizeof(format_setting_txt));
     }
     inline bool operator!=(
         const format_setting_txt lhs, 

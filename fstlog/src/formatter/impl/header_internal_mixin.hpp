@@ -2,7 +2,6 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstring>
-#pragma intrinsic(memcpy)
 
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>
@@ -43,7 +42,7 @@ namespace fstlog {
 
         void get_header(internal_msg_header& header) const noexcept {
             FSTLOG_ASSERT(header_data_ != nullptr);
-            memcpy(&header, header_data_, internal_msg_header::unpadded_data_size);
+            std::memcpy(&header, header_data_, internal_msg_header::unpadded_data_size);
         }
 
         log_msg_type message_type() const noexcept {
@@ -56,7 +55,7 @@ namespace fstlog {
         msg_counter message_size() const noexcept {
             FSTLOG_ASSERT(header_data_ != nullptr);
             msg_counter out;
-            memcpy(&out,
+            std::memcpy(&out,
                 header_data_ + offsetof(internal_msg_header, msg_size),
                 sizeof(msg_counter));
             return out;
@@ -82,7 +81,7 @@ namespace fstlog {
         stamp_type timestamp() const noexcept {
             FSTLOG_ASSERT(header_data_ != nullptr);
             stamp_type out;
-            memcpy(&out,
+            std::memcpy(&out,
                 header_data_ + offsetof(internal_msg_header, timestamp),
                 sizeof(stamp_type));
             return out;
@@ -96,7 +95,7 @@ namespace fstlog {
         msg_counter arg_num() const noexcept {
             FSTLOG_ASSERT(header_data_ != nullptr);
             msg_counter out;
-            memcpy(&out,
+            std::memcpy(&out,
                 header_data_ + offsetof(internal_msg_header, argnum),
                 sizeof(msg_counter));
             return out;

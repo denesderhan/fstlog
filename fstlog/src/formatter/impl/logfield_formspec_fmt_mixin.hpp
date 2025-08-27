@@ -72,7 +72,7 @@ namespace fstlog {
             if (form_spec.empty() || form_spec_size > 20)
                 return get_default_format();
             std::array<char, 24> temp_str{"{:}}}}}}}}}}}}}}}}}}}}}"};
-            memcpy(&temp_str[2], form_spec.data_bytes(), form_spec_size);
+            std::memcpy(&temp_str[2], form_spec.data_bytes(), form_spec_size);
             return format_type{ std::string_view{ &temp_str[0], form_spec_size + 3 } };
         }
 

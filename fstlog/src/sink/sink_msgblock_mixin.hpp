@@ -3,7 +3,6 @@
 #pragma once
 #include <chrono>
 #include <cstring>
-#pragma intrinsic(memcpy)
 
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
@@ -50,7 +49,7 @@ namespace fstlog {
                     break;
                 }
                 msg_counter msg_size;
-                memcpy(
+                std::memcpy(
                     &msg_size,
                     dat_ptr + offsetof(internal_msg_header, msg_size),
                     sizeof(msg_counter));

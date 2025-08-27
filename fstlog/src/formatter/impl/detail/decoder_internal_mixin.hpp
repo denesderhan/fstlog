@@ -4,7 +4,6 @@
 #include <limits>
 #include <type_traits>
 #include <cstring>
-#pragma intrinsic(memcpy)
 
 #include <fstlog/detail/error_code.hpp>
 #include <detail/unaligned_span.hpp>
@@ -68,7 +67,7 @@ namespace fstlog {
             
             const auto end_ptr{ this->input_end() };
             if (signature_begin < end_ptr) {
-                memcpy(
+                std::memcpy(
                     &min_size_header,
                     header_begin,
                     internal_arg_header<char>::data_size);
@@ -93,7 +92,7 @@ namespace fstlog {
                 >= internal_arg_header<char>::data_size)
             {
                 internal_arg_header<char> header;
-                memcpy(
+                std::memcpy(
                     &header,
                     arg_begin,
                     internal_arg_header<char>::data_size);
@@ -110,7 +109,7 @@ namespace fstlog {
             const auto data_ptr = this->input_ptr();
             skip_data<T, padded>();
             if (!this->has_error()) {
-                memcpy(
+                std::memcpy(
                     &out,
                     data_ptr,
                     sizeof(T));

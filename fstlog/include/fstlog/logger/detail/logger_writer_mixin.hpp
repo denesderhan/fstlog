@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cstring>
 #include <limits>
-#pragma intrinsic(memcpy)
 
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -99,9 +98,9 @@ namespace fstlog {
             };
             static_assert(orig_argnum <=
                 (std::numeric_limits<decltype(header.argnum)>::max)(), "Too many arguments!");
-            memcpy(buff_ptr, &header, internal_msg_header::unpadded_data_size);
+            std::memcpy(buff_ptr, &header, internal_msg_header::unpadded_data_size);
             if constexpr (internal_msg_header::unpadded_data_size != internal_msg_header::padded_data_size ) {
-                memset(
+                std::memset(
                     buff_ptr + internal_msg_header::unpadded_data_size,
                     0,
                     internal_msg_header::padded_data_size - internal_msg_header::unpadded_data_size);
@@ -117,7 +116,7 @@ namespace fstlog {
             FSTLOG_ASSERT(buff_ptr > buff_beg && buff_ptr - buff_beg == msg_size);
             // nobody reads the padding at the end of message (sink_msgblock does not include it in the message) 
             // if (padded_msg_size != msg_size)
-            // memset(buff_ptr, 0, padded_msg_size - msg_size);
+            //     std::memset(buff_ptr, 0, padded_msg_size - msg_size);
             buffer.advance_write_pos(padded_msg_size);
         }
 

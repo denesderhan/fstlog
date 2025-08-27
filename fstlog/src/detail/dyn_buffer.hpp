@@ -6,7 +6,6 @@
 #include <cstring>
 #include <new>
 #include <utility>
-#pragma intrinsic(memcpy)
 
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/fstlog_allocator.hpp>
@@ -52,7 +51,7 @@ namespace fstlog {
                     return false;
                 }
             }
-            memcpy(end_, data, byte_num);
+            std::memcpy(end_, data, byte_num);
             end_ += byte_num;
             return true;
         }
@@ -122,7 +121,7 @@ namespace fstlog {
             if (new_memory != nullptr) {
                 const auto data_size(size());
                 if (begin_ != nullptr) {
-                    if (data_size != 0) memcpy(new_memory, begin_, data_size);
+                    if (data_size != 0) std::memcpy(new_memory, begin_, data_size);
                     aligned_nothrow_deallocate(begin_, allocator_, capacity(), constants::cache_ls_nosharing);
                 }
                 begin_ = new_memory;

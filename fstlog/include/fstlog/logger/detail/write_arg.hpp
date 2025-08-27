@@ -2,7 +2,6 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstring>
-#pragma intrinsic(memcpy)
 
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_arg_header.hpp>
@@ -27,7 +26,7 @@ namespace fstlog {
             constexpr auto arg_header =    
                 internal_arg_header<T>{ static_cast<fstlog::msg_counter>(log_arg_size<T>()) };
             FSTLOG_ASSERT(reinterpret_cast<std::uintptr_t>(buff_ind) % constants::internal_msg_data_alignment == 0);
-            memcpy(buff_ind, &arg_header, internal_arg_header<T>::data_size);
+            std::memcpy(buff_ind, &arg_header, internal_arg_header<T>::data_size);
             buff_ind += internal_arg_header<T>::data_size;
             write_var(buff_ind, arg);
         }
@@ -40,7 +39,7 @@ namespace fstlog {
             const auto arg_header =
                 internal_arg_header<T>{ static_cast<msg_counter>(buff_ind - begin_ptr) };
             FSTLOG_ASSERT(reinterpret_cast<std::uintptr_t>(begin_ptr) % constants::internal_msg_data_alignment == 0);
-            memcpy(begin_ptr, &arg_header, internal_arg_header<T>::data_size);
+            std::memcpy(begin_ptr, &arg_header, internal_arg_header<T>::data_size);
         }
     }
 }

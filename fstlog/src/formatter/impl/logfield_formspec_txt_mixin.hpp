@@ -3,6 +3,7 @@
 #pragma once
 #include <array>
 #include <cstddef>
+#include <cstring>
 
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/ut_cast.hpp>
@@ -99,7 +100,7 @@ namespace fstlog {
                 out.align = *--align_end;
                 const std::size_t utf8_seq_len = static_cast<std::size_t>(align_end - align_pos);
                 FSTLOG_ASSERT(utf8_seq_len <= out.fill_char.size());
-                memcpy(out.fill_char.data(), align_pos, utf8_seq_len);
+                std::memcpy(out.fill_char.data(), align_pos, utf8_seq_len);
             }
             if (form_spec.empty()) return out;
             

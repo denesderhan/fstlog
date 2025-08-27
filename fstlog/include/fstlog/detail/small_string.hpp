@@ -5,7 +5,6 @@
 #include <cstring>
 #include <limits>
 #include <string_view>
-#pragma intrinsic(memcmp)
 
 #include <fstlog/detail/is_pow2.hpp>
 
@@ -70,7 +69,7 @@ namespace fstlog {
         const small_string<class_size>& rhs) noexcept 
     {
         static_assert(class_size == sizeof(lhs.free_) + sizeof(lhs.string_));
-        return memcmp(&lhs, &rhs, class_size);
+        return std::memcmp(&lhs, &rhs, class_size);
     }
     template<std::size_t class_size>
     constexpr inline bool operator==(

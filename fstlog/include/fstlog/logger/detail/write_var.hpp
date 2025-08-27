@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <type_traits>
 #include <cstring>
-#pragma intrinsic(memcpy, memset)
 
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/convert_to_basic_string_view.hpp>
@@ -22,7 +21,7 @@ namespace fstlog {
         >* = nullptr>
     void write_var(unsigned char*& buff_ind, T const& var) noexcept {
         const padded_t<rm_cvref_t<T>> temp{ var };
-        memcpy(buff_ind, &temp, padded_t<rm_cvref_t<T>>::padded_data_size);
+        std::memcpy(buff_ind, &temp, padded_t<rm_cvref_t<T>>::padded_data_size);
         buff_ind += padded_t<rm_cvref_t<T>>::padded_data_size;
     }
 
@@ -40,10 +39,10 @@ namespace fstlog {
         FSTLOG_ASSERT(reinterpret_cast<std::uintptr_t>(buff_ind) % constants::internal_msg_data_alignment == 0);
         //preventing undefined behavior when string_var.data() == nullptr
         if (byte_size != 0) {
-            memcpy(buff_ind, string_var.data(), byte_size);
+            std::memcpy(buff_ind, string_var.data(), byte_size);
             const std::size_t padded_str_size{ padded_size<constants::internal_msg_data_alignment>(byte_size) };
             const std::size_t bytes_to_zero{ padded_str_size - byte_size };
-            memset(buff_ind + byte_size, 0, bytes_to_zero);
+            std::memset(buff_ind + byte_size, 0, bytes_to_zero);
             buff_ind += padded_str_size;
         }
     }

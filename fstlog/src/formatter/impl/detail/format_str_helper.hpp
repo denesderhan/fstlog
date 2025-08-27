@@ -50,7 +50,7 @@ namespace fstlog {
                 if (c < 0x20 || c >= 0x7F) break; // not in safe ASCII range
                 char_num++;
             }
-            memcpy(output.data_bytes(), input.data_bytes(), char_num);
+            std::memcpy(output.data_bytes(), input.data_bytes(), char_num);
             input.drop_front(char_num);
             output.drop_front(char_num);
 
