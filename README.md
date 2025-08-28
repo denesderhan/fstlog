@@ -188,15 +188,20 @@ The formatters convert the messages to the desired format.
 Formatters are initialized with a format pattern, using the std::format syntax
 with the following differences:
 - Argument id {arg_id:} is mandatory, only the following id-s can be used:
-    message, level/severity, time/timestamp, logger, thread, policy, channel, file, line, function
+    ~~~
+    {message}, {level}/{severity}, {time}/{timestamp}, {logger}, 
+    {thread}, {policy}, {channel}, {file}, {line}, {function}
+    ~~~
 - For the timestamp replacement field, a custom syntax is used:
+    ~~~
     [[fill]align][width]["."precision][zone][time_format_string]
-    ["."precision] is used for the seconds precision (the timestamp string can not be trimmed).
-    [zone] can be "L" for local time or "U" for UTC (default is local time).
-    [time_format_string] is an strftime format string with limited set of specifiers:
-        %H, %M, %S, %Y, %a, %d, %m, %y, %z, %%
-        %S can only be used once in the string.
-    If the [time_format_string] starts with "L" or "U" the [zone] is mandatory 
+    ~~~
+    - ["."precision] is used for the seconds precision (the timestamp string can not be trimmed).
+    - [zone] can be "L" for local time or "U" for UTC (default is local time).
+    - [time_format_string] is an strftime format string with limited set of specifiers:
+        - %H, %M, %S, %Y, %a, %d, %m, %y, %z, %%
+        - %S can only be used once in the string.
+        - If the [time_format_string] starts with "L" or "U" the [zone] is mandatory 
         (or the first character will be interpreted as [zone])
 
 See example: formatter_config.cpp
@@ -392,10 +397,11 @@ This blocking flush can also be made, calling the core::flush() method.
 ```
 -DFSTLOG_DEBUG=ON
 ```
-- (Windows Debug builds only)
-    On Windows, Release and Debug binaries are incompatible. By default (-DFSTLOG_DEBUG=OFF), fstlog's Debug build is an **optimized Debug build** (uses the Debug C Runtime but enables compiler optimizations) to provide better performance while debugging your *own application*.
-    Set this option to switch to a **standard, unoptimized Debug build**. This makes it significantly easier to step through fstlog's source code in a debugger, but will slow down logging performance.
-    *Recommendation:* Only use this option if you need to debug fstlog itself. For debugging your application, the default is preferred.
+- Windows only
+- On Windows, Release and Debug binaries are incompatible.
+- By default (-DFSTLOG_DEBUG=OFF), fstlog's Debug build is an **optimized Debug build** (uses the Debug C Runtime but enables compiler optimizations) to provide better performance while debugging your *own application*.
+- Set this option to switch to a **standard, unoptimized Debug build**. This makes it significantly easier to step through fstlog's source code in a debugger, but will slow down logging performance.
+- *Recommendation:* Only use this option if you need to debug fstlog itself. For debugging your application, the default is preferred.
 
 ```
 -DFSTLOG_CORELIMIT=16
