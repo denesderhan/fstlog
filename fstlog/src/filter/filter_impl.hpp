@@ -37,6 +37,12 @@ namespace fstlog {
         filter_impl& operator=(const filter_impl&) = delete;
         filter_impl(filter_impl&&) = delete;
         filter_impl& operator=(filter_impl&&) = delete;
+        bool operator==(const filter_impl& other) const noexcept {
+            return this->message_filter_ == other.message_filter_;
+        }
+        bool operator!=(const filter_impl& other) const noexcept {
+            return !(*this == other);
+        }
         ~filter_impl() = default;
             
         template<class T>

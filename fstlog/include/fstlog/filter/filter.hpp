@@ -60,6 +60,8 @@ namespace fstlog {
         FSTLOG_API filter& operator=(const filter& other) noexcept;
         FSTLOG_API filter(filter&& other) noexcept;
         FSTLOG_API filter& operator=(filter&& other) noexcept;
+        FSTLOG_API bool operator==(const filter& other) const noexcept;
+        FSTLOG_API bool operator!=(const filter& other) const noexcept;
         FSTLOG_API ~filter() noexcept;
 
         FSTLOG_API bool good() const noexcept;

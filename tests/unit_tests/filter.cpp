@@ -25,8 +25,10 @@ TEST_CASE("filter") {
         CHECK(filt2.good());
         CHECK(filt2.pimpl() != nullptr);
         CHECK(filt1.pimpl() != filt2.pimpl());
+        CHECK(filt1 == filt2);
 
         fstlog::filter filt3(std::move(filt1));
+        CHECK(filt3 != filt1);
         CHECK(filt1.pimpl() == nullptr);
         CHECK(!filt1.good());
         CHECK(filt3.good());
@@ -104,15 +106,29 @@ TEST_CASE("filter") {
             for (fstlog::channel_type i = 0; i < 10; i++) filters1.push_back(fstlog::filter(fstlog::level::Info, 0, i, allocator1));
             std::vector<fstlog::filter> filters2;
             for (fstlog::channel_type i = 0; i < 10; i++) filters2.push_back(fstlog::filter(fstlog::level::Info, i, i + 10, allocator2));
+            CHECK(filters1[0] != filters2[0]);
+            CHECK(filters1[0].pimpl() != filters2[0].pimpl());
             filters1[0] = filters2[0];
+            CHECK(filters1[0] == filters2[0]);
+            CHECK(filters1[0].pimpl() != filters2[0].pimpl());
             filters2[1] = fstlog::filter(filters1[1]);
+            CHECK(filters2[1] == filters1[1]);
+            CHECK(filters2[1].pimpl() != filters1[1].pimpl());
             filters1[1] = std::move(filters2[0]);
+            CHECK(filters1[1] != filters2[0]);
+            CHECK(filters2[0].pimpl() == nullptr);
             filters2[2] = fstlog::filter(std::move(filters1[0]));
+            CHECK(filters2[2] != filters1[0]);
+            CHECK(filters1[0].pimpl() == nullptr);
             filters1[2] = fstlog::filter{};
+            CHECK(filters2[3] != filters2[4]);
             filters2[3] = filters2[4];
+            CHECK(filters2[3] == filters2[4]);
+            CHECK(filters2[3].pimpl() != filters2[4].pimpl());
+            CHECK(filters1[5] != filters1[6]);
             filters1[5] = filters1[6];
-
-
+            CHECK(filters1[5] == filters1[6]);
+            CHECK(filters1[5].pimpl() != filters1[6].pimpl());
             filters1.clear();
             filters2.clear();
             CHECK(test_res1.all_clear());

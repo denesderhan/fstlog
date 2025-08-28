@@ -28,6 +28,13 @@ namespace fstlog {
             add_level(level::Fatal, lowest);
             add_channel(first_channel, last_channel);
         }
+        bool operator==(const filter_internal& other) const noexcept {
+            return level_data_ == other.level_data_
+                && channel_data_ == other.channel_data_;
+        }
+        bool operator!=(const filter_internal& other) const noexcept {
+            return !(*this == other);
+        }
 
         void add_level(level level) noexcept {
             FSTLOG_ASSERT(level <= fstlog::level::All);

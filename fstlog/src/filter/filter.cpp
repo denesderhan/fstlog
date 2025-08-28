@@ -89,6 +89,14 @@ namespace fstlog {
         other.pimpl_ = nullptr;
         return *this;
     }
+    bool filter::operator==(const filter& other) const noexcept {
+        if (pimpl_ == nullptr && other.pimpl_ == nullptr) return true;
+        if (pimpl_ == nullptr || other.pimpl_ == nullptr) return false;
+        return pimpl_->message_filter_ == other.pimpl_->message_filter_;
+    }
+    bool filter::operator!=(const filter& other) const noexcept {
+        return !(*this == other);
+    }
     filter::~filter() noexcept {
         if (pimpl_ != nullptr) {
             const allocator_type allocator{ pimpl_->get_allocator() };
