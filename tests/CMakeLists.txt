@@ -87,3 +87,10 @@ target_link_libraries(tests
     PRIVATE Catch2::Catch2
     PRIVATE fstlog
 )
+
+################################################################################
+# Register tests with CTest
+################################################################################
+include(CTest)
+include(Catch)
+catch_discover_tests(tests)

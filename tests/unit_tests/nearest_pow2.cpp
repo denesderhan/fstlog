@@ -8,7 +8,7 @@
 #include <detail/nearest_pow2.hpp>
 
 
-TEST_CASE("nearest_pow2_01") {
+TEST_CASE("nearest_pow2") {
     SECTION("size_t") {
         auto extent = GENERATE(table<size_t, size_t>({
             std::tuple<std::size_t, std::size_t>{std::size_t(0), std::size_t(1)},
