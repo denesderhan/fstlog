@@ -1,0 +1,122 @@
+name: Sanitized builds
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual triggers
+
+env:
+  CC: clang
+  CXX: clang++
+  # These environment variables are read by sanitizer runtimes when executing tests/examples
+  ASAN_OPTIONS: detect_leaks=1:allocator_may_return_null=1:log_exe_name=1:check_initialization_order=1:detect_stack_use_after_return=1:strict_init_order=1:strict_string_checks=1:detect_invalid_pointer_pairs=3
+  UBSAN_OPTIONS: halt_on_error=1:report_error_type=1:print_stacktrace=1:symbolize=1
+  TSAN_OPTIONS: detect_deadlocks=1
+
+# Define YAML anchors
+x-pmr-allocator: &pmr_allocator '../fstlog/include/fstlog/detail/pmr_allocator.hpp'
+x-malloc-allocator: &malloc_allocator '../fstlog/include/fstlog/detail/malloc_allocator.hpp'
+x-asan-ubsan-flags: &asan_ubsan_flags '-O1 -fPIE -pie -g -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
+x-tsan-flags: &tsan_flags '-O1 -fsanitize=thread -fno-omit-frame-pointer -g'
+      
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: pmr-asan
+            allocator_path: *pmr_allocator
+            sanitizer_flags: *asan_ubsan_flags
+          - label: malloc-asan
+            allocator_path: *malloc_allocator
+            sanitizer_flags: *asan_ubsan_flags
+          - label: pmr-tsan
+            allocator_path: *pmr_allocator
+            sanitizer_flags: *tsan_flags
+            
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y llvm catch2
+        
+    - name: Configure symbolizer
+      run: echo "ASAN_SYMBOLIZER_PATH=$(command -v llvm-symbolizer)" >> "$GITHUB_ENV"
+        
+    - name: Log info
+      run: |
+        dpkg -l | grep catch2
+        clang --version
+        clang++ --version
+        echo "ASAN_OPTIONS=$ASAN_OPTIONS" 
+        echo "UBSAN_OPTIONS=$UBSAN_OPTIONS"
+        echo "TSAN_OPTIONS=$TSAN_OPTIONS"
+        echo "ASAN_SYMBOLIZER_PATH=$ASAN_SYMBOLIZER_PATH"
+    
+    - name: Clean    
+      run: rm -rf build
+       
+    - name: Configure CMake
+      run: cmake -S . -B build -G Ninja \
+          -DCMAKE_C_COMPILER=clang \
+          -DCMAKE_CXX_COMPILER=clang++ \
+          -DCMAKE_CXX_FLAGS="${{ matrix.sanitizer_flags }}" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_CXX_STANDARD=20 \
+          -DBUILD_SHARED_LIBS=OFF \
+          -DFSTLOG_TESTS=ON \
+          -DFSTLOG_EXAMPLES=ON \
+          -DFSTLOG_ALLOCATOR=${{ matrix.allocator_path }}
+                
+    - name: Build
+      working-directory: build
+      run: ninja -j$(nproc)
+
+    - name: Run tests
+      working-directory: build/tests
+      run: ctest --output-on-failure
+
+    - name: Run hello_worldd
+      working-directory: build/bin/Static
+      run: ./hello_worldd
+        
+    - name: Run log_callsd
+      working-directory: build/bin/Static
+      run: ./log_callsd
+      
+    - name: Run formatter_configd
+      working-directory: build/bin/Static
+      run: ./formatter_configd
+
+    - name: Run filterd
+      working-directory: build/bin/Static
+      run: ./filterd
+      
+    - name: Run multi_threadedd
+      working-directory: build/bin/Static
+      run: ./multi_threadedd
+      
+    - name: Run sink_outputd
+      working-directory: build/bin/Static
+      run: ./sink_outputd
+
+    - name: Upload build artifacts
+      if: always()                # upload even if previous steps fail
+      continue-on-error: true     # to ensure that artifact upload is attempted even if something went wrong in previous steps
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-outputs-${{ matrix.label }}
+        path: |
+          build/bin               # all binaries
+          build/tests/Testing/**  # CTest reports
+          build/CMakeFiles/*.log
+          build/compile_commands.json
+        retention-days: ${{ failure() && 30 || 5 }}
