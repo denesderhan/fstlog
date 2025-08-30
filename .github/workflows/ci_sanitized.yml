@@ -102,10 +102,12 @@ jobs:
       continue-on-error: true     # to ensure that artifact upload is attempted even if something went wrong in previous steps
       uses: actions/upload-artifact@v4
       with:
-        name: build-outputs-${{ matrix.label }}
+        name: sanitized-build-${{ matrix.label }}
         path: |
-          ./build/bin               # all binaries
-          ./build/tests/Testing/**  # CTest reports
-          ./build/CMakeFiles/*.log
+          ./build/bin
+          ./build/tests/Testing
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/compile_commands.json
-        retention-days: 5
+          ./build/build.ninja
+        overwrite: true
+        retention-days: 30
