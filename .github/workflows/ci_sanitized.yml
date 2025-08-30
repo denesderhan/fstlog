@@ -25,13 +25,16 @@ jobs:
         include:
           - label: pmr-asan
             allocator_path: './fstlog/include/fstlog/detail/pmr_allocator.hpp'
-            sanitizer_flags: '-O1 -fPIE -pie -g -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
+            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
+            linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
           - label: malloc-asan
             allocator_path: './fstlog/include/fstlog/detail/malloc_allocator.hpp'
-            sanitizer_flags: '-O1 -fPIE -pie -g -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
+            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
+            linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
           - label: pmr-tsan
             allocator_path: './fstlog/include/fstlog/detail/pmr_allocator.hpp'
-            sanitizer_flags: '-O1 -fsanitize=thread -fno-omit-frame-pointer -g'
+            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=thread'
+            linker_flags: '-pie -fsanitize=thread'
             
     steps:
     - name: Checkout repository
@@ -60,7 +63,7 @@ jobs:
       run: rm -rf build
        
     - name: Configure CMake
-      run: cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="${{ matrix.sanitizer_flags }}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20 -DBUILD_SHARED_LIBS=OFF -DFSTLOG_TESTS=ON -DFSTLOG_EXAMPLES=ON -DFSTLOG_ALLOCATOR=${{ matrix.allocator_path }}
+      run: cmake -S . -B build -G Ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="${{ matrix.compiler_flags }}" -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.linker_flags }}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20 -DBUILD_SHARED_LIBS=OFF -DFSTLOG_TESTS=ON -DFSTLOG_EXAMPLES=ON -DFSTLOG_ALLOCATOR=${{ matrix.allocator_path }}
                 
     - name: Build
       working-directory: ./build
