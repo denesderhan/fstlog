@@ -277,7 +277,7 @@ set(src_sink_impl
     "src/sink/impl/sink_unsort_mixin.hpp"
 )
 
-set(FSTLOG_ALLOCATOR "${CMAKE_CURRENT_LIST_DIR}/include/fstlog/detail/pmr_allocator.hpp" CACHE STRING "Path to allocator.")
+set(FSTLOG_ALLOCATOR "${CMAKE_CURRENT_LIST_DIR}/include/fstlog/detail/pmr_allocator.hpp" CACHE PATH "Path to allocator.")
 if(NOT EXISTS ${FSTLOG_ALLOCATOR})
     message(FATAL_ERROR "FSTLOG_ALLOCATOR path: ${FSTLOG_ALLOCATOR} does not exists!")
 endif()
