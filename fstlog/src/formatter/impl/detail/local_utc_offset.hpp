@@ -17,12 +17,14 @@ namespace fstlog::detail {
     namespace {
 
         constexpr int compile_year() noexcept {
-            const char* d = __DATE__ + sizeof(__DATE__) - 5;
+            char d[] = __DATE__;
+            static_assert(sizeof(__DATE__) >= 5, "No year in __DATE__?");
+            const auto ind = sizeof(__DATE__) - 5;
             int year =
-                (d[0] - '0') * 1000
-                + (d[1] - '0') * 100
-                + (d[2] - '0') * 10
-                + (d[3] - '0');
+                (d[ind] - '0') * 1000
+                + (d[ind + 1] - '0') * 100
+                + (d[ind + 2] - '0') * 10
+                + (d[ind + 3] - '0');
             return year;
         }
 

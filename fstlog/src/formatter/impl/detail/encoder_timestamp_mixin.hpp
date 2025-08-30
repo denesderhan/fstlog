@@ -495,7 +495,7 @@ namespace fstlog {
             std::array<char, 160> buff{ 0 };
             // proving that the length can not grow out of the buffer
             static_assert(
-                (time_format_.capacity() / 2) * 5 // worst case for length grow (%z 5)
+                (decltype(time_format_)::capacity() / 2) * 5 // worst case for length grow (%z 5)
                 + 1 // upper bound in case of odd length
                 + 1 // 0 at end (to be safe)
                 < buff.size(), "buff small");
