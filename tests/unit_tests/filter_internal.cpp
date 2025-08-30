@@ -163,12 +163,14 @@ TEST_CASE("filter_internal") {
 TEST_CASE("filter_internal_rand", "[.][random]") {
     
     SECTION("one range") {
-        fstlog::channel_type num1 = GENERATE(take(100, random(fstlog::channel_type{ 0 }, fstlog::channel_type{ 255 })));
-        fstlog::channel_type num2 = GENERATE(take(100, random(fstlog::channel_type{ 0 }, fstlog::channel_type{ 255 })));
+        auto num1 = GENERATE(take(100, random( 0U , 255U )));
+        auto num2 = GENERATE(take(100, random( 0U, 255U )));
         CAPTURE(num1, num2);
         fstlog::filter_internal filt;
         filt.add_level(fstlog::level::All, fstlog::level::None);
-        filt.add_channel(num1, num2);
+        filt.add_channel(
+            static_cast<fstlog::channel_type>(num1), 
+            static_cast<fstlog::channel_type>(num2));
         auto min = num1 < num2 ? num1 : num2;
         auto max = num1 > num2 ? num1 : num2;
         unsigned char ch{ 0 };
@@ -180,15 +182,19 @@ TEST_CASE("filter_internal_rand", "[.][random]") {
     }
 
     SECTION("two range") {
-        fstlog::channel_type num1 = GENERATE(take(5, random(fstlog::channel_type{ 0 }, fstlog::channel_type{ 255 })));
-        fstlog::channel_type num2 = GENERATE(take(5, random(fstlog::channel_type{ 0 }, fstlog::channel_type{ 255 })));
-        fstlog::channel_type num3 = GENERATE(take(5, random(fstlog::channel_type{ 0 }, fstlog::channel_type{ 255 })));
-        fstlog::channel_type num4 = GENERATE(take(5, random(fstlog::channel_type{ 0 }, fstlog::channel_type{ 255 })));
+        auto num1 = GENERATE(take(5, random( 0U, 255U )));
+        auto num2 = GENERATE(take(5, random( 0U, 255U )));
+        auto num3 = GENERATE(take(5, random( 0U, 255U )));
+        auto num4 = GENERATE(take(5, random( 0U, 255U )));
         CAPTURE(num1, num2, num3, num4);
         fstlog::filter_internal filt;
         filt.add_level(fstlog::level::All, fstlog::level::None);
-        filt.add_channel(num1, num2);
-        filt.add_channel(num3, num4);
+        filt.add_channel(
+            static_cast<fstlog::channel_type>(num1),
+            static_cast<fstlog::channel_type>(num2));
+        filt.add_channel(
+            static_cast<fstlog::channel_type>(num3),
+            static_cast<fstlog::channel_type>(num4));
         auto min1 = num1 < num2 ? num1 : num2;
         auto max1 = num1 > num2 ? num1 : num2;
         auto min2 = num3 < num4 ? num3 : num4;
