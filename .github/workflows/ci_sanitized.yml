@@ -24,13 +24,13 @@ jobs:
       matrix:
         include:
           - label: pmr-asan
-            allocator_path: '../fstlog/include/fstlog/detail/pmr_allocator.hpp'
+            allocator_path: './fstlog/include/fstlog/detail/pmr_allocator.hpp'
             sanitizer_flags: '-O1 -fPIE -pie -g -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
           - label: malloc-asan
-            allocator_path: '../fstlog/include/fstlog/detail/malloc_allocator.hpp'
+            allocator_path: './fstlog/include/fstlog/detail/malloc_allocator.hpp'
             sanitizer_flags: '-O1 -fPIE -pie -g -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
           - label: pmr-tsan
-            allocator_path: '../fstlog/include/fstlog/detail/pmr_allocator.hpp'
+            allocator_path: './fstlog/include/fstlog/detail/pmr_allocator.hpp'
             sanitizer_flags: '-O1 -fsanitize=thread -fno-omit-frame-pointer -g'
             
     steps:
