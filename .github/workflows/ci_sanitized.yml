@@ -47,6 +47,7 @@ jobs:
         
     - name: Log info
       run: |
+        pwd
         dpkg -l | grep catch2
         clang --version
         clang++ --version
@@ -59,47 +60,38 @@ jobs:
       run: rm -rf build
        
     - name: Configure CMake
-      run: cmake -S . -B build -G Ninja \
-          -DCMAKE_C_COMPILER=clang \
-          -DCMAKE_CXX_COMPILER=clang++ \
-          -DCMAKE_CXX_FLAGS="${{ matrix.sanitizer_flags }}" \
-          -DCMAKE_BUILD_TYPE=Debug \
-          -DCMAKE_CXX_STANDARD=20 \
-          -DBUILD_SHARED_LIBS=OFF \
-          -DFSTLOG_TESTS=ON \
-          -DFSTLOG_EXAMPLES=ON \
-          -DFSTLOG_ALLOCATOR=${{ matrix.allocator_path }}
+      run: cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="${{ matrix.sanitizer_flags }}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20 -DBUILD_SHARED_LIBS=OFF -DFSTLOG_TESTS=ON -DFSTLOG_EXAMPLES=ON -DFSTLOG_ALLOCATOR=${{ matrix.allocator_path }}
                 
     - name: Build
-      working-directory: build
+      working-directory: ./build
       run: ninja -j$(nproc)
 
     - name: Run tests
-      working-directory: build/tests
+      working-directory: ./build/tests
       run: ctest --output-on-failure
 
     - name: Run hello_worldd
-      working-directory: build/bin/Static
+      working-directory: ./build/bin/Static
       run: ./hello_worldd
         
     - name: Run log_callsd
-      working-directory: build/bin/Static
+      working-directory: ./build/bin/Static
       run: ./log_callsd
       
     - name: Run formatter_configd
-      working-directory: build/bin/Static
+      working-directory: ./build/bin/Static
       run: ./formatter_configd
 
     - name: Run filterd
-      working-directory: build/bin/Static
+      working-directory: ./build/bin/Static
       run: ./filterd
       
     - name: Run multi_threadedd
-      working-directory: build/bin/Static
+      working-directory: ./build/bin/Static
       run: ./multi_threadedd
       
     - name: Run sink_outputd
-      working-directory: build/bin/Static
+      working-directory: ./build/bin/Static
       run: ./sink_outputd
 
     - name: Upload build artifacts
@@ -109,8 +101,8 @@ jobs:
       with:
         name: build-outputs-${{ matrix.label }}
         path: |
-          build/bin               # all binaries
-          build/tests/Testing/**  # CTest reports
-          build/CMakeFiles/*.log
-          build/compile_commands.json
+          ./build/bin               # all binaries
+          ./build/tests/Testing/**  # CTest reports
+          ./build/CMakeFiles/*.log
+          ./build/compile_commands.json
         retention-days: 5
