@@ -12,13 +12,7 @@ env:
   ASAN_OPTIONS: detect_leaks=1:allocator_may_return_null=1:log_exe_name=1:check_initialization_order=1:detect_stack_use_after_return=1:strict_init_order=1:strict_string_checks=1:detect_invalid_pointer_pairs=3
   UBSAN_OPTIONS: halt_on_error=1:report_error_type=1:print_stacktrace=1:symbolize=1
   TSAN_OPTIONS: detect_deadlocks=1
-
-# Define YAML anchors
-x-pmr-allocator: &pmr_allocator '../fstlog/include/fstlog/detail/pmr_allocator.hpp'
-x-malloc-allocator: &malloc_allocator '../fstlog/include/fstlog/detail/malloc_allocator.hpp'
-x-asan-ubsan-flags: &asan_ubsan_flags '-O1 -fPIE -pie -g -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
-x-tsan-flags: &tsan_flags '-O1 -fsanitize=thread -fno-omit-frame-pointer -g'
-      
+     
 jobs:
   build:
     name: Build ${{ matrix.label }}
@@ -30,14 +24,14 @@ jobs:
       matrix:
         include:
           - label: pmr-asan
-            allocator_path: *pmr_allocator
-            sanitizer_flags: *asan_ubsan_flags
+            allocator_path: '../fstlog/include/fstlog/detail/pmr_allocator.hpp'
+            sanitizer_flags: '-O1 -fPIE -pie -g -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
           - label: malloc-asan
-            allocator_path: *malloc_allocator
-            sanitizer_flags: *asan_ubsan_flags
+            allocator_path: '../fstlog/include/fstlog/detail/malloc_allocator.hpp'
+            sanitizer_flags: '-O1 -fPIE -pie -g -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
           - label: pmr-tsan
-            allocator_path: *pmr_allocator
-            sanitizer_flags: *tsan_flags
+            allocator_path: '../fstlog/include/fstlog/detail/pmr_allocator.hpp'
+            sanitizer_flags: '-O1 -fsanitize=thread -fno-omit-frame-pointer -g'
             
     steps:
     - name: Checkout repository
@@ -119,4 +113,4 @@ jobs:
           build/tests/Testing/**  # CTest reports
           build/CMakeFiles/*.log
           build/compile_commands.json
-        retention-days: ${{ failure() && 30 || 5 }}
+        retention-days: 5
