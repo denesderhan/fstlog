@@ -98,7 +98,7 @@ jobs:
       run: ./sink_outputd
 
     - name: Upload artifacts (SUCCESS)
-      if: failure()
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: sanitized-build-${{ matrix.label }}
@@ -112,13 +112,13 @@ jobs:
         retention-days: 90
         
     - name: Make timestamp
-      if: success()          # this step itself runs only when the job failed
+      if: failure()          # this step itself runs only when the job failed
       id: ts
       shell: bash
       run: echo "STAMP=$(date -u +'%Y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
     
     - name: Upload artifacts (FAILURE)
-      if: success()
+      if: failure()
       uses: actions/upload-artifact@v4
       with:
           name: build-outputs-${{ matrix.label }}-${{ steps.ts.outputs.STAMP }}
