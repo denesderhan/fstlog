@@ -93,4 +93,4 @@ target_link_libraries(tests
 ################################################################################
 include(CTest)
 include(Catch)
-catch_discover_tests(tests)
+catch_discover_tests(tests PROPERTIES SKIP_RETURN_CODE 4)
