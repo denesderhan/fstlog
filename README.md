@@ -2,6 +2,7 @@
 Fast, asynchronous, low footprint, C++ logging library.
 
 [![ci](https://github.com/denesderhan/fstlog/actions/workflows/ci_default.yml/badge.svg)](https://github.com/denesderhan/fstlog/actions/workflows/ci_default.yml)&nbsp;
+[![ci](https://github.com/denesderhan/fstlog/actions/workflows/ci_sanitized.yml/badge.svg)](https://github.com/denesderhan/fstlog/actions/workflows/ci_sanitized.yml)&nbsp;
 
 ## Features
 - C++ 20/17
