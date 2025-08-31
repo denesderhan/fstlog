@@ -1,0 +1,98 @@
+name: Default builds
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual triggers
+     
+jobs:
+  build:
+    name: Default build ${{ runner.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+           
+    - name: Configure CMake
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+                
+    - name: Build
+      run: cmake --build build --config Release
+
+    - name: Install
+      run: |
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          cmake --install build --config Release
+        else
+          sudo cmake --install build --config Release
+        fi
+        
+    - name: Verify Install
+      run: |
+        if [ "${{ runner.os }}" == "Windows" ]; then
+            # Check using Powershell Test-Path
+            # Check if the include files installed
+            if (!(Test-Path -Path "./build/bin/Static/fstlog/include/fstlog/version.hpp")) {
+              Write-Output "Error: Include files did not install!"
+              exit 1
+            }
+            # Check if cmake files installed
+            if (!(Test-Path -Path "./build/bin/Static/fstlog/lib/cmake/fstlog/fstlogConfig.cmake")) {
+              Write-Output "Error: Cmake files did not install!"
+              exit 1
+            }
+            # Check if lib files installed
+            if (!(Test-Path -Path "./build/bin/Static/fstlog/lib/fstlog.lib")) {
+              Write-Output "Error: Lib file did not install!"
+              exit 1
+            }
+            Write-Output "Windows install verification passed."
+          else
+            # Run CMake find-package check and verify output contains "fstlog"
+            CMAKE_OUTPUT=$(cmake --find-package -DNAME=fstlog -DCOMPILER_ID=GNU -DLANGUAGE=C -DMODE=EXIST 2>&1)
+            if [[ ! "$CMAKE_OUTPUT" =~ "fstlog" ]]; then
+              echo "Error: cmake --find-package did not find fstlog. Output: $CMAKE_OUTPUT"
+              exit 1
+            fi
+            # Run pkg-config modversion check and verify it returns a version string like "x.yy.zzz"
+            PKG_OUTPUT=$(pkg-config --modversion libfstlog 2>&1)
+            if [[ ! "$PKG_OUTPUT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Error: pkg-config --modversion did not find fstlog. Output: $PKG_OUTPUT"
+              exit 1
+            fi
+            echo "Unix install verification passed."
+          fi
+  
+    - name: Upload artifacts (SUCCESS)
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: default-build-${{ runner.os }}
+        path: |
+          ./build/bin
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
+          ./build/compile_commands.json
+          overwrite: true
+        retention-days: 90
+        
+    - name: Make timestamp
+      if: failure()          # this step itself runs only when the job failed
+      id: ts
+      shell: bash
+      run: echo "STAMP=$(date -u +'%Y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
+    
+    - name: Upload artifacts (FAILURE)
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+          name: default-build-${{ runner.os }}-${{ steps.ts.outputs.STAMP }}
+          path: |
+            ./build/bin
+            ./build/CMakeFiles/CMakeConfigureLog.yaml
+            ./build/compile_commands.json
+          retention-days: 90
