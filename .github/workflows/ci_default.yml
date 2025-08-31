@@ -7,7 +7,7 @@ on:
      
 jobs:
   build:
-    name: Default build ${{ runner.os }}
+    name: Default build ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
