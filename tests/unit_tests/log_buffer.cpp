@@ -30,8 +30,8 @@ TEST_CASE("log_buffer") {
         fstlog::log_buffer_impl test_log_buffer(1024);
         using index_type = decltype(test_log_buffer.write_pos_)::value_type;
 
-        index_type custom_pos{ 0 };
-        custom_pos -= static_cast<index_type>(fstlog::constants::internal_msg_alignment);
+        index_type custom_pos{ (std::numeric_limits<index_type>::max)()};
+        custom_pos -= static_cast<index_type>(fstlog::constants::internal_msg_alignment) - 1;
 
         test_log_buffer.write_pos_ = custom_pos;
         test_log_buffer.read_pos_ = custom_pos;
@@ -68,8 +68,8 @@ TEST_CASE("log_buffer") {
         fstlog::log_buffer_impl test_log_buffer(1024);
         using index_type = decltype(test_log_buffer.write_pos_)::value_type;
 
-        index_type custom_pos{ 0 };
-        custom_pos -= static_cast<index_type>(fstlog::constants::internal_msg_alignment);
+        index_type custom_pos{ (std::numeric_limits<index_type>::max)() };
+        custom_pos -= static_cast<index_type>(fstlog::constants::internal_msg_alignment) - 1;
 
         test_log_buffer.write_pos_ = custom_pos;
         test_log_buffer.read_pos_ = custom_pos;
