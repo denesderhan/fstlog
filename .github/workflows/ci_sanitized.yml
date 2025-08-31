@@ -106,35 +106,14 @@ jobs:
       working-directory: ./build/bin/Static
       run: ./sink_outputd
 
-    - name: Upload artifacts (SUCCESS)
-      if: success()
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: sanitized-build-${{ matrix.label }}
-        path: |
-          ./build/bin
-          ./build/tests/Testing
-          ./build/CMakeFiles/CMakeConfigureLog.yaml
-          ./build/compile_commands.json
-          ./build/build.ninja
-        overwrite: true
-        retention-days: 90
-        
-    - name: Make timestamp
-      if: failure()          # this step itself runs only when the job failed
-      id: ts
-      shell: bash
-      run: echo "STAMP=$(date -u +'%Y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
-    
-    - name: Upload artifacts (FAILURE)
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-          name: build-outputs-${{ matrix.label }}-${{ steps.ts.outputs.STAMP }}
+          name: sanitized-build-${{ matrix.label }}
           path: |
             ./build/bin
             ./build/tests/Testing
             ./build/CMakeFiles/CMakeConfigureLog.yaml
             ./build/compile_commands.json
             ./build/build.ninja
-          retention-days: 90
+          retention-days: 5

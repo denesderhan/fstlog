@@ -85,8 +85,7 @@ jobs:
         fi
         echo "Unix install verification passed."
 
-    - name: Upload artifacts (SUCCESS)
-      if: success()
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: default-build-${{ runner.os }}
@@ -94,22 +93,4 @@ jobs:
           ./build/bin
           ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/compile_commands.json
-          overwrite: true
-        retention-days: 90
-        
-    - name: Make timestamp
-      if: failure()          # this step itself runs only when the job failed
-      id: ts
-      shell: bash
-      run: echo "STAMP=$(date -u +'%Y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
-    
-    - name: Upload artifacts (FAILURE)
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-          name: default-build-${{ runner.os }}-${{ steps.ts.outputs.STAMP }}
-          path: |
-            ./build/bin
-            ./build/CMakeFiles/CMakeConfigureLog.yaml
-            ./build/compile_commands.json
-          retention-days: 90
+        retention-days: 5
