@@ -26,13 +26,13 @@ jobs:
     - name: Build
       run: cmake --build build --config Release
 
-    - name: Install
-      run: |
-        if [ "${{ runner.os }}" == "Windows" ]; then
-          cmake --install build --config Release
-        else
-          sudo cmake --install build --config Release
-        fi
+    - name: Install (Windows)
+      if: runner.os == 'Windows'
+      run: cmake --install build --config Release
+      
+    - name: Install (Unix)
+      if: runner.os != 'Windows'
+      run: sudo cmake --install build --config Release  
 
     - name: Verify Install (Windows)
       if: runner.os == 'Windows'
