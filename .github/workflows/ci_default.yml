@@ -1,8 +1,19 @@
 name: Default builds
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
+      - '.editorconfig'
+      - 'LICENSE'
+      - '.github/**'
+      - 'tests/**'
   workflow_dispatch:  # Allow manual triggers
      
 jobs:

@@ -1,6 +1,8 @@
 # fstlog
 Fast, asynchronous, low footprint, C++ logging library.
 
+[![ci](https://github.com/denesderhan/fstlog/actions/workflows/ci_default.yml/badge.svg)](https://github.com/denesderhan/fstlog/actions/workflows/ci_default.yml)&nbsp;
+
 ## Features
 - C++ 20/17
 - Low latency of log call in application code.
