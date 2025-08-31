@@ -18,14 +18,13 @@
 #endif
 
 TEST_CASE("output") {
-    
-    auto sstream1{ std::make_shared<std::stringstream>() };
-    auto sstream2{ std::make_shared<std::stringstream>() };
-    auto sstream3{ std::make_shared<std::stringstream>() };
-    auto mutex{ std::make_shared<std::mutex>() };
-    
     SECTION("construct") {
         SECTION("error") {
+            auto sstream1{ std::make_shared<std::stringstream>() };
+            auto sstream2{ std::make_shared<std::stringstream>() };
+            auto sstream3{ std::make_shared<std::stringstream>() };
+            auto mutex{ std::make_shared<std::mutex>() };
+            
             fstlog::output out;
             CHECK(!out.good());
             CHECK(out.pimpl() == nullptr);
@@ -59,6 +58,10 @@ TEST_CASE("output") {
         };
 
         SECTION("construct_assign_copy_move") {
+            auto sstream1{ std::make_shared<std::stringstream>() };
+            auto sstream2{ std::make_shared<std::stringstream>() };
+            auto sstream3{ std::make_shared<std::stringstream>() };
+            auto mutex{ std::make_shared<std::mutex>() };
             std::vector<fstlog::output> outputs;
             outputs.push_back(fstlog::output_console()); //0
             outputs.push_back(fstlog::output_cout());
@@ -117,6 +120,10 @@ TEST_CASE("output") {
     
     SECTION("memory_leak") {
 #ifdef FSTLOG_ALLOCATOR_IS_STDPMR
+        auto sstream1{ std::make_shared<std::stringstream>() };
+        auto sstream2{ std::make_shared<std::stringstream>() };
+        auto sstream3{ std::make_shared<std::stringstream>() };
+        auto mutex{ std::make_shared<std::mutex>() };
         test_mem_resource test_res;
         fstlog::fstlog_allocator allocator(&test_res);
         // error
