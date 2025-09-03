@@ -7,23 +7,19 @@ namespace fstlog {
     template<typename L>
     class formatter_null_mixin : public L {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
         
-        formatter_null_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(formatter_null_mixin(allocator_type{})))
-            : formatter_null_mixin(allocator_type{}) {}
-        explicit formatter_null_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit formatter_null_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         formatter_null_mixin(const formatter_null_mixin& other) noexcept(
-            noexcept(formatter_null_mixin::get_allocator())
-            && noexcept(formatter_null_mixin(formatter_null_mixin{}, allocator_type{})))
-            : formatter_null_mixin(other, other.get_allocator()) {}
-        formatter_null_mixin(const formatter_null_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(formatter_null_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+            noexcept(formatter_null_mixin::get_memory_resource())
+            && noexcept(formatter_null_mixin(formatter_null_mixin{nullptr}, nullptr)))
+            : formatter_null_mixin(other, other.get_memory_resource()) {}
+        formatter_null_mixin(const formatter_null_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(formatter_null_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}
 
         formatter_null_mixin(formatter_null_mixin&& other) = delete;
         formatter_null_mixin& operator=(const formatter_null_mixin& rhs) = delete;

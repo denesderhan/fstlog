@@ -16,15 +16,11 @@ namespace fstlog {
     template<class L>
     class sink_msgblock_mixin : public L {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
-        sink_msgblock_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(sink_msgblock_mixin(allocator_type{})))
-            : sink_msgblock_mixin(allocator_type{}) {}
-        explicit sink_msgblock_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit sink_msgblock_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         sink_msgblock_mixin(const sink_msgblock_mixin& other) = delete;
         sink_msgblock_mixin(sink_msgblock_mixin&& other) = delete;

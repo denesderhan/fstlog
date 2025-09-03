@@ -8,7 +8,7 @@
 #include <ostream>
 
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     // thread safe, ofstream must be opened in binary mode
@@ -16,15 +16,16 @@ namespace fstlog {
         output& out,
         std::shared_ptr<std::ostream> stream,
         std::shared_ptr<std::mutex> mutex,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     // thread safe, ofstream must be opened in binary mode
     inline output output_stream_mt(
         std::shared_ptr<std::ostream> stream,
         std::shared_ptr<std::mutex> mutex,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         output out;
-        const auto error = output_stream_mt(out, stream, mutex, allocator);
+        const auto error = output_stream_mt(out, stream, mutex, resource);
         handle_error(error);
         return out;
     }

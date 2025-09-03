@@ -20,7 +20,7 @@
 
 #include <config_sink.hpp>
 #include <detail/make_allocated.hpp>
-#include <detail/mixin/allocator_mixin.hpp>
+#include <detail/mixin/memory_resource_mixin.hpp>
 #include <detail/mixin/exclusive_use_mixin.hpp>
 #include <detail/mixin/reference_counter_mixin.hpp>
 #include <fstlog/detail/constants.hpp>
@@ -46,7 +46,7 @@ namespace fstlog {
         sink_flush_time_mixin<
         reference_counter_mixin<
         exclusive_use_mixin<
-        allocator_mixin>>>>>>>>>;
+        memory_resource_mixin>>>>>>>>>;
 
     static error_code sink_small(
         sink& out,
@@ -54,9 +54,9 @@ namespace fstlog {
         output output,
         filter_internal const& filter,
         std::chrono::milliseconds flush_interval,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
-        out = make_allocated<sink_small_impl_type>(allocator);
+        out = make_allocated<sink_small_impl_type>(resource);
         sink_small_impl_type* const pimpl =
             static_cast<sink_small_impl_type*>(out.pimpl());
         if (pimpl == nullptr) return error_code::alloc_fail;
@@ -108,7 +108,7 @@ TEST_CASE("formatter_txt_mixin") {
         auto fmt_str = std::get<0>(test_dat);
         CAPTURE(fmt_str);
         fstlog::formatter f;
-        auto error = fstlog::formatter_txt(f, fmt_str);
+        auto error = fstlog::formatter_txt(f, fmt_str, fstlog::get_default_resource());
         CHECK(error == std::get<1>(test_dat));
     }
 
@@ -188,7 +188,7 @@ TEST_CASE("formatter_txt_mixin") {
             output,
             fstlog::filter_internal{ fstlog::level::All, 1, 255 },
             fstlog::config::default_sink_flush_interval,
-            fstlog::fstlog_allocator{});
+            fstlog::get_default_resource());
         CHECK(sink_error == fstlog::error_code::none);
         core.add_sink(out_sink);
         fstlog::logger_st logger(core);
@@ -221,7 +221,7 @@ TEST_CASE("formatter_txt_mixin") {
             output,
             fstlog::filter_internal{ fstlog::level::All, 1, 255 },
             fstlog::config::default_sink_flush_interval,
-            fstlog::fstlog_allocator{});
+            fstlog::get_default_resource());
         CHECK(sink_error == fstlog::error_code::none);
         core.add_sink(out_sink);
         fstlog::logger_st logger(core);

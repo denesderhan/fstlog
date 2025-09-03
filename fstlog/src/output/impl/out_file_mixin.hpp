@@ -14,17 +14,13 @@ namespace fstlog {
     class out_file_mixin : public L
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
         
-        out_file_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(out_file_mixin(allocator_type{})))
-            : out_file_mixin(allocator_type{}) {}
-        explicit out_file_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{}))
-            && noexcept(decltype(file_)(allocator_type{})))
-            : L(allocator),
-            file_{ allocator } {}
+        explicit out_file_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr))
+            && noexcept(decltype(file_)(nullptr)))
+            : L(resource),
+            file_{ resource } {}
 
         out_file_mixin(const out_file_mixin& other) = delete;
         out_file_mixin(out_file_mixin&& other) = delete;
@@ -50,6 +46,6 @@ namespace fstlog {
         }
 
     private:
-        out_file_posix<allocator_type> file_;
+        out_file_posix file_;
     };
 }

@@ -19,24 +19,21 @@ namespace fstlog {
     template<class L>
     class sink_sort_mixin : public L {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
     
     private:
         using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
         struct msg_ind;
         
     public:
-        sink_sort_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(sink_sort_mixin(allocator_type{})))
-            : sink_sort_mixin(allocator_type{}) {}
-        explicit sink_sort_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{}))
-            && noexcept(decltype(message_indices_)(allocator_type{}))
-            && noexcept(decltype(message_data_)(allocator_type{})))
-            : L(allocator),
-            message_indices_{ allocator },
-            message_data_{ allocator } {}
+
+        explicit sink_sort_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr))
+            && noexcept(decltype(message_indices_)(nullptr))
+            && noexcept(decltype(message_data_)(nullptr)))
+            : L(resource),
+            message_indices_{ resource },
+            message_data_{ resource } {}
 
         sink_sort_mixin(const sink_sort_mixin& other) = delete;
         sink_sort_mixin(sink_sort_mixin&& other) = delete;
@@ -139,7 +136,7 @@ namespace fstlog {
         };
         static_assert(sizeof(stamp_type) == sizeof(stamp_type::rep));
         std::uint32_t max_data_size_{15 * 1024};
-        dyn_array<msg_ind, allocator_type> message_indices_;
-        dyn_buffer<allocator_type> message_data_;
+        dyn_array<msg_ind> message_indices_;
+        dyn_buffer message_data_;
     };
 }

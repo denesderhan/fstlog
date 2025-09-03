@@ -13,15 +13,11 @@ namespace fstlog {
     class out_console_mixin : public L
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
-        out_console_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(out_console_mixin(allocator_type{})))
-            : out_console_mixin(allocator_type{}) {}
-        explicit out_console_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit out_console_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         out_console_mixin(const out_console_mixin& other) = delete;
         out_console_mixin(out_console_mixin&& other) = delete;

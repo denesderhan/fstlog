@@ -8,23 +8,19 @@ namespace fstlog {
     class mutex_internal_mixin : public L
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
         
-        mutex_internal_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(mutex_internal_mixin(allocator_type{})))
-            : mutex_internal_mixin(allocator_type{}) {}
-        explicit mutex_internal_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit mutex_internal_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         mutex_internal_mixin(const mutex_internal_mixin& other) noexcept(
-            noexcept(mutex_internal_mixin::get_allocator())
-            && noexcept(mutex_internal_mixin(mutex_internal_mixin{}, allocator_type{})))
-            : mutex_internal_mixin(other, other.get_allocator()) {}
-        mutex_internal_mixin(const mutex_internal_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(mutex_internal_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+            noexcept(mutex_internal_mixin::get_memory_resource())
+            && noexcept(mutex_internal_mixin(mutex_internal_mixin{}, nullptr)))
+            : mutex_internal_mixin(other, other.get_memory_resource()) {}
+        mutex_internal_mixin(const mutex_internal_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(mutex_internal_mixin{}, nullptr)))
+            : L(other, resource) {}
 
         mutex_internal_mixin(mutex_internal_mixin&& other) = delete;
         mutex_internal_mixin& operator=(const mutex_internal_mixin& rhs) = delete;

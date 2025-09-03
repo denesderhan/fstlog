@@ -11,17 +11,17 @@
 #include <fstlog/version.hpp>
 
 namespace fstlog {
-    error_code core::init(allocator_type const& allocator) noexcept {
-        return init("Unnamed", allocator);
+    error_code core::init(memory_resource* resource) noexcept {
+        return init("Unnamed", resource);
     }
-    error_code core::init(std::string_view name, allocator_type const& allocator) noexcept {
+    error_code core::init(std::string_view name, memory_resource* resource) noexcept {
         if (pimpl_ != nullptr) return error_code::double_init;
-        pimpl_ = make_allocated<core_impl>(allocator, name);
+        pimpl_ = make_allocated<core_impl>(resource, name);
         if (pimpl_ == nullptr) return error_code::alloc_fail;
         const auto error = pimpl_->init();
         if (error != error_code::none) {
             pimpl_->~core_impl();
-            nothrow_deallocate(pimpl_, allocator);
+            nothrow_deallocate(pimpl_, resource);
             pimpl_ = nullptr;
         }
         else {
@@ -31,7 +31,9 @@ namespace fstlog {
     }
 
     //this is needed, to be able to construct an empty core (core{nullptr} in logger_core_mixin)
-    core::core(core_impl* pimpl) noexcept 
+    core::core(std::nullptr_t) noexcept {}
+
+    core::core(core_impl* pimpl) noexcept
         : pimpl_{ pimpl } 
     {
         if (pimpl != nullptr)
@@ -41,9 +43,9 @@ namespace fstlog {
     core::~core() noexcept {
         if (pimpl_ != nullptr) {
             if (pimpl_->remove_reference()) {
-                const allocator_type allocator{ pimpl_->get_allocator() };
+                memory_resource* resource{ pimpl_->get_memory_resource() };
                 pimpl_->~core_impl();
-                nothrow_deallocate(pimpl_, allocator);
+                nothrow_deallocate(pimpl_, resource);
                 pimpl_ = nullptr;
             }
         }

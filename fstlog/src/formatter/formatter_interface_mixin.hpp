@@ -13,25 +13,22 @@ namespace fstlog {
         public formatter_interface
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
     private:
         using wrapper_type = formatter;
-        formatter_interface_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(formatter_interface_mixin(allocator_type{})))
-            : formatter_interface_mixin(allocator_type{}) {}
-        explicit formatter_interface_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        
+        explicit formatter_interface_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         formatter_interface_mixin(const formatter_interface_mixin& other) noexcept(
-            noexcept(formatter_interface_mixin::get_allocator())
-            && noexcept(formatter_interface_mixin(formatter_interface_mixin{}, allocator_type{})))
-            : formatter_interface_mixin(other, other.get_allocator()) {}
-        formatter_interface_mixin(const formatter_interface_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(formatter_interface_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+            noexcept(formatter_interface_mixin::get_memory_resource())
+            && noexcept(formatter_interface_mixin(formatter_interface_mixin{nullptr}, nullptr)))
+            : formatter_interface_mixin(other, other.get_memory_resource()) {}
+        formatter_interface_mixin(const formatter_interface_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(formatter_interface_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}
         formatter_interface_mixin& operator=(const formatter_interface_mixin&) = delete;
         formatter_interface_mixin(formatter_interface_mixin&&) = delete;
         formatter_interface_mixin& operator=(formatter_interface_mixin&&) = delete;
@@ -47,15 +44,15 @@ namespace fstlog {
 
         // allocates and constructs a new type erased formatter object
         error_code clone(wrapper_type& out) const noexcept final {
-            return clone( out, L::get_allocator() );
+            return clone( out, L::get_memory_resource() );
         }
 
         // allocates and constructs a new type erased formatter object
         error_code clone(
             wrapper_type& out,
-            allocator_type const& allocator) const noexcept final
+            memory_resource_type* resource) const noexcept final
         {
-            out = make_allocated<formatter_interface_mixin<L>>(allocator, *this);
+            out = make_allocated<formatter_interface_mixin<L>>(resource, *this);
             if (out.pimpl() == nullptr) return error_code::alloc_fail;
             else return error_code::none;
         }
@@ -75,18 +72,18 @@ namespace fstlog {
 
         void release_referred() noexcept final {
             if (L::remove_reference()) {
-                const auto allocator{ L::get_allocator() };
+                const auto resource{ L::get_memory_resource() };
                 this->~formatter_interface_mixin();
-                nothrow_deallocate(this, allocator);
+                nothrow_deallocate(this, resource);
             }
         }
 
         template<class T>
         friend auto make_allocated(
-            fstlog_allocator const& allocator) noexcept;
+            memory_resource* resource) noexcept;
         template<class T, class... Args>
         friend auto make_allocated(
-            fstlog_allocator const& allocator,
+            memory_resource* resource,
             Args&&... args) noexcept;
         friend wrapper_type;
     };

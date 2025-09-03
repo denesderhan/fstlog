@@ -8,7 +8,7 @@
 
 #include <fstlog/detail/api_def.hpp>
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/log_buffer.hpp>
 #include <fstlog/sink/sink.hpp>
 
@@ -16,23 +16,19 @@ namespace fstlog {
     class core_impl;
     class core {
     public:
-        using allocator_type = fstlog_allocator;
-
-        FSTLOG_API core()  noexcept(
-            noexcept(allocator_type())
-             && noexcept(handle_error(error_code::none)))
-            : core(allocator_type{}) {}
-        FSTLOG_API explicit core(allocator_type const& allocator) noexcept(
+        
+        FSTLOG_API explicit core(memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(handle_error(error_code::none)))
         {
-            const auto error = init(allocator);
+            const auto error = init(resource);
             handle_error(error);
         }
         FSTLOG_API core(
             std::string_view name, 
-            allocator_type const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+            memory_resource* resource = fstlog::get_default_resource()) noexcept(
+                noexcept(handle_error(error_code::none)))
         {
-            const auto error = init(name, allocator);
+            const auto error = init(name, resource);
             handle_error(error);
         }
         FSTLOG_API ~core() noexcept;
@@ -64,14 +60,16 @@ namespace fstlog {
         FSTLOG_API void detail_notify_data_ready() const noexcept;
         FSTLOG_API log_buffer detail_get_buffer(std::uint32_t buffer_size) noexcept;
         FSTLOG_API log_buffer& detail_tls_buffer() noexcept;
-        FSTLOG_API explicit core(core_impl* pimpl)  noexcept;
+        FSTLOG_API explicit core(std::nullptr_t) noexcept;
         
         FSTLOG_API core_impl* pimpl() const noexcept;
     private:
-        FSTLOG_API error_code init(allocator_type const& allocator = {}) noexcept;
+        FSTLOG_API explicit core(core_impl* pimpl) noexcept;
+        FSTLOG_API error_code init(
+            memory_resource* resource) noexcept;
         FSTLOG_API error_code init(
             std::string_view name,
-            allocator_type const& allocator = {}) noexcept;
+            memory_resource* resource) noexcept;
         
         core_impl* pimpl_{ nullptr };
     };

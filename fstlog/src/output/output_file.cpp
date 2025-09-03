@@ -3,7 +3,7 @@
 #include <fstlog/output/output_file.hpp>
 
 #include <detail/make_allocated.hpp>
-#include <detail/mixin/allocator_mixin.hpp>
+#include <detail/mixin/memory_resource_mixin.hpp>
 #include <detail/mixin/reference_counter_mixin.hpp>
 #include <detail/mixin/exclusive_use_mixin.hpp>
 #include <output/impl/out_file_mixin.hpp>
@@ -15,31 +15,31 @@ namespace fstlog {
         out_file_mixin<
         reference_counter_mixin<
         exclusive_use_mixin<
-        allocator_mixin>>>>;
+        memory_resource_mixin>>>>;
     
     error_code output_file(
         output& out,
         const char* file_path,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
-        return output_file(out, file_path, false, allocator);
+        return output_file(out, file_path, false, resource);
     }
     error_code output_file(
         output& out,
         const char* file_path,
         bool truncate,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
-        return output_file(out, file_path, truncate, 16 * 1024, allocator);
+        return output_file(out, file_path, truncate, 16 * 1024, resource);
     }
     error_code output_file(
         output& out,
         const char* file_path,
         bool truncate,
         std::uint32_t buffer_size,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
-        out = make_allocated<output_file_impl_type>(allocator);
+        out = make_allocated<output_file_impl_type>(resource);
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
         const auto error = static_cast<output_file_impl_type*>(out.pimpl())->
             init_output(file_path, truncate, buffer_size);

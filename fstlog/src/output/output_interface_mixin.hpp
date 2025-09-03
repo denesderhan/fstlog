@@ -6,9 +6,9 @@
 
 namespace fstlog {
     template<class T>
-    auto make_allocated(fstlog_allocator const& allocator) noexcept;
+    auto make_allocated(memory_resource* resource) noexcept;
     template<class T, class... Args>
-    auto make_allocated(fstlog_allocator const& allocator,
+    auto make_allocated(memory_resource* resource,
         Args&&... args) noexcept;
     
     class output;
@@ -18,16 +18,13 @@ namespace fstlog {
         public output_interface
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
     private:
         using wrapper_type = output;
-        output_interface_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(output_interface_mixin(allocator_type{})))
-            : output_interface_mixin(allocator_type{}) {}
-        explicit output_interface_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+
+        explicit output_interface_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         output_interface_mixin(const output_interface_mixin&) = delete;
         output_interface_mixin& operator=(const output_interface_mixin&) = delete;
@@ -55,18 +52,18 @@ namespace fstlog {
 
         void release_referred() noexcept final {
             if (L::remove_reference()) {
-                const auto allocator{ L::get_allocator() };
+                const auto resource{ L::get_memory_resource() };
                 this->~output_interface_mixin();
-                nothrow_deallocate(this, allocator);
+                nothrow_deallocate(this, resource);
             }
         }
 
         template<class T>
         friend auto make_allocated(
-            fstlog_allocator const& allocator) noexcept;
+            memory_resource* resource) noexcept;
         template<class T, class... Args>
         friend auto make_allocated(
-            fstlog_allocator const& allocator,
+            memory_resource* resource,
             Args&&... args) noexcept;
         friend wrapper_type;
     };

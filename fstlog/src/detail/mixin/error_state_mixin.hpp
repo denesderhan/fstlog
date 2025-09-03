@@ -7,23 +7,19 @@ namespace fstlog {
     template<typename L>
     class error_state_mixin : public L {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
-        error_state_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(error_state_mixin(allocator_type{})))
-            : error_state_mixin(allocator_type{}) {}
-        explicit error_state_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{}))) 
-            : L(allocator) {}
+        explicit error_state_mixin(memory_resource* resource) noexcept(
+            noexcept(L(nullptr))) 
+            : L(resource) {}
 
         error_state_mixin(const error_state_mixin& other) noexcept(
-            noexcept(error_state_mixin::get_allocator())
-            && noexcept(error_state_mixin(error_state_mixin{}, allocator_type{})))
-            : error_state_mixin(other, other.get_allocator()) {}
-        error_state_mixin(const error_state_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(error_state_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+            noexcept(error_state_mixin::get_memory_resource())
+            && noexcept(error_state_mixin(error_state_mixin{nullptr}, nullptr)))
+            : error_state_mixin(other, other.get_memory_resource()) {}
+        error_state_mixin(const error_state_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(error_state_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}
 
         error_state_mixin(error_state_mixin&& other) = delete;
         error_state_mixin& operator=(const error_state_mixin& rhs) = delete;

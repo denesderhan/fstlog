@@ -6,41 +6,45 @@
 #include <string_view>
 
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     FSTLOG_API error_code formatter_txt(
         formatter& out,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     FSTLOG_API error_code formatter_txt(
         formatter& out,
         std::string_view format_string,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     inline formatter formatter_txt(
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         formatter out;
-        const auto error = formatter_txt(out, allocator);
+        const auto error = formatter_txt(out, resource);
         handle_error(error);
         return out;
     }
     inline formatter formatter_txt(
         std::string_view format_string,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         formatter out;
-        const auto error = formatter_txt(out, format_string, allocator);
+        const auto error = formatter_txt(out, format_string, resource);
         handle_error(error);
         return out;
     }
 #ifdef __cpp_char8_t
     inline formatter formatter_txt(
         std::u8string_view format_string,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(noexcept(handle_error(error_code::none)))
     {
         return formatter_txt(
-            std::string_view{ reinterpret_cast<const char*>(format_string.data()), format_string.size() },
-            allocator);
+            std::string_view{ 
+                reinterpret_cast<const char*>(format_string.data()),
+                format_string.size() },
+            resource);
     }
 #endif
 }

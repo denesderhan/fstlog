@@ -8,23 +8,18 @@ namespace fstlog {
     class exclusive_use_mixin : public L
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
         
-        exclusive_use_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(exclusive_use_mixin(allocator_type{})))
-            : exclusive_use_mixin(allocator_type{}) {}
-        explicit exclusive_use_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit exclusive_use_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         exclusive_use_mixin(const exclusive_use_mixin& other) noexcept(
-            noexcept(exclusive_use_mixin::get_allocator())
-            && noexcept(exclusive_use_mixin(exclusive_use_mixin{}, allocator_type{})))
-            : exclusive_use_mixin(other, other.get_allocator()) {}
-        exclusive_use_mixin(const exclusive_use_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(exclusive_use_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+            noexcept(exclusive_use_mixin(exclusive_use_mixin{}, nullptr)))
+            : exclusive_use_mixin(other, other.get_memory_resource()) {}
+        exclusive_use_mixin(const exclusive_use_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(exclusive_use_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}
 
         exclusive_use_mixin(exclusive_use_mixin&& other) = delete;
         exclusive_use_mixin& operator=(const exclusive_use_mixin& rhs) = delete;

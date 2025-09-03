@@ -4,7 +4,7 @@
 #include <string_view>
 
 #include <detail/unaligned_span.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/formatter/formatter.hpp>
 
 namespace fstlog {
@@ -25,7 +25,7 @@ namespace fstlog {
         virtual error_code clone(formatter& out) const noexcept = 0;
         virtual error_code clone(
             formatter& out,
-            fstlog_allocator const& allocator) const noexcept = 0;
+            memory_resource* resource) const noexcept = 0;
         virtual bool use() noexcept = 0;
         virtual void release() noexcept = 0;
     

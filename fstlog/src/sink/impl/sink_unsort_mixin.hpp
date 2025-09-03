@@ -9,15 +9,11 @@ namespace fstlog {
     class sink_unsort_mixin : public L {
         typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
-        sink_unsort_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(sink_unsort_mixin(allocator_type{})))
-            : sink_unsort_mixin(allocator_type{}) {}
-        explicit sink_unsort_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit sink_unsort_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         sink_unsort_mixin(const sink_unsort_mixin& other) = delete;
         sink_unsort_mixin(sink_unsort_mixin&& other) = delete;

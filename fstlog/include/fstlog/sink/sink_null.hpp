@@ -4,17 +4,18 @@
 #include <fstlog/sink/sink.hpp>
 
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     FSTLOG_API error_code sink_null(
         sink& out,
-        fstlog_allocator const& allocator) noexcept;
+        memory_resource* resource) noexcept;
     inline sink sink_null(
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         sink out;
-        const auto error = sink_null(out, allocator);
+        const auto error = sink_null(out, resource);
         handle_error(error);
         return out;
     }

@@ -8,18 +8,18 @@
 #include <filter/filter_impl.hpp>
 
 namespace fstlog {
-    error_code filter::init(allocator_type const& allocator) noexcept {
+    error_code filter::init(memory_resource* resource) noexcept {
         if (pimpl_ != nullptr) return error_code::double_init;
-        pimpl_ = make_allocated<filter_impl>(allocator);
+        pimpl_ = make_allocated<filter_impl>(resource);
         if (pimpl_ == nullptr) return error_code::alloc_fail;
         return error_code::none;
     }
     error_code filter::init(
         level level,
         channel_type channel,
-        allocator_type const& allocator)  noexcept 
+        memory_resource* resource)  noexcept 
     {
-        auto error = init(allocator);
+        auto error = init(resource);
         if (error == error_code::none) {
             if (level == level::All)
                 add_level(level::Fatal, level::Trace);
@@ -33,9 +33,9 @@ namespace fstlog {
         level level,
         channel_type first_channel,
         channel_type last_channel,
-        allocator_type const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
-        auto error = init(allocator);
+        auto error = init(resource);
         if (error == error_code::none) {
             if (level == level::All)
                 add_level(level::Fatal, level::Trace);
@@ -48,13 +48,13 @@ namespace fstlog {
     error_code filter::init(const filter& other) noexcept {
         if (pimpl_ != nullptr) return error_code::double_init;
         if (other.pimpl_ == nullptr) return error_code::none;
-        return init(other, other.pimpl_->get_allocator());
+        return init(other, other.pimpl_->get_memory_resource());
     }
-    error_code filter::init(const filter& other, allocator_type const& allocator) noexcept {
+    error_code filter::init(const filter& other, memory_resource* resource) noexcept {
         if (pimpl_ != nullptr) return error_code::double_init;
         if (other.pimpl_ == nullptr) return error_code::none;
         pimpl_ = make_allocated<filter_impl>(
-            allocator, 
+            resource, 
             *other.pimpl_);
         if (pimpl_ == nullptr) return error_code::alloc_fail;
         return error_code::none;
@@ -65,9 +65,9 @@ namespace fstlog {
                 pimpl_->message_filter_ = other.pimpl_->message_filter_;
             }
             else {
-                const allocator_type allocator{ pimpl_->get_allocator() };
+                memory_resource* resource{ pimpl_->get_memory_resource() };
                 pimpl_->~filter_impl();
-                nothrow_deallocate(pimpl_, allocator);
+                nothrow_deallocate(pimpl_, resource);
                 pimpl_ = nullptr;
             }
         }
@@ -81,9 +81,9 @@ namespace fstlog {
     filter& filter::operator=(filter&& other) noexcept {
         assert(this != &other);
         if (pimpl_ != nullptr) {
-            const allocator_type allocator{ pimpl_->get_allocator() };
+            memory_resource* resource{ pimpl_->get_memory_resource() };
             pimpl_->~filter_impl();
-            nothrow_deallocate(pimpl_, allocator);
+            nothrow_deallocate(pimpl_, resource);
         }
         pimpl_ = other.pimpl_;
         other.pimpl_ = nullptr;
@@ -99,9 +99,9 @@ namespace fstlog {
     }
     filter::~filter() noexcept {
         if (pimpl_ != nullptr) {
-            const allocator_type allocator{ pimpl_->get_allocator() };
+            memory_resource* resource{ pimpl_->get_memory_resource() };
             pimpl_->~filter_impl();
-            nothrow_deallocate(pimpl_, allocator);
+            nothrow_deallocate(pimpl_, resource);
             pimpl_ = nullptr;
         }
     }

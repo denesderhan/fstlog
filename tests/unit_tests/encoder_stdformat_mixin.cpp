@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include <detail/mixin/allocator_mixin.hpp>
+#include <detail/mixin/memory_resource_mixin.hpp>
 #include <detail/mixin/error_state_mixin.hpp>
 #include <formatter/impl/output_span_mixin.hpp>
 #include <formatter/impl/detail/encoder_stdformat_mixin.hpp>
@@ -24,10 +24,10 @@ using enc_type = fstlog::encoder_stdformat_mixin<
                     fstlog::logfield_formspec_fmt_mixin<
                     fstlog::error_state_mixin<
                     fstlog::output_span_mixin<
-                    fstlog::allocator_mixin>>>>;
+                    fstlog::memory_resource_mixin>>>>;
 
 TEST_CASE("encoder_stdformat_mixin") {
-    enc_type encoder;
+    enc_type encoder(fstlog::get_default_resource());
     std::array<unsigned char, 128> buffer;
     encoder.clear_error();
     encoder.output_span_init(fstlog::byte_span(buffer.data(), buffer.size()));

@@ -21,7 +21,6 @@ set(include_fstlog_detail
     "include/fstlog/detail/error_handling.hpp"
     "include/fstlog/detail/fast_to_str.hpp"
     "include/fstlog/detail/fnv_hash.hpp"
-    "include/fstlog/detail/fstlog_allocator.hpp"
     "include/fstlog/detail/fstlog_assert.hpp"
     "include/fstlog/detail/fstlog_ex.hpp"
     "include/fstlog/detail/has_input_iterator.hpp"
@@ -41,6 +40,7 @@ set(include_fstlog_detail
     "include/fstlog/detail/log_type.hpp"
     "include/fstlog/detail/log_type_metadata.hpp"
     "include/fstlog/detail/log2_size.hpp"
+    "include/fstlog/detail/memory_resource.hpp"
     "include/fstlog/detail/noexceptions.hpp"
     "include/fstlog/detail/padded_size.hpp"
     "include/fstlog/detail/padded_t.hpp"
@@ -161,6 +161,7 @@ set(src_detail
     "src/detail/log_buffer_impl.hpp"
     "src/detail/log_buffer_unread_data.hpp"
     "src/detail/make_allocated.hpp"
+    "src/detail/memory_resource.cpp"
     "src/detail/nearest_pow2.hpp"
     "src/detail/nothrow_allocate.hpp"
     "src/detail/safe_reinterpret_cast.hpp"
@@ -170,10 +171,10 @@ set(src_detail
 )
 
 set(src_detail_mixin
-    "src/detail/mixin/allocator_mixin.hpp"
     "src/detail/mixin/concurrent_use_mixin.hpp"
     "src/detail/mixin/error_state_mixin.hpp"
     "src/detail/mixin/exclusive_use_mixin.hpp"
+    "src/detail/mixin/memory_resource_mixin.hpp"
     "src/detail/mixin/mutex_external_mixin.hpp"
     "src/detail/mixin/mutex_internal_mixin.hpp"
     "src/detail/mixin/reference_counter_mixin.hpp"
@@ -276,16 +277,6 @@ set(src_sink_impl
     "src/sink/impl/sink_sort_mixin.hpp"
     "src/sink/impl/sink_unsort_mixin.hpp"
 )
-
-set(FSTLOG_ALLOCATOR "${CMAKE_CURRENT_LIST_DIR}/include/fstlog/detail/pmr_allocator.hpp" CACHE PATH "Path to allocator.")
-if(NOT EXISTS ${FSTLOG_ALLOCATOR})
-    message(FATAL_ERROR "FSTLOG_ALLOCATOR path: ${FSTLOG_ALLOCATOR} does not exists!")
-endif()
-file(COPY_FILE 
-    "${FSTLOG_ALLOCATOR}" 
-    "${CMAKE_CURRENT_LIST_DIR}/include/fstlog/detail/fstlog_allocator.hpp"
-    ONLY_IF_DIFFERENT)
-
 
 set(ALL_FILES 
     ${include_fstlog}

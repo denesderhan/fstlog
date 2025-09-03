@@ -6,19 +6,20 @@
 #include <cstdint>
 
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     FSTLOG_API error_code output_file(
         output& out,
         const char* file_path,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     inline output output_file(
         const char* file_path,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         output out;
-        const auto error = output_file(out, file_path, allocator);
+        const auto error = output_file(out, file_path, resource);
         handle_error(error);
         return out;
     }
@@ -27,14 +28,15 @@ namespace fstlog {
         output& out,
         const char* file_path,
         bool truncate,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     inline output output_file(
         const char* file_path,
         bool truncate,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         output out;
-        const auto error = output_file(out, file_path, truncate, allocator);
+        const auto error = output_file(out, file_path, truncate, resource);
         handle_error(error);
         return out;
     }
@@ -43,15 +45,16 @@ namespace fstlog {
         const char* file_path,
         bool truncate,
         std::uint32_t buffer_size,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     inline output output_file(
         const char* file_path,
         bool truncate,
         std::uint32_t buffer_size,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         output out;
-        const auto error = output_file(out, file_path, truncate, buffer_size, allocator);
+        const auto error = output_file(out, file_path, truncate, buffer_size, resource);
         handle_error(error);
         return out;
     }

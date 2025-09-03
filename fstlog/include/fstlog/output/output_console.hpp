@@ -4,45 +4,49 @@
 #include <fstlog/output/output.hpp>
 
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     FSTLOG_API error_code output_cout(
         output& out,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     FSTLOG_API error_code output_cerr(
         output& out,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     FSTLOG_API error_code output_clog(
         output& out,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     inline output output_cout(
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         output out;
-        const auto error = output_cout(out, allocator);
+        const auto error = output_cout(out, resource);
         handle_error(error);
         return out;
     }
     inline output output_cerr(
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         output out;
-        const auto error = output_cerr(out, allocator);
+        const auto error = output_cerr(out, resource);
         handle_error(error);
         return out;
     }
     inline output output_clog(
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         output out;
-        const auto error = output_clog(out, allocator);
+        const auto error = output_clog(out, resource);
         handle_error(error);
         return out;
     }
     inline output output_console(
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(output_cout()))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(output_cout(resource)))
     {
-        return output_cout(allocator);
+        return output_cout(resource);
     }
 }

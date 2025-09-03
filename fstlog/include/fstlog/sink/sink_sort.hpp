@@ -6,30 +6,30 @@
 #include <chrono>
 
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/filter/filter.hpp>
 #include <fstlog/formatter/formatter.hpp>
 #include <fstlog/output/output.hpp>
 
 namespace fstlog {
-       FSTLOG_API error_code sink_sort(
+    FSTLOG_API error_code sink_sort(
         sink& out,
         formatter formatter,
         output output,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     FSTLOG_API error_code sink_sort(
         sink& out,
         formatter formatter,
         output output,
         filter filter,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     FSTLOG_API error_code sink_sort(
         sink& out,
         formatter formatter,
         output output,
         filter filter,
         std::chrono::milliseconds flush_interval,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
     FSTLOG_API error_code sink_sort(
         sink& out,
         formatter formatter,
@@ -37,16 +37,17 @@ namespace fstlog {
         filter filter,
         std::chrono::milliseconds flush_interval,
         std::uint32_t max_buffer_bytes,
-        fstlog_allocator const& allocator = {}) noexcept;
+        memory_resource* resource) noexcept;
 
     inline sink sink_sort(
         formatter formatter,
         output output,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         sink out;
         const auto error =
-            sink_sort(out,formatter, output, allocator);
+            sink_sort(out,formatter, output, resource);
         handle_error(error);
         return out;
     }
@@ -54,11 +55,12 @@ namespace fstlog {
         formatter formatter,
         output output,
         filter filter,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         sink out;
         const auto error =
-            sink_sort(out, formatter, output, filter, allocator);
+            sink_sort(out, formatter, output, filter, resource);
         handle_error(error);
         return out;
     }
@@ -67,11 +69,12 @@ namespace fstlog {
         output output,
         filter filter,
         std::chrono::milliseconds flush_interval,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         sink out;
         const auto error =
-            sink_sort(out, formatter, output, filter, flush_interval, allocator);
+            sink_sort(out, formatter, output, filter, flush_interval, resource);
         handle_error(error);
         return out;
     }
@@ -81,11 +84,12 @@ namespace fstlog {
         filter filter,
         std::chrono::milliseconds flush_interval,
         std::uint32_t max_buffer_bytes,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         sink out;
         const auto error =
-            sink_sort(out, formatter, output, filter, flush_interval, max_buffer_bytes, allocator);
+            sink_sort(out, formatter, output, filter, flush_interval, max_buffer_bytes, resource);
         handle_error(error);
         return out;
     }

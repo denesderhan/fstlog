@@ -11,23 +11,19 @@ namespace fstlog {
     template<typename L>
     class header_internal_mixin : public L {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
         
-        header_internal_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(header_internal_mixin(allocator_type{})))
-            : header_internal_mixin(allocator_type{}) {}
-        explicit header_internal_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator)))
-            : L(allocator) {}
+        explicit header_internal_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(resource)))
+            : L(resource) {}
 
         header_internal_mixin(const header_internal_mixin& other) noexcept(
-            noexcept(header_internal_mixin::get_allocator())
-            && noexcept(header_internal_mixin(header_internal_mixin{}, allocator_type{})))
-            : header_internal_mixin(other, other.get_allocator()) {}
-        header_internal_mixin(const header_internal_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(header_internal_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+            noexcept(header_internal_mixin::get_memory_resource())
+            && noexcept(header_internal_mixin(header_internal_mixin{nullptr}, nullptr)))
+            : header_internal_mixin(other, other.get_memory_resource()) {}
+        header_internal_mixin(const header_internal_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(header_internal_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}
 
         header_internal_mixin(header_internal_mixin&& other) = delete;
         header_internal_mixin& operator=(const header_internal_mixin& rhs) = delete;

@@ -8,7 +8,7 @@
 #include <config_formatter_txt.hpp>
 #include <detail/unaligned_span.hpp>
 #include <detail/make_allocated.hpp>
-#include <detail/mixin/allocator_mixin.hpp>
+#include <detail/mixin/memory_resource_mixin.hpp>
 #include <detail/mixin/error_state_mixin.hpp>
 #include <detail/mixin/exclusive_use_mixin.hpp>
 #include <detail/mixin/reference_counter_mixin.hpp>
@@ -45,14 +45,14 @@ namespace fstlog {
         error_state_mixin<
         exclusive_use_mixin<
         reference_counter_mixin<
-        allocator_mixin>>>>>>>>>>>>>>>>;
+        memory_resource_mixin>>>>>>>>>>>>>>>>;
     
     static error_code formatter_txt(
         formatter& out,
         byte_span_const format_string,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
-        out = make_allocated<formatter_txt_type>(allocator);
+        out = make_allocated<formatter_txt_type>(resource);
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
         auto error = static_cast<formatter_txt_type*>(out.pimpl())->
             formatter_init(format_string);
@@ -63,23 +63,23 @@ namespace fstlog {
     error_code formatter_txt(
         formatter& out,
         std::string_view format_string,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
         return formatter_txt(
             out,
             byte_span_const{ 
                 safe_reinterpret_cast<const unsigned char*>(format_string.data()),
                 format_string.size() },
-            allocator);
+                resource);
     }
 
     error_code formatter_txt(
         formatter& out,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
         return formatter_txt(
             out,
             config::default_format_string,
-            allocator);
+            resource);
     }
 }

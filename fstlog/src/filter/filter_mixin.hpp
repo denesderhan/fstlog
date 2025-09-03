@@ -9,24 +9,20 @@ namespace fstlog {
     template<class L>
     class filter_mixin : public L {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
-        filter_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(filter_mixin(allocator_type{})))
-            : filter_mixin(allocator_type{}) {}
-        explicit filter_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit filter_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         filter_mixin(const filter_mixin& other) noexcept(
-            noexcept(filter_mixin::get_allocator())
-            && noexcept(filter_mixin(filter_mixin{}, allocator_type{})))
-            : filter_mixin(other, other.get_allocator()) {}
-        filter_mixin(const filter_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(filter_mixin{}, allocator_type{}))
-            && noexcept(filter_internal(filter_internal{})))
-            : L(other, allocator),
+            noexcept(filter_mixin::get_memory_resource())
+            && noexcept(filter_mixin(filter_mixin{nullptr}, nullptr)))
+            : filter_mixin(other, other.get_memory_resource()) {}
+        filter_mixin(const filter_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(filter_mixin{nullptr}, nullptr))
+            && noexcept(filter_internal()))
+            : L(other, resource),
             message_filter_{ other.message_filter_ } {}
         filter_mixin& operator=(const filter_mixin&) = delete;
         filter_mixin(filter_mixin&&) = delete;

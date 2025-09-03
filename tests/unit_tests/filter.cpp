@@ -7,9 +7,8 @@
 #include <vector>
 
 #include <fstlog/filter/filter.hpp>
-#ifdef FSTLOG_ALLOCATOR_IS_STDPMR
+
 #include <test_mem_resource.hpp>
-#endif
 
 TEST_CASE("filter") {
 
@@ -95,46 +94,49 @@ TEST_CASE("filter") {
     };
 
     SECTION("memory_leak") {
-#ifdef FSTLOG_ALLOCATOR_IS_STDPMR
-        test_mem_resource test_res1;
-        fstlog::fstlog_allocator allocator1(&test_res1);
-        test_mem_resource test_res2;
-        fstlog::fstlog_allocator allocator2(&test_res2);
-
-        std::vector<fstlog::filter> filters1;
-        for (fstlog::channel_type i = 0; i < 10; i++) filters1.push_back(fstlog::filter(fstlog::level::Info, 0, i, allocator1));
-        std::vector<fstlog::filter> filters2;
-        for (fstlog::channel_type i = 0; i < 10; i++) filters2.push_back(fstlog::filter(fstlog::level::Info, i, i + 10, allocator2));
-        CHECK(filters1[0] != filters2[0]);
-        CHECK(filters1[0].pimpl() != filters2[0].pimpl());
-        filters1[0] = filters2[0];
-        CHECK(filters1[0] == filters2[0]);
-        CHECK(filters1[0].pimpl() != filters2[0].pimpl());
-        filters2[1] = fstlog::filter(filters1[1]);
-        CHECK(filters2[1] == filters1[1]);
-        CHECK(filters2[1].pimpl() != filters1[1].pimpl());
-        filters1[1] = std::move(filters2[0]);
-        CHECK(filters1[1] != filters2[0]);
-        CHECK(filters2[0].pimpl() == nullptr);
-        filters2[2] = fstlog::filter(std::move(filters1[0]));
-        CHECK(filters2[2] != filters1[0]);
-        CHECK(filters1[0].pimpl() == nullptr);
-        filters1[2] = fstlog::filter{};
-        CHECK(filters2[3] != filters2[4]);
-        filters2[3] = filters2[4];
-        CHECK(filters2[3] == filters2[4]);
-        CHECK(filters2[3].pimpl() != filters2[4].pimpl());
-        CHECK(filters1[5] != filters1[6]);
-        filters1[5] = filters1[6];
-        CHECK(filters1[5] == filters1[6]);
-        CHECK(filters1[5].pimpl() != filters1[6].pimpl());
-        filters1.clear();
-        filters2.clear();
-        CHECK(test_res1.all_clear());
-        CHECK(test_res2.all_clear());
-#else
-        SKIP("Memory leak tests are implemented using std::pmr::memory_resource but fstlog::fstlog_allocator is set to different type!");
-#endif
+        if constexpr (std::is_same_v<fstlog::memory_resource, std::pmr::memory_resource>) {
+            test_mem_resource test_res1;
+            test_mem_resource test_res2;
+            fstlog::memory_resource* res_ptr1 =
+                reinterpret_cast<fstlog::memory_resource*>(&test_res1);
+            fstlog::memory_resource* res_ptr2 =
+                reinterpret_cast<fstlog::memory_resource*>(&test_res2);
+        
+            std::vector<fstlog::filter> filters1;
+            for (fstlog::channel_type i = 0; i < 10; i++) filters1.push_back(fstlog::filter(fstlog::level::Info, 0, i, res_ptr1));
+            std::vector<fstlog::filter> filters2;
+            for (fstlog::channel_type i = 0; i < 10; i++) filters2.push_back(fstlog::filter(fstlog::level::Info, i, i + 10, res_ptr2));
+            CHECK(filters1[0] != filters2[0]);
+            CHECK(filters1[0].pimpl() != filters2[0].pimpl());
+            filters1[0] = filters2[0];
+            CHECK(filters1[0] == filters2[0]);
+            CHECK(filters1[0].pimpl() != filters2[0].pimpl());
+            filters2[1] = fstlog::filter(filters1[1]);
+            CHECK(filters2[1] == filters1[1]);
+            CHECK(filters2[1].pimpl() != filters1[1].pimpl());
+            filters1[1] = std::move(filters2[0]);
+            CHECK(filters1[1] != filters2[0]);
+            CHECK(filters2[0].pimpl() == nullptr);
+            filters2[2] = fstlog::filter(std::move(filters1[0]));
+            CHECK(filters2[2] != filters1[0]);
+            CHECK(filters1[0].pimpl() == nullptr);
+            filters1[2] = fstlog::filter{};
+            CHECK(filters2[3] != filters2[4]);
+            filters2[3] = filters2[4];
+            CHECK(filters2[3] == filters2[4]);
+            CHECK(filters2[3].pimpl() != filters2[4].pimpl());
+            CHECK(filters1[5] != filters1[6]);
+            filters1[5] = filters1[6];
+            CHECK(filters1[5] == filters1[6]);
+            CHECK(filters1[5].pimpl() != filters1[6].pimpl());
+            filters1.clear();
+            filters2.clear();
+            CHECK(test_res1.all_clear());
+            CHECK(test_res2.all_clear());
+        }
+        else {
+            SKIP("Memory leak tests are implemented using std::pmr::memory_resource but fstlog::memory_resource is set to different type!");
+        }
     };
 }
 

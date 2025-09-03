@@ -3,7 +3,7 @@
 #include <fstlog/formatter/formatter_null.hpp>
 
 #include <detail/make_allocated.hpp>
-#include <detail/mixin/allocator_mixin.hpp>
+#include <detail/mixin/memory_resource_mixin.hpp>
 #include <detail/mixin/concurrent_use_mixin.hpp>
 #include <detail/mixin/reference_counter_mixin.hpp>
 #include <formatter/formatter_interface_mixin.hpp>
@@ -16,13 +16,13 @@ namespace fstlog {
         formatter_null_mixin<
         concurrent_use_mixin<
         reference_counter_mixin<
-        allocator_mixin>>>>;
+        memory_resource_mixin>>>>;
 
     error_code formatter_null(
         formatter& out,
-        fstlog_allocator const& allocator) noexcept 
+        memory_resource* resource) noexcept 
     {
-        out = make_allocated<formatter_null_type>(allocator);
+        out = make_allocated<formatter_null_type>(resource);
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
         return error_code::none;
     }

@@ -8,9 +8,9 @@
 #include <type_traits>
 
 #include <fstlog/detail/types.hpp>
-#include <detail/mixin/allocator_mixin.hpp>
 #include <fstlog/detail/padded_size.hpp>
 #include <fstlog/logger/detail/log/log_compute_msgsize_mixin.hpp>
+#include <fstlog/logger/detail/logger_base_mixin.hpp>
 #include <fstlog/logger/detail/logger_msgsize_mixin.hpp>
 #include <fstlog/logger/detail/logger_writer_mixin.hpp>
 #include <fstlog/logger/log_policy_lowlatency.hpp>
@@ -63,7 +63,7 @@ public:
 using w_type = fstlog::log_compute_msgsize_mixin<
     mock_tester<
     fstlog::logger_msgsize_mixin<
-    fstlog::allocator_mixin>>>;
+    fstlog::logger_base_mixin>>>;
 
 TEST_CASE("log_compute_msgsize_mixin") {
 

@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     // non thread safe, opening/closing FILE* is callers responsibility
@@ -14,15 +14,16 @@ namespace fstlog {
     FSTLOG_API error_code output_cstream(
         output& out,
         FILE* file, 
-        fstlog_allocator const& allocator) noexcept;
+        memory_resource* resource) noexcept;
     // non thread safe, opening/closing FILE* is callers responsibility
     // FILE* must be opened in binary mode
     inline output output_cstream(
         FILE* file,
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         output out;
-        const auto error = output_cstream(out, file, allocator);
+        const auto error = output_cstream(out, file, resource);
         handle_error(error);
         return out;
     }

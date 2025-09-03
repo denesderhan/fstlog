@@ -12,23 +12,19 @@ namespace fstlog {
     class output_span_mixin : public L
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
-        output_span_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(output_span_mixin(allocator_type{})))
-            : output_span_mixin(allocator_type{}) {}
-        explicit output_span_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit output_span_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         output_span_mixin(const output_span_mixin& other) noexcept(
-            noexcept(output_span_mixin::get_allocator())
-            && noexcept(output_span_mixin(output_span_mixin{}, allocator_mixin{})))
-            : output_span_mixin(other, other.get_allocator()) {}
-        output_span_mixin(const output_span_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(output_span_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+            noexcept(output_span_mixin::get_memory_resource())
+            && noexcept(output_span_mixin(output_span_mixin{nullptr}, nullptr)))
+            : output_span_mixin(other, other.get_memory_resource()) {}
+        output_span_mixin(const output_span_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(output_span_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}
 
         output_span_mixin(output_span_mixin&& other) = delete;
         output_span_mixin& operator=(const output_span_mixin& rhs) = delete;

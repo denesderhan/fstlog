@@ -10,22 +10,22 @@
 namespace fstlog {
     template<class T>
     auto make_allocated(
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
-        T* obj_ptr = nothrow_allocate<T>(allocator);
+        T* obj_ptr = nothrow_allocate<T>(resource);
         if (obj_ptr != nullptr) {
 #ifdef FSTLOG_NOEXCEPTIONS
-            static_assert(noexcept(T(allocator)), "Constructor must be noexcept!");
-            // storing the allocator in the object!
-            obj_ptr = ::new(static_cast<void*>(obj_ptr)) T(allocator);
+            static_assert(noexcept(T(resource)), "Constructor must be noexcept!");
+            // storing the memory_resource in the object!
+            obj_ptr = ::new(static_cast<void*>(obj_ptr)) T(resource);
 #else
             try {
-                // storing the allocator in the object!
-                obj_ptr = ::new(static_cast<void*>(obj_ptr)) T(allocator);
+                // storing the memory_resource in the object!
+                obj_ptr = ::new(static_cast<void*>(obj_ptr)) T(resource);
             }
             catch (...) {
                 //constructor failed cleaning up
-                nothrow_deallocate(obj_ptr, allocator);
+                nothrow_deallocate(obj_ptr, resource);
                 obj_ptr = nullptr;
             }
 #endif
@@ -35,26 +35,26 @@ namespace fstlog {
 
     template<class T, class... Args>
     auto make_allocated(
-        fstlog_allocator const& allocator, 
+        memory_resource* resource, 
         Args&&... args) noexcept
     {
-        T* obj_ptr = nothrow_allocate<T>(allocator);
+        T* obj_ptr = nothrow_allocate<T>(resource);
         if (obj_ptr != nullptr) {
 #ifdef FSTLOG_NOEXCEPTIONS
-            static_assert(noexcept(T(std::forward<Args>(args)..., allocator)),
+            static_assert(noexcept(T(std::forward<Args>(args)..., resource)),
                 "Constructor must be noexcept!");
-            // storing the allocator in the object!
+            // storing the memory_resource in the object!
             obj_ptr = ::new(static_cast<void*>(obj_ptr))
-                T(std::forward<Args>(args)..., allocator);
+                T(std::forward<Args>(args)..., resource);
 #else
             try {
-                // storing the allocator in the object!
+                // storing the memory_resource in the object!
                 obj_ptr = ::new(static_cast<void*>(obj_ptr))
-                    T(std::forward<Args>(args)..., allocator);
+                    T(std::forward<Args>(args)..., resource);
             }
             catch (...) {
                 //constructor failed cleaning up
-                nothrow_deallocate(obj_ptr, allocator);
+                nothrow_deallocate(obj_ptr, resource);
                 obj_ptr = nullptr;
             }
 #endif

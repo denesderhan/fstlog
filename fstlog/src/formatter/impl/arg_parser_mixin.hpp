@@ -24,26 +24,22 @@ namespace fstlog {
     template<typename L>
     class arg_parser_mixin : public L {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
         using format_type = typename L::format_type;
 
-        arg_parser_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(arg_parser_mixin(allocator_type{})))
-            : arg_parser_mixin(allocator_type{}) {}
-        explicit arg_parser_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{}))) 
-            : L(allocator) {}
+        explicit arg_parser_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr))) 
+            : L(resource) {}
 
         arg_parser_mixin(const arg_parser_mixin& other) noexcept(
-            noexcept(arg_parser_mixin::get_allocator())
-            && noexcept(arg_parser_mixin(arg_parser_mixin{}, allocator_type{})))
-            : arg_parser_mixin(other, other.get_allocator()) {}
+            noexcept(arg_parser_mixin::get_memory_resource())
+            && noexcept(arg_parser_mixin(arg_parser_mixin{nullptr}, nullptr)))
+            : arg_parser_mixin(other, other.get_memory_resource()) {}
         arg_parser_mixin(
             const arg_parser_mixin& other, 
-            allocator_type const& allocator) noexcept(
-                noexcept(L(arg_parser_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+            memory_resource_type* resource) noexcept(
+                noexcept(L(arg_parser_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}
 
         arg_parser_mixin(arg_parser_mixin&& other) = delete;
         arg_parser_mixin& operator=(const arg_parser_mixin& rhs) = delete;

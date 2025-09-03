@@ -8,22 +8,21 @@
 #include <utility>
 
 #include <fstlog/detail/constants.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <detail/nothrow_allocate.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
-    template <class A = fstlog_allocator >
+
     class dyn_buffer {
     public:
-        using allocator_type = A;
-        dyn_buffer() noexcept : dyn_buffer(allocator_type{}) {}
-        explicit dyn_buffer(allocator_type const& allocator) noexcept
-            : allocator_{ allocator } {}
+
+        explicit dyn_buffer(memory_resource* resource = fstlog::get_default_resource()) noexcept
+            : memory_resource_{ resource } {}
         explicit dyn_buffer(std::size_t size) noexcept
-            : dyn_buffer(size, allocator_type{}) {}
-        dyn_buffer(std::size_t size, allocator_type const& allocator) noexcept
-            : allocator_{ allocator } 
+            : dyn_buffer(size, fstlog::get_default_resource()) {}
+        dyn_buffer(std::size_t size, memory_resource* resource) noexcept
+            : memory_resource_{ resource } 
         {
             grow(size);
         }
@@ -32,7 +31,7 @@ namespace fstlog {
             if (begin_ != nullptr) {
                 aligned_nothrow_deallocate(
                     begin_, 
-                    allocator_, 
+                    memory_resource_, 
                     capacity(), 
                     constants::cache_ls_nosharing);
             }
@@ -107,8 +106,8 @@ namespace fstlog {
             reallocate_memory(new_capacity);
         }
 
-        allocator_type const& get_allocator() const noexcept {
-            return allocator_;
+        memory_resource* get_memory_resource() const noexcept {
+            return memory_resource_;
         }
 
     private:
@@ -117,12 +116,12 @@ namespace fstlog {
             const auto cur_size{ size() };
             if (new_capacity < cur_size || new_capacity == 0) return;
             unsigned char* new_memory = static_cast<unsigned char*>(
-                aligned_nothrow_allocate(allocator_, new_capacity, constants::cache_ls_nosharing));
+                aligned_nothrow_allocate(memory_resource_, new_capacity, constants::cache_ls_nosharing));
             if (new_memory != nullptr) {
                 const auto data_size(size());
                 if (begin_ != nullptr) {
                     if (data_size != 0) std::memcpy(new_memory, begin_, data_size);
-                    aligned_nothrow_deallocate(begin_, allocator_, capacity(), constants::cache_ls_nosharing);
+                    aligned_nothrow_deallocate(begin_, memory_resource_, capacity(), constants::cache_ls_nosharing);
                 }
                 begin_ = new_memory;
                 cap_end_ = new_memory + new_capacity;
@@ -133,7 +132,7 @@ namespace fstlog {
         unsigned char* begin_{ nullptr };
         unsigned char* end_{ nullptr };
         unsigned char* cap_end_{ nullptr };
-        const allocator_type allocator_;
+        memory_resource* const memory_resource_;
     };
 
 }

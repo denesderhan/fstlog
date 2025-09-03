@@ -2,7 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/api_def.hpp>
 
 namespace fstlog {
@@ -24,17 +24,17 @@ namespace fstlog {
             return out;
         }
         FSTLOG_API formatter clone(
-            fstlog_allocator const& allocator) const noexcept(noexcept(handle_error(error_code::none)))
+            memory_resource* resource) const noexcept(noexcept(handle_error(error_code::none)))
         {
             formatter out{};
-            const auto error = clone(out, allocator);
+            const auto error = clone(out, resource);
             handle_error(error);
             return out;
         }
         
         FSTLOG_API bool good() const noexcept;
         FSTLOG_API error_code clone(formatter& out) const noexcept;
-        FSTLOG_API error_code clone(formatter& out, fstlog_allocator const& allocator) const noexcept;
+        FSTLOG_API error_code clone(formatter& out, memory_resource* resource) const noexcept;
         
         explicit formatter(formatter_interface* pimpl) noexcept;
         formatter_interface* pimpl() const noexcept;

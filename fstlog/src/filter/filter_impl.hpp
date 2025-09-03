@@ -2,38 +2,34 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 
-#include <detail/mixin/allocator_mixin.hpp>
+#include <detail/mixin/memory_resource_mixin.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <filter/filter_mixin.hpp>
 
 namespace fstlog {
     template<class T>
-    auto make_allocated(fstlog_allocator const& allocator) noexcept;
+    auto make_allocated(memory_resource* resource) noexcept;
     template<class T, class... Args>
-    auto make_allocated(fstlog_allocator const& allocator,
+    auto make_allocated(memory_resource* resource,
         Args&&... args) noexcept;
 
     class filter_impl 
         : public filter_mixin<
-                allocator_mixin> {
+                memory_resource_mixin> {
     private:
         using wrapper_type = filter_impl*;
 
-        filter_impl() noexcept(
-            noexcept(allocator_type())
-            && noexcept(filter_mixin(allocator_type{})))
-            : filter_impl(allocator_type{}) {}
-        explicit filter_impl(allocator_type const& allocator) noexcept(
-            noexcept(filter_mixin(allocator_type{})))
-            : filter_mixin(allocator) {}
+        explicit filter_impl(memory_resource* resource) noexcept(
+            noexcept(filter_mixin(nullptr)))
+            : filter_mixin(resource) {}
 
         filter_impl(const filter_impl& other) noexcept(
-            noexcept(this->get_allocator())
-            && noexcept(filter_mixin(filter_impl{}, allocator_type{})))
-            : filter_impl(other, other.get_allocator()) {}
-        filter_impl(const filter_impl& other, allocator_type const& allocator) noexcept(
-            noexcept(filter_mixin(filter_impl{}, allocator_type{})))
-            : filter_mixin(other, allocator) {}
+            noexcept(this->get_memory_resource())
+            && noexcept(filter_mixin(filter_impl{nullptr}, nullptr)))
+            : filter_impl(other, other.get_memory_resource()) {}
+        filter_impl(const filter_impl& other, memory_resource* resource) noexcept(
+            noexcept(filter_mixin(filter_impl{nullptr}, nullptr)))
+            : filter_mixin(other, resource) {}
         filter_impl& operator=(const filter_impl&) = delete;
         filter_impl(filter_impl&&) = delete;
         filter_impl& operator=(filter_impl&&) = delete;
@@ -47,10 +43,10 @@ namespace fstlog {
             
         template<class T>
         friend auto make_allocated(
-            fstlog_allocator const& allocator) noexcept;
+            memory_resource* resource) noexcept;
         template<class T, class... Args>
         friend auto make_allocated(
-            fstlog_allocator const& allocator,
+            memory_resource* resource,
             Args&&... args) noexcept;
         friend class filter;
     };

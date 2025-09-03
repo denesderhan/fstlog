@@ -9,23 +9,19 @@ namespace fstlog {
     class reference_counter_mixin : public L
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
         
-        reference_counter_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(reference_counter_mixin(allocator_type{})))
-            : reference_counter_mixin(allocator_type{}) {}
-        explicit reference_counter_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+       explicit reference_counter_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         reference_counter_mixin(const reference_counter_mixin& other) noexcept(
-            noexcept(reference_counter_mixin::get_allocator())
-            && noexcept(reference_counter_mixin(reference_counter_mixin{}, allocator_type{})))
-            : reference_counter_mixin(other, other.get_allocator()) {}
-        reference_counter_mixin(const reference_counter_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(reference_counter_mixin{}, allocator_type{})))
-            : L(other, allocator) {}    //ref count is not copied
+            noexcept(reference_counter_mixin::get_memory_resource())
+            && noexcept(reference_counter_mixin(reference_counter_mixin{nullptr}, nullptr)))
+            : reference_counter_mixin(other, other.get_memory_resource()) {}
+        reference_counter_mixin(const reference_counter_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(reference_counter_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}    //ref count is not copied
 
         reference_counter_mixin(reference_counter_mixin&& other) = delete;
         reference_counter_mixin& operator=(const reference_counter_mixin& rhs) = delete;

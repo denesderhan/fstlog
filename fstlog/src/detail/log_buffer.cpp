@@ -21,9 +21,9 @@ namespace fstlog {
     log_buffer::~log_buffer() noexcept {
         if (pimpl_ != nullptr) {
             if (pimpl_->remove_reference()) {
-                const log_buffer_impl::allocator_type allocator{ pimpl_->get_allocator() };
+                memory_resource* resource{ pimpl_->get_memory_resource() };
                 pimpl_->~log_buffer_impl();
-                nothrow_deallocate(pimpl_, allocator);
+                nothrow_deallocate(pimpl_, resource);
                 pimpl_ = nullptr;
             }
         }

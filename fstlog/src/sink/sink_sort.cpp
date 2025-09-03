@@ -4,7 +4,7 @@
 
 #include <config_sink.hpp>
 #include <detail/make_allocated.hpp>
-#include <detail/mixin/allocator_mixin.hpp>
+#include <detail/mixin/memory_resource_mixin.hpp>
 #include <detail/mixin/exclusive_use_mixin.hpp>
 #include <detail/mixin/reference_counter_mixin.hpp>
 #include <fstlog/detail/constants.hpp>
@@ -32,7 +32,7 @@ namespace fstlog {
         sink_flush_time_mixin<
         reference_counter_mixin<
         exclusive_use_mixin<
-        allocator_mixin>>>>>>>>>>;
+        memory_resource_mixin>>>>>>>>>>;
 
     static error_code sink_sort(
         sink& out,
@@ -41,9 +41,9 @@ namespace fstlog {
         filter_internal const& filter,
         std::chrono::milliseconds flush_interval,
         std::uint32_t max_buffer_bytes,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
-        out = make_allocated<sink_sort_impl_type>(allocator);
+        out = make_allocated<sink_sort_impl_type>(resource);
         const auto pimpl = static_cast<sink_sort_impl_type*>(out.pimpl());
         if (pimpl == nullptr) return error_code::alloc_fail;
         auto error = pimpl->set_formatter(std::move(formatter));
@@ -64,7 +64,7 @@ namespace fstlog {
         output output,
         filter filter,
         std::chrono::milliseconds flush_interval, 
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
         return sink_sort(
             out,
@@ -73,14 +73,14 @@ namespace fstlog {
             std::move(filter),
             flush_interval, 
             15 * 1024, 
-            allocator);
+            resource);
     }
     error_code sink_sort(
         sink& out,
         formatter formatter, 
         output output,
         filter filter,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
         return sink_sort(
             out,
@@ -89,13 +89,13 @@ namespace fstlog {
             std::move(filter),
             config::default_sink_flush_interval, 
             15 * 1024, 
-            allocator);
+            resource);
     }
     error_code sink_sort(
         sink& out,
         formatter formatter, 
         output output,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
         filter_internal filter{ level::All, 1, 255 };
         return sink_sort(
@@ -105,7 +105,7 @@ namespace fstlog {
             filter,
             config::default_sink_flush_interval, 
             15 * 1024, 
-            allocator);
+            resource);
     }
     error_code sink_sort(
         sink& out,
@@ -114,7 +114,7 @@ namespace fstlog {
         filter filter,
         std::chrono::milliseconds flush_interval, 
         std::uint32_t max_buffer_bytes, 
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
         out = sink{};
         if (!filter.good()) return error_code::obj_null;
@@ -125,6 +125,6 @@ namespace fstlog {
             filter.pimpl()->message_filter_,
             flush_interval,
             max_buffer_bytes,
-            allocator);
+            resource);
     }
 }

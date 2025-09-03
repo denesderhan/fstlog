@@ -58,14 +58,14 @@ namespace fstlog {
     }
     error_code formatter::clone(
         formatter& out,
-        fstlog_allocator const& allocator) const noexcept
+        memory_resource* resource) const noexcept
     {
         if (pimpl_ == nullptr) {
             out = formatter{};
             return error_code::none;
         }
         else {
-            return pimpl_->clone(out, allocator);
+            return pimpl_->clone(out, resource);
         }
     }
     bool formatter::good() const noexcept {

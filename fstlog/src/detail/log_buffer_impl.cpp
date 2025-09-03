@@ -13,9 +13,9 @@
 #include <fstlog/detail/is_pow2.hpp>
 
 namespace fstlog {
-    log_buffer_impl::log_buffer_impl(std::uint32_t buffer_size, allocator_type const& alloc) noexcept
+    log_buffer_impl::log_buffer_impl(std::uint32_t buffer_size, memory_resource_type* resource) noexcept
         : max_message_size_{ config::max_internal_log_msg_size },
-        allocator_{ alloc }
+        memory_resource_{ resource }
     {
         //buffer_size = 0 means use default
         if (buffer_size == 0) buffer_size = config::default_ringbuffer_size;
@@ -27,7 +27,7 @@ namespace fstlog {
             buffer_size_ = config::max_ringbuffer_size;
         }
         begin_ = static_cast<unsigned char*>(aligned_nothrow_allocate(
-            allocator_, 
+            memory_resource_, 
             buffer_size_, 
             config::buffer_alignment));
                 
@@ -52,7 +52,7 @@ namespace fstlog {
         if (begin_ != nullptr) {
             aligned_nothrow_deallocate(
                 begin_, 
-                allocator_, 
+                memory_resource_, 
                 buffer_size_, 
                 config::buffer_alignment);
         }

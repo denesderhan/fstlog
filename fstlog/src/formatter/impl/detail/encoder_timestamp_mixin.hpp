@@ -29,23 +29,19 @@ namespace fstlog {
     template<bool use_fill_align, typename L>
     class encoder_timestamp_mixin : public L {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
-        encoder_timestamp_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(encoder_timestamp_mixin(allocator_type{})))
-            : encoder_timestamp_mixin(allocator_type{}) {}
-        explicit encoder_timestamp_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit encoder_timestamp_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         encoder_timestamp_mixin(const encoder_timestamp_mixin& other) noexcept(
-            noexcept(encoder_timestamp_mixin::get_allocator())
-            && noexcept(encoder_timestamp_mixin(encoder_timestamp_mixin{}, allocator_type{})))
-            : encoder_timestamp_mixin(other, other.get_allocator()) {}
-        encoder_timestamp_mixin(const encoder_timestamp_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(encoder_timestamp_mixin{}, allocator_type{})))
-            : L(other, allocator),
+            noexcept(encoder_timestamp_mixin::get_memory_resource())
+            && noexcept(encoder_timestamp_mixin(encoder_timestamp_mixin{nullptr}, nullptr)))
+            : encoder_timestamp_mixin(other, other.get_memory_resource()) {}
+        encoder_timestamp_mixin(const encoder_timestamp_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(encoder_timestamp_mixin{nullptr}, nullptr)))
+            : L(other, resource),
             time_string_cache_{ other.time_string_cache_ },
             time_format_{ other.time_format_ },
             tzone_{ other.tzone_ },

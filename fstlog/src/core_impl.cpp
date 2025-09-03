@@ -15,10 +15,10 @@
 #include <sink/sink_interface.hpp>
 
 namespace fstlog {
-    core_impl::core_impl(std::string_view name, allocator_type const& allocator) noexcept
+    core_impl::core_impl(std::string_view name, memory_resource* resource) noexcept
         : name_(name),
-        bufferstore_(64, allocator),
-        sinkstore_(8, allocator)
+        bufferstore_(64, resource),
+        sinkstore_(8, resource)
     {
         if (buffer_poll_interval_ == std::chrono::milliseconds{0})
             next_buffer_poll_ = (steady_msec::max)();
@@ -297,7 +297,7 @@ namespace fstlog {
     }
 
     log_buffer core_impl::get_buffer(std::uint32_t buffer_size) noexcept {
-        auto out{ make_allocated<log_buffer_impl>(get_allocator(), buffer_size) };
+        auto out{ make_allocated<log_buffer_impl>(get_memory_resource(), buffer_size) };
         if (out.good()) {
             std::lock_guard<std::mutex> bs_guard(bufferstore_mutex_);
             if (bufferstore_.try_push_back(out)) {

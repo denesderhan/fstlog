@@ -16,7 +16,7 @@
 #include <fstlog/core.hpp>
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/error_code.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/small_string.hpp>
 #include <fstlog/sink/sink.hpp>
 #include <logger/logger_background.hpp>
@@ -24,7 +24,7 @@
 namespace fstlog {
     template<class T, class... Args>
     auto make_allocated(
-        fstlog_allocator const& allocator,
+        memory_resource* resource,
         Args&&... args) noexcept;
     
     class buffer_store;
@@ -33,12 +33,12 @@ namespace fstlog {
     class alignas(constants::cache_ls_nosharing) core_impl final
     {
     public:
-        using allocator_type = fstlog_allocator;
+        using memory_resource_type = memory_resource;
     private:
         using wrapper_type = core_impl*;
 
         core_impl() = delete;
-        core_impl(std::string_view name, allocator_type const& allocator = {}) noexcept;
+        core_impl(std::string_view name, memory_resource* resource) noexcept;
         core_impl(const core_impl&) = delete;
         core_impl(core_impl&& other) = delete;
         core_impl& operator=(const core_impl&) = delete;
@@ -76,8 +76,8 @@ namespace fstlog {
             return name_;
         }
 
-        allocator_type const& get_allocator() const noexcept {
-            return bufferstore_.get_allocator();
+        memory_resource_type* get_memory_resource() const noexcept {
+            return bufferstore_.get_memory_resource();
         }
 
         std::uintmax_t id() const noexcept {
@@ -109,10 +109,10 @@ namespace fstlog {
 
         //not contended, mutex shares cache line
         alignas(constants::cache_ls_nosharing) mutable std::mutex bufferstore_mutex_;
-        dyn_array<log_buffer, allocator_type> bufferstore_;
+        dyn_array<log_buffer> bufferstore_;
         //not contended, mutex shares cache line
         std::mutex sinkstore_mutex_;
-        dyn_array<sink, allocator_type> sinkstore_;
+        dyn_array<sink> sinkstore_;
                  
         //the next time point when all the log_buffers will be flushed
         steady_msec next_buffer_poll_{ std::chrono::time_point_cast<std::chrono::milliseconds>(
@@ -150,7 +150,7 @@ namespace fstlog {
 
         template<class T, class... Args>
         friend auto make_allocated(
-            fstlog_allocator const& allocator,
+            memory_resource* resource,
             Args&&... args) noexcept;
         friend class core;
         friend class background_thread;

@@ -3,7 +3,7 @@
 #include <fstlog/sink/sink_null.hpp>
 
 #include <detail/make_allocated.hpp>
-#include <detail/mixin/allocator_mixin.hpp>
+#include <detail/mixin/memory_resource_mixin.hpp>
 #include <detail/mixin/concurrent_use_mixin.hpp>
 #include <detail/mixin/reference_counter_mixin.hpp>
 #include <sink/impl/sink_null_mixin.hpp>
@@ -15,13 +15,13 @@ namespace fstlog {
         sink_null_mixin<
         reference_counter_mixin<
         concurrent_use_mixin<
-        allocator_mixin>>>>;
+        memory_resource_mixin>>>>;
 
     error_code sink_null(
         sink& out,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
-        out = make_allocated<sink_null_impl_type>(allocator);
+        out = make_allocated<sink_null_impl_type>(resource);
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
         return error_code::none;
     }

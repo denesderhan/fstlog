@@ -28,24 +28,20 @@ namespace fstlog {
     template<typename L>
     class encoder_charconv_mixin : public L {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
         typedef format_setting_txt format_type;
 
-        encoder_charconv_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(encoder_charconv_mixin(allocator_type{})))
-            : encoder_charconv_mixin(allocator_type{}) {}
-        explicit encoder_charconv_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit encoder_charconv_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         encoder_charconv_mixin(const encoder_charconv_mixin& other) noexcept(
-            noexcept(encoder_charconv_mixin::get_allocator())
-            && noexcept(encoder_charconv_mixin(encoder_charconv_mixin{}, allocator_type{})))
-            : encoder_charconv_mixin(other, other.get_allocator()) {}
-        encoder_charconv_mixin(const encoder_charconv_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(encoder_charconv_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+            noexcept(encoder_charconv_mixin::get_memory_resource())
+            && noexcept(encoder_charconv_mixin(encoder_charconv_mixin{nullptr}, nullptr)))
+            : encoder_charconv_mixin(other, other.get_memory_resource()) {}
+        encoder_charconv_mixin(const encoder_charconv_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(encoder_charconv_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}
 
         encoder_charconv_mixin(encoder_charconv_mixin&& other) = delete;
         encoder_charconv_mixin& operator=(const encoder_charconv_mixin& rhs) = delete;

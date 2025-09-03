@@ -11,15 +11,11 @@ namespace fstlog {
         : public L
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
-        output_locked_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(output_locked_mixin(allocator_type{})))
-            : output_locked_mixin(allocator_type{}) {}
-        explicit output_locked_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit output_locked_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         output_locked_mixin(const output_locked_mixin& other) = delete;
         output_locked_mixin(output_locked_mixin&& other) = delete;

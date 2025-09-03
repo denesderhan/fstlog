@@ -12,14 +12,11 @@
 #include <detail/utf_conv.hpp>
 
 namespace fstlog {
-    template<class Allocator>
     class out_file_posix {
     public:
-        using allocator_type = Allocator;
-
-        out_file_posix() noexcept : out_file_posix(allocator_type{}) {}
-        explicit out_file_posix(allocator_type const& allocator) noexcept
-            : allocator_{ allocator } {}
+        
+        explicit out_file_posix(memory_resource* resource) noexcept
+            : memory_resource_{ resource } {}
 
         out_file_posix(const out_file_posix& other) = delete;
         out_file_posix(out_file_posix&& other) = delete;
@@ -63,7 +60,7 @@ namespace fstlog {
                 deallocate_buffer();
                 if (buffer_size != 0) {
                     buffer_ = static_cast<char*>(aligned_nothrow_allocate(
-                        allocator_,
+                        memory_resource_,
                         buffer_size,
                         constants::cache_ls_nosharing));
                     if (buffer_ == nullptr) {
@@ -168,7 +165,7 @@ namespace fstlog {
             if (buffer_ != nullptr) {
                 aligned_nothrow_deallocate(
                     buffer_,
-                    allocator_,
+                    memory_resource_,
                     buffer_size_,
                     constants::cache_ls_nosharing);
                 buffer_ = nullptr;
@@ -179,6 +176,6 @@ namespace fstlog {
         std::FILE* handle_{ nullptr };
         char* buffer_{ nullptr };
         std::size_t buffer_size_{ 0 };
-        allocator_type allocator_;
+        memory_resource* const memory_resource_;
     };
 }

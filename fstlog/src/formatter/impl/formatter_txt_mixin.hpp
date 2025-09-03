@@ -26,23 +26,19 @@ namespace fstlog {
     class formatter_txt_mixin : public L
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
-        formatter_txt_mixin() noexcept(
-            noexcept(allocator_type{})
-            && noexcept(L(allocator_type{})))
-            : formatter_txt_mixin(allocator_type{}) {}
-        explicit formatter_txt_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit formatter_txt_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         formatter_txt_mixin(const formatter_txt_mixin& other) noexcept(
-            noexcept(this->get_allocator())
-            && noexcept(L(formatter_txt_mixin{}, allocator_type{})))
-            : formatter_txt_mixin(other, other.get_allocator()) {}
-        formatter_txt_mixin(const formatter_txt_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(formatter_txt_mixin{}, allocator_type{})))
-            : L(other, allocator),
+            noexcept(this->get_memory_resource())
+            && noexcept(L(formatter_txt_mixin{nullptr}, nullptr)))
+            : formatter_txt_mixin(other, other.get_memory_resource()) {}
+        formatter_txt_mixin(const formatter_txt_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(formatter_txt_mixin{nullptr}, nullptr)))
+            : L(other, resource),
             formatting_buffer_ { other.formatting_buffer_ }, //noexcept
             log_fmt_str_len_{ other.log_fmt_str_len_ }, //noexcept
             msg_fmt_str_start_{ other.msg_fmt_str_start_ }, //noexcept

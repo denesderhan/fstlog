@@ -11,25 +11,21 @@ namespace fstlog {
     class logfield_formspec_txt_fast_mixin : public L
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
         typedef format_setting_txt_fast format_type;
     
-        logfield_formspec_txt_fast_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(logfield_formspec_txt_fast_mixin(allocator_type{})))
-            : logfield_formspec_txt_fast_mixin(allocator_type{}) {}
-        explicit logfield_formspec_txt_fast_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit logfield_formspec_txt_fast_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         logfield_formspec_txt_fast_mixin(const logfield_formspec_txt_fast_mixin& other) noexcept(
-            noexcept(logfield_formspec_txt_fast_mixin::get_allocator())
+            noexcept(logfield_formspec_txt_fast_mixin::get_memory_resource())
             && noexcept(logfield_formspec_txt_fast_mixin(
-                logfield_formspec_txt_fast_mixin{}, allocator_type{})))
-            : logfield_formspec_txt_fast_mixin(other, other.get_allocator()) {}
-        logfield_formspec_txt_fast_mixin(const logfield_formspec_txt_fast_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(logfield_formspec_txt_fast_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+                logfield_formspec_txt_fast_mixin{nullptr}, nullptr)))
+            : logfield_formspec_txt_fast_mixin(other, other.get_memory_resource()) {}
+        logfield_formspec_txt_fast_mixin(const logfield_formspec_txt_fast_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(logfield_formspec_txt_fast_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}
         
         logfield_formspec_txt_fast_mixin(logfield_formspec_txt_fast_mixin&& other) = delete;
         logfield_formspec_txt_fast_mixin& operator=(const logfield_formspec_txt_fast_mixin& rhs) = delete;

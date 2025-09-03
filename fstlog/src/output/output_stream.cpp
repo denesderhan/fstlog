@@ -3,7 +3,7 @@
 #include <fstlog/output/output_stream.hpp>
 
 #include <detail/make_allocated.hpp>
-#include <detail/mixin/allocator_mixin.hpp>
+#include <detail/mixin/memory_resource_mixin.hpp>
 #include <detail/mixin/exclusive_use_mixin.hpp>
 #include <detail/mixin/reference_counter_mixin.hpp>
 #include <output/impl/out_stream_mixin.hpp>
@@ -15,14 +15,14 @@ namespace fstlog {
         out_stream_mixin<
         reference_counter_mixin<
         exclusive_use_mixin<
-        allocator_mixin>>>>;
+        memory_resource_mixin>>>>;
 
     error_code output_stream(
         output& out,
         std::shared_ptr<std::ostream> stream,
-        fstlog_allocator const& allocator) noexcept
+        memory_resource* resource) noexcept
     {
-        out = make_allocated<output_stream_impl_type>(allocator);
+        out = make_allocated<output_stream_impl_type>(resource);
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
         const auto error = static_cast<output_stream_impl_type*>(out.pimpl())->set_stream(stream);
         if (error != error_code::none) out = output{};

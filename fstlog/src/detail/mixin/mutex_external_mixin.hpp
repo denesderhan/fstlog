@@ -10,15 +10,11 @@ namespace fstlog {
     class mutex_external_mixin : public L
     {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
         
-        mutex_external_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(mutex_external_mixin(allocator_type{})))
-            : mutex_external_mixin(allocator_type{}) {}
-        explicit mutex_external_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit mutex_external_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         //No copy constructor! copy would use the same mutex!
         mutex_external_mixin(const mutex_external_mixin& other) = delete;

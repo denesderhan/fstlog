@@ -14,16 +14,13 @@ namespace fstlog {
     {
         typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
     private:
         using wrapper_type = sink;
-        sink_interface_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(sink_interface_mixin(allocator_type{})))
-            : sink_interface_mixin(allocator_type{}) {}
-        explicit sink_interface_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+
+        explicit sink_interface_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         sink_interface_mixin(const sink_interface_mixin&) = delete;
         sink_interface_mixin& operator=(const sink_interface_mixin&) = delete;
@@ -58,18 +55,18 @@ namespace fstlog {
 
         void release_referred() noexcept final {
             if (L::remove_reference()) {
-                const auto allocator{ L::get_allocator() };
+                const auto resource{ L::get_memory_resource() };
                 this->~sink_interface_mixin();
-                nothrow_deallocate(this, allocator);
+                nothrow_deallocate(this, resource);
             }
         }
 
         template<class T>
         friend auto make_allocated(
-            fstlog_allocator const& allocator) noexcept;
+            memory_resource* resource) noexcept;
         template<class T, class... Args>
         friend auto make_allocated(
-            fstlog_allocator const& allocator,
+            memory_resource* resource,
             Args&&... args) noexcept;
         friend wrapper_type;
     };

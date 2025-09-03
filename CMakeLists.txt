@@ -89,6 +89,23 @@ message(STATUS "Targets: ${FSTLOG_TARGETS_BUILT}.")
 message(STATUS "Generator: ${GENERATOR_MSG}.")
 
 #-------------------------------
+# Copy memory resource files
+#-------------------------------
+set(FSTLOG_RESOURCE "${CMAKE_SOURCE_DIR}/memory_resource/std_pmr" CACHE PATH "Path to the memory_resource.")
+if(NOT EXISTS "${FSTLOG_RESOURCE}/memory_resource.hpp" OR NOT EXISTS "${FSTLOG_RESOURCE}/memory_resource.cpp")
+    message(FATAL_ERROR "FSTLOG_RESOURCE file: ${FSTLOG_RESOURCE}/memory_resource.hpp or ${FSTLOG_RESOURCE}/memory_resource.cpp does not exists!")
+endif()
+file(COPY_FILE 
+    "${FSTLOG_RESOURCE}/memory_resource.hpp" 
+    "${CMAKE_SOURCE_DIR}/fstlog/include/fstlog/detail/memory_resource.hpp"
+    ONLY_IF_DIFFERENT)
+file(COPY_FILE 
+    "${FSTLOG_RESOURCE}/memory_resource.cpp" 
+    "${CMAKE_SOURCE_DIR}/fstlog/src/detail/memory_resource.cpp"
+    ONLY_IF_DIFFERENT)
+
+
+#-------------------------------
 # shared lib/tests target check
 #-------------------------------
 if (BUILD_SHARED_LIBS AND FSTLOG_TESTS)

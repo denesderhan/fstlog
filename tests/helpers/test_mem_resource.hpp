@@ -13,9 +13,7 @@
 class test_mem_resource : public std::pmr::memory_resource {
 public:
     explicit test_mem_resource(std::pmr::memory_resource* resource = std::pmr::get_default_resource())
-        : upstream_resource_(resource)
-    {
-        if (!resource) throw std::invalid_argument("upstream_resource must not be null!");
+        : upstream_resource_(resource) {
     }
 
     test_mem_resource(const test_mem_resource&) = delete;
@@ -113,15 +111,8 @@ public:
 protected:
     void* do_allocate(std::size_t bytes, std::size_t alignment) override {
         void* pointer{ nullptr };
-        try {
-            pointer = upstream_resource_->allocate(bytes, alignment);
-        }
-        catch(...){
-            // if allocate() throws we assume no allocation occured
-            std::lock_guard<std::mutex> lock(mutex_);
-            bad_allocations_++;
-            throw;
-        }
+        pointer = upstream_resource_->allocate(bytes, alignment);
+        
         // if allocate() returns nullptr we assume no allocation occured
         if (pointer == nullptr) {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -156,15 +147,8 @@ protected:
     }
 
     void do_deallocate(void* pointer, std::size_t bytes, std::size_t alignment) override {
-        try {
-            upstream_resource_->deallocate(pointer, bytes, alignment);
-        }
-        catch (...) {
-            // we count deallocate() fails
-            std::lock_guard<std::mutex> lock(mutex_);
-            bad_deallocations_++;
-            throw;
-        }
+        upstream_resource_->deallocate(pointer, bytes, alignment);
+        
         // if deallocate() accepted nullptr
         if (pointer == nullptr) {
             std::lock_guard<std::mutex> lock(mutex_);

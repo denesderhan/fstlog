@@ -8,9 +8,9 @@ Fast, asynchronous, low footprint, C++ logging library.
 - C++ 20/17
 - Low latency of log call in application code.
 - Asynchronous high throughput log formatting in background thread.
-- Custom allocator support (std::pmr::polymorphic_allocator used by default).
+- Custom memory resource support (std::pmr::memory_resource used by default).
 - Multiple logging policies: guaranteed / non guaranteed / low latency.
-- Compilation without exceptions is supported, (with suitable allocator).
+- Compilation without exceptions is supported, (graceful degradation with suitable memory resource).
 - Custom formatting, std::format syntax is used for log calls and formatter setup.
 - Multiple formatter options, with varying capabilities and performance.
 - Simple log message filtering (by log channel and log level).
@@ -456,11 +456,17 @@ default zero means no polling.
 default zero means no periodic flushing.
 
 ```
--DFSTLOG_ALLOCATOR=../fstlog/include/fstlog/detail/pmr_allocator.hpp
+-DFSTLOG_RESOURCE=../memory_resource/std_pmr
+-DFSTLOG_RESOURCE=../memory_resource/malloc
 ```
-- Copies the file into the source tree and uses it for the allocator.
-Default is the pmr allocator, the malloc_allocator can be used 
-if compiling with disabled exceptions.
-```
--DFSTLOG_ALLOCATOR=../fstlog/include/fstlog/detail/malloc_allocator.hpp
-```
+- These options specify which memory resource implementation to use. The build process will copy 
+memory_resource.hpp and memory_resource.cpp from your chosen directory into the source tree.
+- By default, the library uses the std_pmr resource. However, if you need to compile without exception support, 
+you should use the malloc resource instead. The pmr (and all resources) that use exceptions will abort (crash)
+the application on allocation failure (they are not able to throw).
+Meanwhile the malloc resource allows the logging service to degrade gracefully.
+- Important for shared libraries: It's highly recommended to use the malloc resource when creating a shared library. 
+While this doesn't guarantee full ABI compatibility across the entire build, it does ensure that 
+the memory resource interface remains ABI-compatible between your application code and the library. 
+In contrast, using std::pmr::memory_resource requires that both your application and the dynamic library 
+are built with identical toolchain versions and build settings to maintain compatibility for the resource usage.

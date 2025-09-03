@@ -6,23 +6,22 @@
 #include <utility>
 #include <new>
 
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <detail/nothrow_allocate.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
-    template <typename T, class A = fstlog_allocator >
+    template <typename T>
     class dyn_array {
     public:
         using value_type = T;
-        using allocator_type = A;
-        dyn_array() noexcept : dyn_array(allocator_type{}) {}
-        explicit dyn_array(allocator_type const& allocator) noexcept
-            : allocator_{ allocator } {}
+
+        explicit dyn_array(memory_resource* resource = fstlog::get_default_resource()) noexcept
+            : memory_resource_{ resource } {}
         explicit dyn_array(std::size_t size) noexcept 
-            : dyn_array(size, allocator_type{}) {}
-        dyn_array(std::size_t size, allocator_type const& allocator) noexcept
-            : allocator_{ allocator } 
+            : dyn_array(size, fstlog::get_default_resource()) {}
+        dyn_array(std::size_t size, memory_resource* resource) noexcept
+            : memory_resource_{ resource } 
         {
             grow(size);
         }
@@ -33,7 +32,7 @@ namespace fstlog {
                 (*this)[i].~T();
             }
             if (begin_ != nullptr) {
-                nothrow_deallocate(begin_, allocator_, capacity());
+                nothrow_deallocate(begin_, memory_resource_, capacity());
             }
         }
 
@@ -138,8 +137,8 @@ namespace fstlog {
             reallocate_memory(new_capacity);
         }
 
-        allocator_type const& get_allocator() const noexcept {
-            return allocator_;
+        memory_resource* get_memory_resource() const noexcept {
+            return memory_resource_;
         }
 
     private:
@@ -147,7 +146,7 @@ namespace fstlog {
         void reallocate_memory(std::size_t new_capacity) noexcept {
             const std::size_t cur_size{ size() };
             if (new_capacity < cur_size || new_capacity == 0) return;
-            T* new_memory = nothrow_allocate<T>(allocator_, new_capacity);
+            T* new_memory = nothrow_allocate<T>(memory_resource_, new_capacity);
             if (new_memory != nullptr) {
                 T* new_pos = new_memory;
                 if (begin_ != nullptr) {
@@ -156,7 +155,7 @@ namespace fstlog {
                         new_pos = ::new(static_cast<void*>(new_pos)) T(std::move(*old_pos++));
                         new_pos++;
                     }
-                    nothrow_deallocate(begin_, allocator_, capacity());
+                    nothrow_deallocate(begin_, memory_resource_, capacity());
                 }
                 begin_ = new_memory;
                 cap_end_ = new_memory + new_capacity;
@@ -173,7 +172,7 @@ namespace fstlog {
         T* begin_{ nullptr };
         T* end_{ nullptr };
         T* cap_end_{ nullptr };
-        const allocator_type allocator_;
+        memory_resource* const memory_resource_;
     };
 
 }

@@ -3,7 +3,7 @@
 #pragma once
 #include <fstlog/detail/api_def.hpp>
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/level.hpp>
 #include <fstlog/detail/types.hpp>
 
@@ -11,36 +11,32 @@ namespace fstlog {
     class filter_impl;
     class filter {
     public:
-        using allocator_type = fstlog_allocator;
+        using memory_resource_type = memory_resource;
 
-        FSTLOG_API filter() noexcept(
-            noexcept(allocator_type())
-             && noexcept(handle_error(error_code::none)))
-            : filter( allocator_type{} ) {}
-        explicit FSTLOG_API filter(allocator_type const& allocator) noexcept(
+        explicit FSTLOG_API filter(memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(handle_error(error_code::none)))
         {
-            const auto error = init(allocator);
+            const auto error = init(resource);
             handle_error(error);
         }
         FSTLOG_API filter(
             level level,
             channel_type channel,
-            allocator_type const& allocator = {}) noexcept(
+            memory_resource* resource = fstlog::get_default_resource()) noexcept(
                 noexcept(handle_error(error_code::none)))
         {
-            const auto error = init(level, channel, allocator);
+            const auto error = init(level, channel, resource);
             handle_error(error);
         }
         FSTLOG_API filter(
             level level,
             channel_type first_channel,
             channel_type last_channel,
-            allocator_type const& allocator = {}) noexcept(
+            memory_resource* resource = fstlog::get_default_resource()) noexcept(
                 noexcept(handle_error(error_code::none)))
         {
             const auto error = 
-                init(level, first_channel, last_channel, allocator);
+                init(level, first_channel, last_channel, resource);
             handle_error(error);
         }
         FSTLOG_API filter(const filter& other) noexcept(
@@ -51,10 +47,10 @@ namespace fstlog {
         }
         FSTLOG_API filter(
             const filter& other, 
-            allocator_type const& allocator) noexcept(
+            memory_resource* resource) noexcept(
                 noexcept(handle_error(error_code::none))) 
         {
-            const auto error = init(other, allocator);
+            const auto error = init(other, resource);
             handle_error(error);
         }
         FSTLOG_API filter& operator=(const filter& other) noexcept;
@@ -76,18 +72,18 @@ namespace fstlog {
         
         filter_impl* pimpl() const noexcept;
     private:
-        FSTLOG_API error_code init(allocator_type const& allocator) noexcept;
+        FSTLOG_API error_code init(memory_resource* resource) noexcept;
         FSTLOG_API error_code init(
             level level,
             channel_type channel,
-            allocator_type const& allocator = {}) noexcept;
+            memory_resource* resource) noexcept;
         FSTLOG_API error_code init(
             level level,
             channel_type first_channel,
             channel_type last_channel,
-            allocator_type const& allocator = {}) noexcept;
+            memory_resource* resource) noexcept;
         FSTLOG_API error_code init(const filter& other) noexcept;
-        FSTLOG_API error_code init(const filter& other, allocator_type const& allocator) noexcept;
+        FSTLOG_API error_code init(const filter& other, memory_resource* resource) noexcept;
 
         filter_impl* pimpl_{ nullptr };
     };

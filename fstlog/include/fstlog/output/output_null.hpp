@@ -4,17 +4,18 @@
 #include <fstlog/output/output.hpp>
 
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     FSTLOG_API error_code output_null(
         output& out,
-        fstlog_allocator const& allocator) noexcept;
+        memory_resource* resource) noexcept;
     inline output output_null(
-        fstlog_allocator const& allocator = {}) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         output out;
-        const auto error = output_null(out, allocator);
+        const auto error = output_null(out, resource);
         handle_error(error);
         return out;
     }

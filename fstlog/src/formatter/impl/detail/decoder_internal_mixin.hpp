@@ -20,23 +20,19 @@ namespace fstlog {
     template<typename L>
     class decoder_internal_mixin : public L {
     public:
-        using allocator_type = typename L::allocator_type;
+        using memory_resource_type = typename L::memory_resource_type;
 
-        decoder_internal_mixin() noexcept(
-            noexcept(allocator_type())
-            && noexcept(decoder_internal_mixin(allocator_type{})))
-            : decoder_internal_mixin(allocator_type{}) {}
-        explicit decoder_internal_mixin(allocator_type const& allocator) noexcept(
-            noexcept(L(allocator_type{})))
-            : L(allocator) {}
+        explicit decoder_internal_mixin(memory_resource_type* resource) noexcept(
+            noexcept(L(nullptr)))
+            : L(resource) {}
 
         decoder_internal_mixin(const decoder_internal_mixin& other) noexcept(
-            noexcept(decoder_internal_mixin::get_allocator())
-            && noexcept(decoder_internal_mixin(decoder_internal_mixin{}, allocator_type{})))
-            : decoder_internal_mixin(other, other.get_allocator()) {}
-        decoder_internal_mixin(const decoder_internal_mixin& other, allocator_type const& allocator) noexcept(
-            noexcept(L(decoder_internal_mixin{}, allocator_type{})))
-            : L(other, allocator) {}
+            noexcept(decoder_internal_mixin::get_memory_resource())
+            && noexcept(decoder_internal_mixin(decoder_internal_mixin{nullptr}, nullptr)))
+            : decoder_internal_mixin(other, other.get_memory_resource()) {}
+        decoder_internal_mixin(const decoder_internal_mixin& other, memory_resource_type* resource) noexcept(
+            noexcept(L(decoder_internal_mixin{nullptr}, nullptr)))
+            : L(other, resource) {}
 
         decoder_internal_mixin(decoder_internal_mixin&& other) = delete;
         decoder_internal_mixin& operator=(const decoder_internal_mixin& rhs) = delete;

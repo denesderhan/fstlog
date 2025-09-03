@@ -9,7 +9,7 @@
 #include <fstlog/core.hpp>
 #include <fstlog/detail/api_def.hpp>
 #include <fstlog/detail/constants.hpp>
-#include <fstlog/detail/fstlog_allocator.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>
 #include <fstlog/detail/types.hpp>
@@ -20,11 +20,11 @@ namespace fstlog {
     struct log_buffer_unread_data;
     class alignas(constants::cache_ls_nosharing) log_buffer_impl {
     public:
-        using allocator_type = fstlog_allocator;
+        using memory_resource_type = memory_resource;
 
         using wrapper_type = log_buffer;
 
-        log_buffer_impl(std::uint32_t buffer_size, allocator_type const& alloc = {}) noexcept;
+        log_buffer_impl(std::uint32_t buffer_size, memory_resource_type* resource = fstlog::get_default_resource()) noexcept;
         log_buffer_impl(const log_buffer_impl&) = delete;
         log_buffer_impl(log_buffer_impl&&) = delete;
         log_buffer_impl& operator=(const log_buffer_impl&) = delete;
@@ -136,8 +136,8 @@ namespace fstlog {
         //called by consumer
         void wake_up() noexcept;
 
-        allocator_type const& get_allocator() const noexcept {
-            return allocator_;
+        memory_resource_type* get_memory_resource() const noexcept {
+            return memory_resource_;
         }
 
         std::size_t use_count() const noexcept {
@@ -175,7 +175,7 @@ namespace fstlog {
         //producer read/write
         std::uint32_t writeable_size_;
         
-        allocator_type allocator_;
+        memory_resource_type* memory_resource_;
 
         std::atomic<std::uintptr_t> reference_counter_{ 0 };
 
