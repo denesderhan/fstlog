@@ -86,7 +86,7 @@ namespace fstlog {
 
         FSTLOG_API filter(filter_impl* pimpl) noexcept;
         
-        filter_impl* pimpl() const noexcept;
+        FSTLOG_TEST_API filter_impl* pimpl() const noexcept;
     private:
         FSTLOG_API error_code init(memory_resource* resource) noexcept;
         FSTLOG_API error_code init(

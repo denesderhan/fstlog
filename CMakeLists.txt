@@ -93,13 +93,6 @@ message(STATUS "Generator: ${GENERATOR_MSG}.")
 #------------------------------
 set(FSTLOG_RESOURCE "" CACHE PATH "Path to a custom directory containing the memory resource.")
 
-#-------------------------------
-# shared lib/tests target check
-#-------------------------------
-if (BUILD_SHARED_LIBS AND FSTLOG_TESTS)
-        message( FATAL_ERROR "Can not build tests project with shared library. (disable tests target with -DFSTLOG_TESTS=OFF)" )
-endif()
-
 #-----------------
 # Output dirs 
 #-----------------

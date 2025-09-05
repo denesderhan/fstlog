@@ -366,6 +366,11 @@ if(BUILD_SHARED_LIBS)
         PUBLIC "FSTLOG_SHARED"
         PRIVATE "FSTLOG_EXPORT"
     )
+    if(FSTLOG_TESTS)
+        target_compile_definitions(fstlog
+            PRIVATE "FSTLOG_TESTING"
+        )
+    endif()
 endif()
 
 if(MSVC AND NOT(FSTLOG_DEBUG))

@@ -17,8 +17,8 @@ namespace fstlog {
         FSTLOG_API bool operator!=(const sink& other) const noexcept;
         FSTLOG_API bool good() const noexcept;
         
-        explicit sink(sink_interface* pimpl) noexcept;
-        sink_interface* pimpl() const noexcept;
+        FSTLOG_TEST_API explicit sink(sink_interface* pimpl) noexcept;
+        FSTLOG_TEST_API sink_interface* pimpl() const noexcept;
     private:
         sink_interface* pimpl_{ nullptr };
     };

@@ -3,19 +3,27 @@
 #pragma once
 
 #ifndef FSTLOG_API
-#if defined(FSTLOG_SHARED)
-    #if defined(_WIN32)
-        #if defined(FSTLOG_EXPORT)
-            #define FSTLOG_API __declspec(dllexport)
+    #if defined(FSTLOG_SHARED)
+        #if defined(_WIN32)
+            #if defined(FSTLOG_EXPORT)
+                #define FSTLOG_API __declspec(dllexport)
+            #else
+                #define FSTLOG_API __declspec(dllimport)
+            #endif
+        #elif defined(__GNUC__) || defined(__clang__)
+            #define FSTLOG_API __attribute__((visibility("default")))
         #else
-            #define FSTLOG_API __declspec(dllimport)
+            #define FSTLOG_API
         #endif
-    #elif defined(__GNUC__) || defined(__clang__)
-        #define FSTLOG_API __attribute__((visibility("default")))
     #else
         #define FSTLOG_API
     #endif
-#else
-    #define FSTLOG_API
 #endif
+
+#ifndef FSTLOG_TEST_API
+    #ifdef FSTLOG_TESTING
+        #define FSTLOG_TEST_API FSTLOG_API
+    #else
+        #define FSTLOG_TEST_API
+    #endif
 #endif

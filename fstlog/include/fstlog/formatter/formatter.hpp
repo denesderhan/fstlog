@@ -36,8 +36,8 @@ namespace fstlog {
         FSTLOG_API error_code clone(formatter& out) const noexcept;
         FSTLOG_API error_code clone(formatter& out, memory_resource* resource) const noexcept;
         
-        explicit formatter(formatter_interface* pimpl) noexcept;
-        formatter_interface* pimpl() const noexcept;
+        FSTLOG_TEST_API explicit formatter(formatter_interface* pimpl) noexcept;
+        FSTLOG_TEST_API formatter_interface* pimpl() const noexcept;
     private:
         formatter_interface* pimpl_{ nullptr };
     };

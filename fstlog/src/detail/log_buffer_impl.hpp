@@ -24,12 +24,12 @@ namespace fstlog {
 
         using wrapper_type = log_buffer;
 
-        log_buffer_impl(std::uint32_t buffer_size, memory_resource_type* resource = fstlog::get_default_resource()) noexcept;
-        log_buffer_impl(const log_buffer_impl&) = delete;
-        log_buffer_impl(log_buffer_impl&&) = delete;
-        log_buffer_impl& operator=(const log_buffer_impl&) = delete;
-        log_buffer_impl& operator=(log_buffer_impl&&) = delete;
-        ~log_buffer_impl() noexcept;
+        FSTLOG_TEST_API log_buffer_impl(std::uint32_t buffer_size, memory_resource_type* resource = fstlog::get_default_resource()) noexcept;
+        FSTLOG_TEST_API log_buffer_impl(const log_buffer_impl&) = delete;
+        FSTLOG_TEST_API log_buffer_impl(log_buffer_impl&&) = delete;
+        FSTLOG_TEST_API log_buffer_impl& operator=(const log_buffer_impl&) = delete;
+        FSTLOG_TEST_API log_buffer_impl& operator=(log_buffer_impl&&) = delete;
+        FSTLOG_TEST_API ~log_buffer_impl() noexcept;
     
         FSTLOG_API bool good() const noexcept;
         
@@ -55,9 +55,9 @@ namespace fstlog {
             FSTLOG_ASSERT((prev_pos & buffer_mask_) <= size() - adv_size);
         }
         //called only by consumer
-        void get_unread(log_buffer_unread_data& unread) noexcept;
+        FSTLOG_TEST_API void get_unread(log_buffer_unread_data& unread) noexcept;
         //called only by consumer
-        void advance_read_pos(std::uint32_t size) noexcept;
+        FSTLOG_TEST_API void advance_read_pos(std::uint32_t size) noexcept;
         
         bool half_full() const noexcept {
             return (write_pos() - read_pos()) > half_buffer_mask_;

@@ -115,16 +115,20 @@ TEST_CASE("log_noexcept") {
         CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_except, 0>(0)) == false);
         CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_noexcept, 0>(0)) == noexceptions);
     };
-#ifdef FSTLOG_TEST_FIX_LOGGER
+
     SECTION("logger_st_fix") {
+#ifdef FSTLOG_TEST_FIX_LOGGER        
         fstlog::logger_st_fix<> l{ fstlog::core{nullptr} };
         CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_guaranteed, 0>(0)) == noexceptions);
         CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_nonguaranteed, 0>(0)) == noexceptions);
         CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_lowlatency, 0>(0)) == noexceptions);
         CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_except, 0>(0)) == false);
         CHECK(noexcept(l.log<fstlog::level::Info, fake_policy_noexcept, 0>(0)) == noexceptions);
+#else
+        SKIP("Unable to test logger_st_fix, missing feature: __cpp_nontype_template_args");
+#endif   
     };
-#endif
+
     SECTION("logger_test") {
         fstlog::logger_test l{ fstlog::core{nullptr} };
         CHECK(noexcept(l.log<fstlog::level::Info, fstlog::log_policy_guaranteed, 0>(0)) == true);

@@ -17,8 +17,8 @@ namespace fstlog {
         FSTLOG_API bool operator!=(const output& other) const noexcept;
         FSTLOG_API bool good() const noexcept;
         
-        explicit output(output_interface* pimpl)  noexcept;
-        output_interface* pimpl() const noexcept;
+        FSTLOG_TEST_API explicit output(output_interface* pimpl)  noexcept;
+        FSTLOG_TEST_API output_interface* pimpl() const noexcept;
     private:
         output_interface* pimpl_{ nullptr };
     };
