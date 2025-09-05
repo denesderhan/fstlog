@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <string_view>
 
+#include <fstlog/compatible.hpp>
 #include <fstlog/core.hpp>
-#include <fstlog/detail/api_def.hpp>
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/logger/detail/log/log_addmeta_mixin.hpp>
 #include <fstlog/logger/detail/log/log_check_buffer_mixin.hpp>
@@ -52,24 +52,29 @@ namespace fstlog {
         : private logger_st_impl
     {
     public:
-        logger_st() noexcept = default;
-
         explicit logger_st(
             core core,
-            std::string_view logger_name = "",
+            std::string_view logger_name = "Unnamed",
             fstlog::level level = level::All,
             channel_type channel = constants::default_log_channel,
             std::string_view thread_name = "",
-            std::uint32_t buffer_size = 0) noexcept
+            std::uint32_t buffer_size = 0) noexcept(
+                noexcept(handle_error(error_code::none)))
         {
-            logger_st_impl::set_core(std::move(core));
-            logger_st_impl::new_buffer(buffer_size);
-            logger_st_impl::set_name(logger_name);
-            logger_st_impl::set_channel(channel);
-            logger_st_impl::set_level(level);
-            if (!thread_name.empty()) {
-                logger_st_impl::set_thread(thread_name);
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else {
+                logger_st_impl::set_core(std::move(core));
+                logger_st_impl::new_buffer(buffer_size);
+                logger_st_impl::set_name(logger_name);
+                logger_st_impl::set_channel(channel);
+                logger_st_impl::set_level(level);
+                if (!thread_name.empty()) {
+                    logger_st_impl::set_thread(thread_name);
+                }
             }
+            handle_error(error);
         }
 
         ~logger_st() noexcept = default;

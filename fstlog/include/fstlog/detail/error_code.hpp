@@ -21,7 +21,9 @@ namespace fstlog {
         path_bad,
         stream_bad,
         core_limit,
-        obj_limit
+        obj_limit,
+        incomp_api,
+        mem_res_bad
     };
 
     inline const char* error_message(error_code code) noexcept {
@@ -45,6 +47,8 @@ namespace fstlog {
             case error_code::stream_bad: return "fstlog error: The iostream had an error state!";
             case error_code::core_limit: return "fstlog error: The concurrent core instance limit is reached!";
             case error_code::obj_limit: return "fstlog error: Object creation limit reached (unique id exhaustion)!";
+            case error_code::incomp_api: return "fstlog error: Header and library binary API-s are incompatible!";
+            case error_code::mem_res_bad: return "fstlog error: Memory resource in header and library binary does not match!";
             default : return "fstlog error: Unknown error!";
         };
     };

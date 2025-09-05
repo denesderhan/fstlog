@@ -12,7 +12,7 @@ TEST_CASE("logger_st") {
     core.poll_interval(std::chrono::milliseconds{0});
 
     SECTION("construct") {
-        fstlog::logger_st logger;
+        fstlog::logger_st logger(fstlog::core(nullptr));
         CHECK(logger.get_core().pimpl() == nullptr);
         CHECK(logger.name() == fstlog::small_string<32>{"Unnamed"});
         CHECK(logger.channel() == 1);
@@ -45,7 +45,7 @@ TEST_CASE("logger_st") {
 
         //copy construct/assign
         fstlog::logger_st logger_cpy{logger};
-        fstlog::logger_st logger_cpy2;
+        fstlog::logger_st logger_cpy2(fstlog::core(nullptr));
         logger_cpy2 = logger;
         
         CHECK(logger.get_core().pimpl() == core.pimpl());
@@ -82,7 +82,7 @@ TEST_CASE("logger_st") {
 
         //move construct/assign
         fstlog::logger_st logger_mov{ std::move(logger) };
-        fstlog::logger_st logger_mov2;
+        fstlog::logger_st logger_mov2(fstlog::core(nullptr));
         logger_mov2 = std::move(logger_cpy);
 
         CHECK(logger.get_core().pimpl() == nullptr);

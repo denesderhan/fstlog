@@ -3,6 +3,7 @@
 #pragma once
 #include <fstlog/formatter/formatter.hpp>
 
+#include <fstlog/compatible.hpp>
 #include <fstlog/detail/error_handling.hpp>
 #include <fstlog/detail/memory_resource.hpp>
 
@@ -15,7 +16,10 @@ namespace fstlog {
             noexcept(handle_error(error_code::none)))
     {
         formatter out;
-        const auto error = formatter_null(out, resource);
+        error_code error{ error_code::none };
+        if (!compatible()) error = error_code::incomp_api;
+        else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+        else error = formatter_null(out, resource);
         handle_error(error);
         return out;
     }

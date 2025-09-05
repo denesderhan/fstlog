@@ -1,10 +1,11 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <fstlog/compatible.hpp>
 #include <fstlog/detail/api_def.hpp>
 #include <fstlog/detail/error_handling.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/level.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/types.hpp>
 
 namespace fstlog {
@@ -16,7 +17,10 @@ namespace fstlog {
         explicit FSTLOG_API filter(memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(handle_error(error_code::none)))
         {
-            const auto error = init(resource);
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else error = init(resource);
             handle_error(error);
         }
         FSTLOG_API filter(
@@ -25,7 +29,10 @@ namespace fstlog {
             memory_resource* resource = fstlog::get_default_resource()) noexcept(
                 noexcept(handle_error(error_code::none)))
         {
-            const auto error = init(level, channel, resource);
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else error = init(level, channel, resource);
             handle_error(error);
         }
         FSTLOG_API filter(
@@ -35,14 +42,20 @@ namespace fstlog {
             memory_resource* resource = fstlog::get_default_resource()) noexcept(
                 noexcept(handle_error(error_code::none)))
         {
-            const auto error = 
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else error = 
                 init(level, first_channel, last_channel, resource);
             handle_error(error);
         }
         FSTLOG_API filter(const filter& other) noexcept(
             noexcept(handle_error(error_code::none))) 
         {
-            const auto error = init(other);
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else error = init(other);
             handle_error(error);
         }
         FSTLOG_API filter(
@@ -50,7 +63,10 @@ namespace fstlog {
             memory_resource* resource) noexcept(
                 noexcept(handle_error(error_code::none))) 
         {
-            const auto error = init(other, resource);
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else error = init(other, resource);
             handle_error(error);
         }
         FSTLOG_API filter& operator=(const filter& other) noexcept;

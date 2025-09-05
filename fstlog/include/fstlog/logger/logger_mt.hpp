@@ -5,8 +5,8 @@
 #include <string_view>
 #include <mutex>
 
+#include <fstlog/compatible.hpp>
 #include <fstlog/core.hpp>
-#include <fstlog/detail/api_def.hpp>
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/logger/detail/log/log_addmeta_mixin.hpp>
 #include <fstlog/logger/detail/log/log_check_buffer_mixin.hpp>
@@ -53,20 +53,25 @@ namespace fstlog {
         : private logger_mt_impl
     {
     public:
-        logger_mt() noexcept = default;
-        
         explicit logger_mt(
             core core,
-            std::string_view logger_name = "",
+            std::string_view logger_name = "Unnamed",
             fstlog::level level = level::All,
             channel_type channel = constants::default_log_channel,
-            std::uint32_t buffer_size = 0) noexcept
+            std::uint32_t buffer_size = 0) noexcept(
+                noexcept(handle_error(error_code::none)))
         {
-            logger_mt_impl::set_core(std::move(core));
-            logger_mt_impl::new_buffer(buffer_size);
-            logger_mt_impl::set_name(logger_name);
-            logger_mt_impl::set_channel(channel);
-            logger_mt_impl::set_level(level);
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else {
+                logger_mt_impl::set_core(std::move(core));
+                logger_mt_impl::new_buffer(buffer_size);
+                logger_mt_impl::set_name(logger_name);
+                logger_mt_impl::set_channel(channel);
+                logger_mt_impl::set_level(level);
+            }
+            handle_error(error);
         }
         
         ~logger_mt() noexcept = default;

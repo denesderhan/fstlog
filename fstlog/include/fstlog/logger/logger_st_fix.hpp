@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+#include <fstlog/compatible.hpp>
+#include <fstlog/core.hpp>
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/small_string.hpp>
 #include <fstlog/logger/detail/log/log_addmeta_mixin.hpp>
@@ -60,11 +62,17 @@ namespace fstlog {
         : private logger_st_fix_impl<logger_name_, level_, log_channel_, thread_name_>
     {
     public:
-        logger_st_fix() noexcept = default;
-
-        explicit logger_st_fix(core core, std::uint32_t buffer_size = 0)  noexcept {
-            logger_st_fix_t::set_core(std::move(core));
-            logger_st_fix_t::new_buffer(buffer_size);
+        explicit logger_st_fix(core core, std::uint32_t buffer_size = 0) noexcept(
+                noexcept(handle_error(error_code::none)))
+        {
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else {
+                logger_st_fix_t::set_core(std::move(core));
+                logger_st_fix_t::new_buffer(buffer_size);
+            }
+            handle_error(error);
         }
 
         ~logger_st_fix() noexcept = default;

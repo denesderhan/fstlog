@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <string_view>
 
+#include <fstlog/compatible.hpp>
 #include <fstlog/detail/api_def.hpp>
 #include <fstlog/detail/error_handling.hpp>
 #include <fstlog/detail/memory_resource.hpp>
@@ -20,7 +21,10 @@ namespace fstlog {
         FSTLOG_API explicit core(memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(handle_error(error_code::none)))
         {
-            const auto error = init(resource);
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else error = error = init(resource);
             handle_error(error);
         }
         FSTLOG_API core(
@@ -28,7 +32,10 @@ namespace fstlog {
             memory_resource* resource = fstlog::get_default_resource()) noexcept(
                 noexcept(handle_error(error_code::none)))
         {
-            const auto error = init(name, resource);
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else error = init(name, resource);
             handle_error(error);
         }
         FSTLOG_API ~core() noexcept;

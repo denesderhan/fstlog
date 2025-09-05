@@ -14,7 +14,7 @@ TEST_CASE("logger_mt") {
     core.poll_interval(std::chrono::milliseconds{0});
 
     SECTION("construct") {
-        fstlog::logger_mt logger;
+        fstlog::logger_mt logger(fstlog::core(nullptr));
         CHECK(logger.get_core().pimpl() == nullptr);
         CHECK(logger.name() == fstlog::small_string<32>{"Unnamed"});
         CHECK(logger.channel() == 1);

@@ -4,9 +4,10 @@
 #include <cstdint>
 #include <string_view>
 
+#include <fstlog/compatible.hpp>
 #include <fstlog/core.hpp>
-#include <fstlog/detail/api_def.hpp>
 #include <fstlog/detail/constants.hpp>
+#include <fstlog/detail/error_handling.hpp>
 #include <fstlog/logger/detail/log/log_addmeta_mixin.hpp>
 #include <fstlog/logger/detail/log/log_check_buffer_mixin.hpp>
 #include <fstlog/logger/detail/log/log_check_core_mixin.hpp>
@@ -57,18 +58,23 @@ namespace fstlog {
         : private logger_impl
     {
     public:
-        logger() noexcept = default;
-
         explicit logger(
             core core,
             std::string_view name = "Unnamed",
             fstlog::level level = level::All,
-            channel_type channel = constants::default_log_channel ) noexcept
+            channel_type channel = constants::default_log_channel) noexcept(
+                noexcept(handle_error(error_code::none)))
         {
-            logger_impl::set_core(std::move(core));
-            logger_impl::set_name(name);
-            logger_impl::set_level(level);
-            logger_impl::set_channel(channel);
+            error_code error{ error_code::none };
+            if (!compatible()) error = error_code::incomp_api;
+            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
+            else {
+                logger_impl::set_core(std::move(core));
+                logger_impl::set_name(name);
+                logger_impl::set_level(level);
+                logger_impl::set_channel(channel);
+            }
+            handle_error(error);
         }
 
         ~logger() noexcept = default;

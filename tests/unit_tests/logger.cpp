@@ -13,7 +13,8 @@ TEST_CASE("logger") {
 
     SECTION("construct") {
         
-        fstlog::logger logger;
+        // creating a logger with bad core (core.pimpl_ == nullptr)
+        fstlog::logger logger(fstlog::core(nullptr));
         CHECK(logger.get_core().pimpl() == nullptr);
         CHECK(logger.name() == fstlog::small_string<32>{"Unnamed"});
         CHECK(logger.channel() == 1);
@@ -46,7 +47,7 @@ TEST_CASE("logger") {
 
         //copy construct/assign
         fstlog::logger logger_cpy{logger};
-        fstlog::logger logger_cpy2;
+        fstlog::logger logger_cpy2(fstlog::core(nullptr));
         logger_cpy2 = logger;
         
         CHECK(logger.get_core().pimpl() == core.pimpl());
@@ -81,7 +82,7 @@ TEST_CASE("logger") {
 
         //move construct/assign
         fstlog::logger logger_mov{ std::move(logger) };
-        fstlog::logger logger_mov2;
+        fstlog::logger logger_mov2(fstlog::core(nullptr));
         logger_mov2 = std::move(logger_cpy);
 
         CHECK(logger.get_core().pimpl() == nullptr);
