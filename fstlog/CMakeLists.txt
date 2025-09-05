@@ -149,6 +149,7 @@ set(src
     "src/core.cpp"
     "src/core_impl.cpp"
     "src/core_impl.hpp"
+    "src/version.cpp"
 )
 
 set(src_detail
@@ -278,6 +279,37 @@ set(src_sink_impl
     "src/sink/impl/sink_unsort_mixin.hpp"
 )
 
+#----------------------------------------------
+# Use custom memory resource files if provided
+#----------------------------------------------
+if(FSTLOG_RESOURCE)
+    string(STRIP "${FSTLOG_RESOURCE}" FSTLOG_RESOURCE)
+    file(TO_CMAKE_PATH "${FSTLOG_RESOURCE}" FSTLOG_RESOURCE)
+    get_filename_component(FSTLOG_RESOURCE "${FSTLOG_RESOURCE}" ABSOLUTE)
+    if(NOT EXISTS "${FSTLOG_RESOURCE}/src/detail/memory_resource.cpp")
+        message(FATAL_ERROR "Missing file: ${FSTLOG_RESOURCE}/src/detail/memory_resource.cpp")
+    endif()
+    if(NOT EXISTS "${FSTLOG_RESOURCE}/include/fstlog/detail/memory_resource.hpp")
+        message(FATAL_ERROR "FSTLOG_RESOURCE file: ${FSTLOG_RESOURCE}/include/fstlog/detail/memory_resource.hpp")
+    endif()
+    
+    # replace the header file 
+    list(FIND include_fstlog_detail "include/fstlog/detail/memory_resource.hpp" REPLACE_INDEX)
+    if(REPLACE_INDEX LESS 0)
+        message(FATAL_ERROR "Entry missing from source list: include/fstlog/detail/memory_resource.hpp")
+    endif()
+    list(REMOVE_AT include_fstlog_detail ${REPLACE_INDEX})
+    list(INSERT include_fstlog_detail ${REPLACE_INDEX} "${FSTLOG_RESOURCE}/include/fstlog/detail/memory_resource.hpp")
+
+    # replace the .cpp file
+    list(FIND src_detail "src/detail/memory_resource.cpp" REPLACE_INDEX)
+    if(REPLACE_INDEX LESS 0)
+        message(FATAL_ERROR "Entry missing from source list: src/detail/memory_resource.cpp")
+    endif()
+    list(REMOVE_AT src_detail ${REPLACE_INDEX})
+    list(INSERT src_detail ${REPLACE_INDEX} "${FSTLOG_RESOURCE}/src/detail/memory_resource.cpp")
+endif()
+
 set(ALL_FILES 
     ${include_fstlog}
     ${include_fstlog_detail}
@@ -387,11 +419,22 @@ endif()
 #--------------------
 # Include directories
 #--------------------
-target_include_directories(fstlog
-    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>"
-    PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>"
-    PUBLIC "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-)
+if(FSTLOG_RESOURCE)
+    # add custom memory resource include path before source dir include path
+    # the compiler will search it first and finds/uses the custom header
+    target_include_directories(fstlog
+        PUBLIC "$<BUILD_INTERFACE:${FSTLOG_RESOURCE}/include>"
+        PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>"
+        PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>"
+        PUBLIC "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+    )
+else()
+    target_include_directories(fstlog
+        PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>"
+        PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>"
+        PUBLIC "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+    )
+endif()
 
 #--------
 # Install

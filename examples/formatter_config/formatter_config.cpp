@@ -8,6 +8,7 @@
 #include <string_view>
 #include <vector>
 
+#include <fstlog/version.hpp>
 #include <fstlog/core.hpp>
 #include <fstlog/sink/sink_sort.hpp>
 #include <fstlog/formatter/formatter_txt.hpp>
@@ -21,6 +22,7 @@ void log_with_formatter(fstlog::logger& logger, fstlog::formatter formatter);
 
 int main()
 {
+    std::cout << "fstlog version: " << fstlog::version() << "\n\n";
     //Format patterns
     std::vector<std::string_view> format_patterns{
         // default pattern
@@ -48,7 +50,7 @@ int main()
 
     // create core
     fstlog::core my_core{ "my_core" };
-    std::cout << "fstlog version: " << my_core.version() << "\n\n";
+    
     // create logger
     fstlog::logger my_logger{ my_core, "my_logger" };
 

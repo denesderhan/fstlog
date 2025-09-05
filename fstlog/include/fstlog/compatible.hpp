@@ -2,10 +2,9 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <fstlog/version.hpp>
-#include <fstlog/core.hpp>
 
 namespace fstlog {
-    /*
+    /**
     * @brief Checks API compatibility between headers and library binary using Semantic Versioning.
     *
     * @details
@@ -22,15 +21,15 @@ namespace fstlog {
     */
     inline bool compatible() noexcept {
         // alpha, beta versions have to match exactly
-        if constexpr (FSTLOG_VERSION_MAJOR == 0) {
-            return core::version_major() == FSTLOG_VERSION_MAJOR
-                && core::version_minor() == FSTLOG_VERSION_MINOR
-                && core::version_patch() == FSTLOG_VERSION_PATCH;
+        if constexpr (FSTLOG_HEADER_VERSION_MAJOR == 0) {
+            return fstlog::version_major() == FSTLOG_HEADER_VERSION_MAJOR
+                && fstlog::version_minor() == FSTLOG_HEADER_VERSION_MINOR
+                && fstlog::version_patch() == FSTLOG_HEADER_VERSION_PATCH;
         }
         // backwards compatibility
         else {
-            return core::version_major() == FSTLOG_VERSION_MAJOR
-                && core::version_minor() >= FSTLOG_VERSION_MINOR;
+            return fstlog::version_major() == FSTLOG_HEADER_VERSION_MAJOR
+                && fstlog::version_minor() >= FSTLOG_HEADER_VERSION_MINOR;
         }
     }
 }

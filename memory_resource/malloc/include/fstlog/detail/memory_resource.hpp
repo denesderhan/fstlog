@@ -32,4 +32,11 @@ namespace fstlog {
 
     FSTLOG_API bool operator ==(malloc_resource const&, malloc_resource const&) noexcept;
     FSTLOG_API bool operator !=(malloc_resource const&, malloc_resource const&) noexcept;
+    
+    FSTLOG_API bool memory_resource_id_match(const char* id) noexcept;
+
+    inline bool memory_resource_identical() noexcept {
+        // this id must be unique (use a hash of the .hpp .cpp files)
+        return memory_resource_id_match("fstlog_malloc_22475e3881e65aae12a7ec7b63cdecc657bdc30f3b8d5cf7c734de2bb5955b06");
+    }
 }

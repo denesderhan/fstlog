@@ -66,6 +66,7 @@ Example binaries will be in build/bin/Static
 ```c++
 #include <iostream>
 
+#include <fstlog/version.hpp>
 #include <fstlog/core.hpp>
 #include <fstlog/logger/logger.hpp>
 #include <fstlog/logger/log_macro.hpp>
@@ -76,9 +77,9 @@ Example binaries will be in build/bin/Static
 int main()
 {
     try {
+        std::cout << "fstlog version: " << fstlog::version() << "\n\n";
         //create core
         fstlog::core my_core("my_core");
-        std::cout << "fstlog version: " << my_core.version() << "\n\n";
         //create sink
         fstlog::sink my_sink = fstlog::sink_sort(
             fstlog::formatter_txt(),
@@ -456,13 +457,12 @@ default zero means no polling.
 default zero means no periodic flushing.
 
 ```
--DFSTLOG_RESOURCE=../memory_resource/std_pmr
 -DFSTLOG_RESOURCE=../memory_resource/malloc
 ```
-- These options specify which memory resource implementation to use. The build process will copy 
-memory_resource.hpp and memory_resource.cpp from your chosen directory into the source tree.
-- By default, the library uses the std_pmr resource. However, if you need to compile without exception support, 
-you should use the malloc resource instead. The pmr (and all resources) that use exceptions will abort (crash)
+- This option specifies a custom memory resource implementation to be used by the library.
+- By default (if the option is not set), the library uses the std::pmr::memory_resource. 
+However, if you need to compile without exception support, you should use the malloc resource instead.
+The pmr (and all resources) that rely on exceptions to signal errors will abort (crash) 
 the application on allocation failure (they are not able to throw).
 Meanwhile the malloc resource allows the logging service to degrade gracefully.
 - Important for shared libraries: It's highly recommended to use the malloc resource when creating a shared library. 

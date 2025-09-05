@@ -50,10 +50,6 @@ namespace fstlog {
         FSTLOG_API void flush() const noexcept;
         FSTLOG_API std::string_view name() const noexcept;
         FSTLOG_API bool good() const noexcept;
-        FSTLOG_API static std::string_view version() noexcept;
-        FSTLOG_API static int version_major() noexcept;
-        FSTLOG_API static int version_minor() noexcept;
-        FSTLOG_API static int version_patch() noexcept;
         FSTLOG_API std::uintmax_t id() const noexcept;
         FSTLOG_API static std::size_t limit() noexcept;
 

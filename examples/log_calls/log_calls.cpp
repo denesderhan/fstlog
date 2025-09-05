@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include <fstlog/version.hpp>
 #include <fstlog/core.hpp>
 #include <fstlog/formatter/formatter_txt.hpp>
 #include <fstlog/logger/log_macro.hpp>
@@ -37,12 +38,12 @@ public:
 
 int main()
 {
+    std::cout << "fstlog version: " << fstlog::version() << "\n\n";
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
 #endif
     //create core
     fstlog::core my_core("my_core");
-    std::cout << "fstlog version: " << my_core.version() << "\n\n";
 
     //create sink
     fstlog::sink my_sink = fstlog::sink_sort(

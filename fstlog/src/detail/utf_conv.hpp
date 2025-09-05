@@ -642,7 +642,7 @@ namespace fstlog::detail::utf {
         }
     }
 
-    /*
+    /**
     * @brief Calculates the length of a UTF-8 string (byte and char) trimmed to the desired char length.
     * If the string is shorter than the trim length, the full lengths are returned.
     *

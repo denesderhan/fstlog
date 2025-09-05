@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 
+#include <fstlog/version.hpp>
 #include <fstlog/core.hpp>
 #include <fstlog/logger/logger.hpp>
 #include <fstlog/logger/log_macro.hpp>
@@ -19,10 +20,10 @@
 
 int main()
 {
+    std::cout << "fstlog version: " << fstlog::version() << "\n\n";
     // create core
     fstlog::core my_core("my_core");
-    std::cout << "fstlog version: " << my_core.version() << "\n\n";
-
+    
     // create filter that passes messages
     // with level::Info and above (Info, Warn, Error, Fatal)
     // and channel 1

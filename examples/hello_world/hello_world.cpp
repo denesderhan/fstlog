@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+#include <fstlog/version.hpp>
 #include <fstlog/core.hpp>
 #include <fstlog/logger/logger.hpp>
 #include <fstlog/logger/log_macro.hpp>
@@ -12,9 +13,9 @@
 
 int main()
 {
+    std::cout << "fstlog version: " << fstlog::version() << "\n\n";
     //create core
     fstlog::core my_core("my_core");
-    std::cout << "fstlog version: " << my_core.version() << "\n\n";
     //create sink
     fstlog::sink my_sink = fstlog::sink_sort(
         fstlog::formatter_txt(),

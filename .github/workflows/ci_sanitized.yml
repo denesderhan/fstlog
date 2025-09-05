@@ -34,19 +34,19 @@ jobs:
       matrix:
         include:
           - label: pmr-asan
-            resource_path: './memory_resource/std_pmr'
+            resource_path: ''
             compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
             linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
           - label: malloc-asan
-            resource_path: './memory_resource/malloc'
+            resource_path: '-DFSTLOG_RESOURCE=./memory_resource/malloc'
             compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
             linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
           - label: pmr-tsan
-            resource_path: './memory_resource/std_pmr'
+            resource_path: ''
             compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=thread'
             linker_flags: '-pie -fsanitize=thread'
           - label: noexceptions
-            resource_path: './memory_resource/malloc'
+            resource_path: ''
             compiler_flags: '-O1 -g -fno-exceptions -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
             linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
             
@@ -72,7 +72,7 @@ jobs:
         echo "ASAN_SYMBOLIZER_PATH=$ASAN_SYMBOLIZER_PATH"
        
     - name: Configure CMake
-      run: cmake -S . -B build -G Ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="${{ matrix.compiler_flags }}" -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.linker_flags }}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20 -DBUILD_SHARED_LIBS=OFF -DFSTLOG_TESTS=ON -DFSTLOG_EXAMPLES=ON -DFSTLOG_RESOURCE=${{ matrix.resource_path }}
+      run: cmake -S . -B build -G Ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="${{ matrix.compiler_flags }}" -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.linker_flags }}" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20 -DBUILD_SHARED_LIBS=OFF -DFSTLOG_TESTS=ON -DFSTLOG_EXAMPLES=ON ${{ matrix.resource_path }}
                 
     - name: Build
       working-directory: ./build

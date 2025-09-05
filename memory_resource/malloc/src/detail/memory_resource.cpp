@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
 #ifndef FSTLOG_NOEXCEPTIONS
 #include <stdexcept>
@@ -83,5 +84,9 @@ namespace fstlog {
     }
     bool operator !=(malloc_resource const &lhs, malloc_resource const &rhs) noexcept {
         return !(lhs == rhs);
+    }
+    
+    bool memory_resource_id_match(const char* id) noexcept {
+        return std::strcmp(id, "fstlog_malloc_22475e3881e65aae12a7ec7b63cdecc657bdc30f3b8d5cf7c734de2bb5955b06") == 0;
     }
 }

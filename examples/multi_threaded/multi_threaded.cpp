@@ -4,6 +4,7 @@
 #include <iostream>
 #include <thread>
 
+#include <fstlog/version.hpp>
 #include <fstlog/core.hpp>
 #include <fstlog/logger/logger.hpp>
 #include <fstlog/logger/logger_mt.hpp>
@@ -26,13 +27,16 @@ void logger_thread(logger_type& logger) {
 
 int main()
 {
+    std::cout << "fstlog version: " << fstlog::version() << "\n\n";
+    
     // create core
     fstlog::core my_core("my_core");
-    std::cout << "fstlog version: " << my_core.version() << "\n\n";
+    
     // create sink
     fstlog::sink my_sink = fstlog::sink_sort(
         fstlog::formatter_txt("{timestamp:.2%M:%S} [{logger:10}] [thr:{thread:>10}] {message}"),
         fstlog::output_console());
+    
     // assign sink to core
     my_core.add_sink(my_sink);
 

@@ -165,19 +165,6 @@ namespace fstlog {
         }
     }
 
-    std::string_view core::version() noexcept {
-        return FSTLOG_VERSION;
-    }
-    int core::version_major() noexcept {
-        return FSTLOG_VERSION_MAJOR;
-    }
-    int core::version_minor() noexcept {
-        return FSTLOG_VERSION_MINOR;
-    }
-    int core::version_patch() noexcept {
-        return FSTLOG_VERSION_PATCH;
-    }
-
     bool core::good() const noexcept {
         return pimpl_ != nullptr;
     }

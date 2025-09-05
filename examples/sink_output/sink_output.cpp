@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 
+#include <fstlog/version.hpp>
 #include <fstlog/core.hpp>
 #include <fstlog/formatter/formatter_txt.hpp>
 #include <fstlog/logger/log_macro.hpp>
@@ -19,6 +20,7 @@
 
 int main()
 {
+    std::cout << "fstlog version: " << fstlog::version() << "\n\n";
     // ----------------------------------
     //   OUTPUT CONSOLE (UNSORTED SINK)
     // ---------------------------------
@@ -117,8 +119,8 @@ int main()
 
     // Create a core and logger
     fstlog::core my_core("my_core");
-    std::cout << "fstlog version: " << my_core.version() << "\n\n";
     fstlog::logger my_logger(my_core, "my_logger");
+
     // add sinks to core
     my_core.add_sink(sink_console);
     my_core.add_sink(sink_error);
