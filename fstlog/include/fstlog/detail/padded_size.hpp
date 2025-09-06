@@ -8,6 +8,8 @@
 #include <fstlog/detail/is_pow2.hpp>
 
 namespace fstlog {
+    // returns the number that is in the range [num, num + padd_to)
+    // and is divisible by padd_to (returns 0 on num == 0)
     template <std::uintmax_t padd_to, typename T>
     constexpr T padded_size(T num) noexcept {
         static_assert(std::is_unsigned_v<T>);
@@ -16,15 +18,18 @@ namespace fstlog {
         }
         else {
             static_assert(is_pow2(padd_to), "padd_to must be power of two!");
-            static_assert(padd_to <= (std::numeric_limits<T>::max)(), "padd_to must be less than T max");
-            constexpr T padding = padd_to;
-            constexpr T mask = ~(padding - 1);
-            T comp = num & mask;
-            if (comp != num) {
-                comp += padding;
-                if (comp > num) return comp;
+            static_assert(padd_to != 0 
+                && padd_to <= (std::numeric_limits<T>::max)(), "padd_to must be in range 1 - maxT");
+            constexpr T round = static_cast<T>(padd_to);
+            // compute temp = (num / round) * round
+            auto temp = num & (~(round - 1));
+            // if already rounded or overflow would happen we don't padd
+            if (temp == num || temp > (std::numeric_limits<T>::max)() - round) {
+                return num;
             }
-            return num;
+            else {
+                return temp + round;
+            }
         }
     }
 }

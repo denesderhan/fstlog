@@ -15,7 +15,7 @@
 #include <formatter/impl/detail/severity_txt.hpp>
 #include <formatter/impl/detail/tz_format.hpp>
 #include <formatter/impl/detail/valid_strftime_string.hpp>
-#include <fstlog/detail/constants.hpp>
+#include <detail/constants_src.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/padded_size.hpp>

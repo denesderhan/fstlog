@@ -8,7 +8,7 @@
 
 #include <fstlog/core.hpp>
 #include <fstlog/detail/api_def.hpp>
-#include <fstlog/detail/constants.hpp>
+#include <detail/constants_src.hpp>
 #include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>

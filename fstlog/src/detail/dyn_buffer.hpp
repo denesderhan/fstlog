@@ -7,7 +7,7 @@
 #include <new>
 #include <utility>
 
-#include <fstlog/detail/constants.hpp>
+#include <detail/constants_src.hpp>
 #include <fstlog/detail/memory_resource.hpp>
 #include <detail/nothrow_allocate.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>

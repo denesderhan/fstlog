@@ -39,7 +39,7 @@ namespace {
 }
 
 namespace fstlog {
-    class alignas(constants::cache_ls_nosharing) logger_test final : public
+    class logger_test final : public
         log_level_filter_mixin <
         log_addmeta_mixin <
         log_compute_msgsize_mixin <

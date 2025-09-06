@@ -8,8 +8,6 @@
 
 namespace fstlog {
     namespace constants {
-        inline constexpr std::size_t cache_ls_nosharing{ 64 };
-
         inline constexpr std::size_t internal_msg_alignment{ 8 };
         inline constexpr std::size_t internal_msg_data_alignment{ 4 };
         

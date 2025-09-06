@@ -16,6 +16,7 @@
 
 #include <cstdint>
 
+#include <detail/constants_src.hpp>
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/padded_size.hpp>
 

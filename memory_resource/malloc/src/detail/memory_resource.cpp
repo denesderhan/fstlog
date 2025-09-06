@@ -12,8 +12,11 @@
 #endif
 #include <type_traits>
 
+#include <detail/safe_reinterpret_cast.hpp>
+#include <detail/constants_src.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/is_pow2.hpp>
+#include <fstlog/detail/padded_t.hpp>
 
 namespace fstlog {
     
@@ -75,8 +78,13 @@ namespace fstlog {
     }
 
     malloc_resource* get_default_resource() noexcept {
-        static malloc_resource resource;
-        return &resource;
+        // in theory reading/writing of the 1 byte data of the instance never hapens
+        // just in case it does, align and size the default resource to prevent false sharing
+        alignas(constants::cache_ls_nosharing) static padded_t<malloc_resource, constants::cache_ls_nosharing>
+            default_resource{ malloc_resource{} };
+        static_assert(sizeof(decltype(default_resource)) == constants::cache_ls_nosharing, "error");
+        FSTLOG_ASSERT(safe_reinterpret_cast<std::uintptr_t>(&(default_resource.value)) % constants::cache_ls_nosharing == 0);
+        return &(default_resource.value);
     }
 
     bool operator ==(malloc_resource const &lhs, malloc_resource const &rhs) noexcept {

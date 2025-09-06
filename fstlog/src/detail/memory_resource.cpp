@@ -2,11 +2,14 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <fstlog/detail/memory_resource.hpp>
 
+#include <cassert>
 #include <cstring>
 
 namespace fstlog {
     memory_resource* get_default_resource() noexcept {
-        return std::pmr::get_default_resource();
+        auto resource = std::pmr::get_default_resource();
+        assert(resource != nullptr);
+        return resource;
     }
 
     bool memory_resource_id_match(const char* id) noexcept {

@@ -460,6 +460,9 @@ default zero means no periodic flushing.
 -DFSTLOG_RESOURCE=../memory_resource/malloc
 ```
 - This option specifies a custom memory resource implementation to be used by the library.
+- The custom resource implementation must provide an fstlog::get_default_resource() function,
+that must return a pointer to a thread safe memory resource.
+- Only thread safe resources can be used to construct the fstlog objects.
 - By default (if the option is not set), the library uses the std::pmr::memory_resource. 
 However, if you need to compile without exception support, you should use the malloc resource instead.
 The pmr (and all resources) that rely on exceptions to signal errors will abort (crash) 

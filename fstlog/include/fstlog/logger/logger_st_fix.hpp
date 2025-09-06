@@ -58,7 +58,7 @@ namespace fstlog {
         fstlog::level level_ = level::All,
         channel_type log_channel_ = constants::default_log_channel,
         auto thread_name_ = small_string<16>("Unnamed")>
-    class alignas(constants::cache_ls_nosharing) logger_st_fix final 
+    class logger_st_fix final 
         : private logger_st_fix_impl<logger_name_, level_, log_channel_, thread_name_>
     {
     public:

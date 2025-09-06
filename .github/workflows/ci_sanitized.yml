@@ -35,11 +35,11 @@ jobs:
         include:
           - label: pmr-asan
             resource_path: ''
-            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
+            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fsanitize=undefined'
             linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
           - label: malloc-asan
             resource_path: '-DFSTLOG_RESOURCE=./memory_resource/malloc'
-            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
+            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fsanitize=undefined'
             linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
           - label: pmr-tsan
             resource_path: ''
@@ -47,7 +47,7 @@ jobs:
             linker_flags: '-pie -fsanitize=thread'
           - label: noexceptions
             resource_path: ''
-            compiler_flags: '-O1 -g -fno-exceptions -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize=undefined'
+            compiler_flags: '-O1 -g -fno-exceptions -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fsanitize=undefined'
             linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
             
     steps:

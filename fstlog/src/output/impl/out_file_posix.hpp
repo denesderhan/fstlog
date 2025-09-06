@@ -6,7 +6,7 @@
 #include <cstring>
 
 #include <detail/nothrow_allocate.hpp>
-#include <fstlog/detail/constants.hpp>
+#include <detail/constants_src.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <detail/utf_conv.hpp>

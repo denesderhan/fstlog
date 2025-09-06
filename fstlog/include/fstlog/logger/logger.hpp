@@ -54,7 +54,7 @@ namespace fstlog {
     // If new_buffer() is called (per thread) and good() returns true,
     // allocation succeeded and no exceptions will be thrown (or asserts triggered).
     // If good() returns false logging can be disabled with set_level()
-    class alignas(constants::cache_ls_nosharing) logger final 
+    class logger final 
         : private logger_impl
     {
     public:

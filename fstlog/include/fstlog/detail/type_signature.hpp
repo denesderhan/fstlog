@@ -11,7 +11,6 @@
 #include <fstlog/detail/log_element_type.hpp>
 #include <fstlog/detail/log_type.hpp>
 #include <fstlog/detail/log_type_metadata.hpp>
-#include <fstlog/detail/padded_size.hpp>
 #include <fstlog/detail/rm_cvref_t.hpp>
 #include <fstlog/detail/types.hpp>
 #include <fstlog/detail/ut_cast.hpp>

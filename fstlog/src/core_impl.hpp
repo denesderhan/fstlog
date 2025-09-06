@@ -14,7 +14,7 @@
 #include <config_core.hpp>
 #include <detail/dyn_array.hpp>
 #include <fstlog/core.hpp>
-#include <fstlog/detail/constants.hpp>
+#include <detail/constants_src.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/small_string.hpp>

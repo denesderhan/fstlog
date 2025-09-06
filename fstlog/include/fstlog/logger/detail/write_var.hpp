@@ -20,9 +20,13 @@ namespace fstlog {
             && log_type_v<T> != log_element_type::String
         >* = nullptr>
     void write_var(unsigned char*& buff_ind, T const& var) noexcept {
-        const padded_t<rm_cvref_t<T>> temp{ var };
-        std::memcpy(buff_ind, &temp, padded_t<rm_cvref_t<T>>::padded_data_size);
-        buff_ind += padded_t<rm_cvref_t<T>>::padded_data_size;
+        const padded_t<rm_cvref_t<T>, constants::internal_msg_data_alignment>
+            temp{ var };
+        std::memcpy(
+            buff_ind, 
+            &temp, 
+            decltype(temp)::padded_data_size);
+        buff_ind += decltype(temp)::padded_data_size;
     }
 
     //string contents copied

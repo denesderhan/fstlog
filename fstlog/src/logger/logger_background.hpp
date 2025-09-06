@@ -3,6 +3,7 @@
 #pragma once
 #include <mutex>
 
+#include <detail/constants_src.hpp>
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/logger/detail/log/log_addmeta_mixin.hpp>
 #include <fstlog/logger/detail/log/log_nobuffer_nolog_mixin.hpp>

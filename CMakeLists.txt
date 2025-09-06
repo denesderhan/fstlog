@@ -157,6 +157,11 @@ else()
         -fno-rtti
         -Wno-psabi # suppress ABI alignment change notification in gcc
     )
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(
+            -Wno-interference-size # suppress std::hardware_destructive_interference_size usage warning (not part of public ABI)
+        )
+    endif()
 endif()
 
 message(STATUS "=================================================================================")

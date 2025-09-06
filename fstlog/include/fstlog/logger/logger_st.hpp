@@ -48,7 +48,7 @@ namespace fstlog {
         >>>>>>>>>>>>>>>;
 
     // non thread safe logger
-    class alignas(constants::cache_ls_nosharing) logger_st final 
+    class logger_st final 
         : private logger_st_impl
     {
     public:
