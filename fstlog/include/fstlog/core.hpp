@@ -17,7 +17,8 @@ namespace fstlog {
     class core_impl;
     class core {
     public:
-        FSTLOG_API core() noexcept(noexcept(core(fstlog::get_default_resource())))
+        FSTLOG_API core() noexcept(noexcept(fstlog::get_default_resource()) 
+            && noexcept(handle_error(error_code::none)))
             :core(fstlog::get_default_resource()) {}
 
         FSTLOG_API explicit core(memory_resource* resource) noexcept(
