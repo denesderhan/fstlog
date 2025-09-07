@@ -10,6 +10,12 @@
 #include <test_mem_resource.hpp>
 
 TEST_CASE("core") {
+    SECTION("default_construct") {
+        fstlog::core core_instance;
+        CHECK(core_instance.good());
+        CHECK(core_instance.running());
+    };
+    
     SECTION("id") {
         fstlog::core core_1{ "core_1" };
         fstlog::core core_2{ "core_2" };
