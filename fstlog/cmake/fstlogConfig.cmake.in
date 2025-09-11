@@ -2,4 +2,19 @@
 
 include("${CMAKE_CURRENT_LIST_DIR}/fstlogTargets.cmake")
 
+# Set version variables for easy access by consumers
+set(fstlog_VERSION "@FSTLOG_VERSION@")
+set(fstlog_VERSION_MAJOR "@FSTLOG_VERSION_MAJOR@")
+set(fstlog_VERSION_MINOR "@FSTLOG_VERSION_MINOR@")
+set(fstlog_VERSION_PATCH "@FSTLOG_VERSION_PATCH@")
+
+# Explicitly set VERSION and SOVERSION on the imported target
+set_target_properties(fstlog::fstlog PROPERTIES
+    VERSION "${fstlog_VERSION}"
+    SOVERSION "${fstlog_VERSION_MAJOR}.${fstlog_VERSION_MINOR}"
+)
+
+# Set fstlog_FOUND for consistency
+set(fstlog_FOUND TRUE)
+
 check_required_components(fstlog)

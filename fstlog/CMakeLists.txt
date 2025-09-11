@@ -360,7 +360,10 @@ source_group("src/sink/impl" FILES ${src_sink_impl})
 add_library(fstlog ${ALL_FILES})
 add_library(fstlog::fstlog ALIAS fstlog)
 target_link_libraries(fstlog PUBLIC Threads::Threads)
-set_target_properties(fstlog PROPERTIES VERSION ${FSTLOG_VERSION} SOVERSION  ${FSTLOG_VERSION_MAJOR}.${FSTLOG_VERSION_MINOR})
+set_target_properties(fstlog PROPERTIES 
+    VERSION ${FSTLOG_VERSION} 
+    SOVERSION  ${FSTLOG_VERSION_MAJOR}.${FSTLOG_VERSION_MINOR}
+)
 
 if(BUILD_SHARED_LIBS)
     target_compile_definitions(fstlog
