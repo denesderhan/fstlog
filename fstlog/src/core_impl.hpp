@@ -63,13 +63,11 @@ namespace fstlog {
         }
 
         void notify_data_ready() noexcept {
-            bool notify = false;
-            {
-                std::lock_guard<std::mutex> grd(core_mutex_);
+            std::lock_guard<std::mutex> grd(core_mutex_);
+            if (!data_ready_) {
                 data_ready_ = true;
-                if (background_thread_sleeping_) notify = true;
+                background_thread_condvar_.notify_all();
             }
-            if (notify) background_thread_condvar_.notify_all();
         }
 
         std::string_view name() const noexcept {
