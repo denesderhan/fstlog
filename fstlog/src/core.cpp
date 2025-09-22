@@ -170,9 +170,8 @@ namespace fstlog {
     }
 
     void core::detail_notify_data_ready() const noexcept {
-        if (good()) {
-            pimpl_->notify_data_ready();
-        }
+        FSTLOG_ASSERT(pimpl_ != nullptr);
+        pimpl_->notify_data_ready();
     }
 
     log_buffer core::detail_get_buffer(std::uint32_t buffer_size) noexcept {

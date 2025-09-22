@@ -5,7 +5,6 @@
 #include <limits>
  
 #include <fstlog/detail/padded_size.hpp>
-#include <fstlog/detail/fstlog_assert.hpp>
 
 template<typename T, T padd_to>
 T padded_size_naive(T num) {

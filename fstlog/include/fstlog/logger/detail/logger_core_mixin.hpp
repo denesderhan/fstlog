@@ -2,14 +2,12 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <fstlog/core.hpp>
-#include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
     template<class L>
     class logger_core_mixin : public L {
     public:
         void notify_core() noexcept {
-            FSTLOG_ASSERT(is_core_set() && "Core was not set!");
             core_.detail_notify_data_ready();
         }
 

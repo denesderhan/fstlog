@@ -3,7 +3,6 @@
 #pragma once
 #include <atomic> 
 
-#include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/level.hpp>
 
 namespace fstlog {
@@ -43,8 +42,5 @@ namespace fstlog {
         }
 
         std::atomic<fstlog::level> level_{ fstlog::level::All};
-#ifdef FSTLOG_DEBUG
-        static_assert(decltype(level_)::is_always_lock_free);
-#endif
     };
 }
