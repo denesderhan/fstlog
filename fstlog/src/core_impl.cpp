@@ -480,10 +480,8 @@ namespace fstlog {
                         (std::chrono::duration_cast<std::chrono::milliseconds>(next_buffer_poll_ - current_time).count()),
                         (std::chrono::duration_cast<std::chrono::milliseconds>(next_sink_flush_ - current_time).count()),
                         (std::chrono::duration_cast<std::chrono::milliseconds>(sleep_until_time - current_time).count()));
-                    background_thread_sleeping_ = true;
                     // does not throw (clocks, time points, and durations provided by the standard library never throw)
                     background_thread_condvar_.wait_until(lock, sleep_until_time);
-                    background_thread_sleeping_ = false;
                     current_time = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
                     LOG_LL_TRACE(logger_, 
                         "Background thread woke up {} msec early.",

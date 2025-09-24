@@ -101,7 +101,6 @@ namespace fstlog {
         alignas(constants::cache_ls_nosharing) mutable std::mutex core_mutex_;
         alignas(constants::cache_ls_nosharing) std::condition_variable background_thread_condvar_;
         bool data_ready_{ false };
-        bool background_thread_sleeping_{ false };
         //ext read, self read, written at init
         small_string<32> name_;
 
