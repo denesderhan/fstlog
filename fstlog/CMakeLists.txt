@@ -156,7 +156,6 @@ set(src_detail
     "src/detail/checked_iterator.hpp"
     "src/detail/constants_src.hpp"
     "src/detail/dyn_array.hpp"
-    "src/detail/dyn_buffer.hpp"
     "src/detail/error.hpp"
     "src/detail/log_buffer.cpp"
     "src/detail/log_buffer_impl.cpp"

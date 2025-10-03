@@ -10,7 +10,6 @@
 
 #include <detail/unaligned_span.hpp>
 #include <detail/dyn_array.hpp>
-#include <detail/dyn_buffer.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>
 #include <fstlog/detail/types.hpp>
@@ -113,7 +112,7 @@ namespace fstlog {
                 message_indices_.begin(), 
                 message_indices_.size(),
                 sizeof(msg_ind),
-                [](const void* a, const void* b)->int { 
+                [](const void* a, const void* b)->int {
                     const auto first{ static_cast<msg_ind const*>(a)->timestamp };
                     const auto second{ static_cast<msg_ind const*>(b)->timestamp };
                     if (first < second) return -1;
@@ -137,6 +136,6 @@ namespace fstlog {
         static_assert(sizeof(stamp_type) == sizeof(stamp_type::rep));
         std::uint32_t max_data_size_{15 * 1024};
         dyn_array<msg_ind> message_indices_;
-        dyn_buffer message_data_;
+        dyn_array<unsigned char> message_data_;
     };
 }

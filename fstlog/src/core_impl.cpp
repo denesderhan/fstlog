@@ -17,8 +17,8 @@
 namespace fstlog {
     core_impl::core_impl(std::string_view name, memory_resource* resource) noexcept
         : name_(name),
-        bufferstore_(64, resource),
-        sinkstore_(8, resource)
+        bufferstore_(resource),
+        sinkstore_(resource)
     {
         if (buffer_poll_interval_ == std::chrono::milliseconds{0})
             next_buffer_poll_ = (steady_msec::max)();
@@ -59,7 +59,9 @@ namespace fstlog {
                 return error_code::core_limit;
             }
         }
-        bool self_buffer_good = true;
+        if (!bufferstore_.grow(32)) return error_code::alloc_fail;
+        if (!sinkstore_.grow(8)) return error_code::alloc_fail;
+        
         // if there is no self logging, no need to init self buffer
         if constexpr (level::FSTLOG_COMPILETIME_LOGLEVEL != level::None) {
 #ifdef FSTLOG_DEBUG
@@ -67,22 +69,13 @@ namespace fstlog {
 #else
             auto log_buff = get_buffer(4 * 1024);
 #endif // FSTLOG_DEBUG
-            // first try to set buffer (start() can log)
-            // if buffer is null there will be no logging, see: log_nobuffer_nolog_mixin
+            if (!log_buff.good()) return error_code::alloc_fail;
             logger_.init(log_buff);
-            self_buffer_good = log_buff.good();
         }
         
         // always try to start background thread
         start();
-        // report errors
         if (!running()) return error_code::thread_fail;
-        if (bufferstore_.capacity() < 64
-            || sinkstore_.capacity() < 8
-            || !self_buffer_good)
-        {
-            return error_code::alloc_fail;
-        }
         return error_code::none;
     }
 
