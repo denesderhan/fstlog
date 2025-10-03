@@ -27,7 +27,7 @@ namespace fstlog {
             error_code error{ error_code::none };
             if (!compatible()) error = error_code::incomp_api;
             else if (!memory_resource_identical()) error = error_code::mem_res_bad;
-            else error = error = init(resource);
+            else error = init(resource);
             handle_error(error);
         }
         FSTLOG_API core(
