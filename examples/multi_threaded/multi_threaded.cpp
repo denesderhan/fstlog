@@ -34,7 +34,7 @@ int main()
     
     // create sink
     fstlog::sink my_sink = fstlog::sink_sort(
-        fstlog::formatter_txt("{timestamp:.2%M:%S} [{logger:10}] [thr:{thread:>10}] {message}"),
+        fstlog::formatter_txt("{timestamp:.9%H:%M:%S} [{logger:10}] [thr:{thread:>10}] {message}"),
         fstlog::output_console());
     
     // assign sink to core

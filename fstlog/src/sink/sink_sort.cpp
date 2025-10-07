@@ -45,17 +45,18 @@ namespace fstlog {
     {
         out = make_allocated<sink_sort_impl_type>(resource);
         const auto pimpl = static_cast<sink_sort_impl_type*>(out.pimpl());
-        if (pimpl == nullptr) return error_code::alloc_fail;
-        auto error = pimpl->set_formatter(std::move(formatter));
-        if (error == error_code::none) error = pimpl->set_output(std::move(output));
-        if (error != error_code::none) {
-            out = sink{};
-            return error;
+        if (pimpl == nullptr) {
+            return error_code::alloc_fail;
         }
         pimpl->set_filter(filter);
         pimpl->set_flush_interval(flush_interval);
-        pimpl->set_max_data_size(max_buffer_bytes);
-        return error_code::none;
+        auto error = pimpl->init_sink_sort(max_buffer_bytes);
+        if (error == error_code::none) error = pimpl->set_formatter(std::move(formatter));
+        if (error == error_code::none) error = pimpl->set_output(std::move(output));
+        if (error != error_code::none) {
+            out = sink{};
+        }
+        return error;
     }
 
     error_code sink_sort(

@@ -80,6 +80,16 @@ namespace fstlog {
             end_ = begin_;
         }
         
+        T& back() noexcept {
+            FSTLOG_ASSERT(!empty());
+            return *(end_ - 1);
+        }
+
+        const T& back() const noexcept {
+            FSTLOG_ASSERT(!empty());
+            return *(end_ - 1);
+        }
+
         T* data() noexcept {
             return begin_;
         }
@@ -281,9 +291,9 @@ namespace fstlog {
         }
 
         static_assert(std::is_default_constructible_v<T>, "Type must be default constructible");
-        static_assert(std::is_nothrow_move_constructible_v<T>, "Value type bad!");
-        static_assert(std::is_nothrow_constructible_v<T>, "Value type bad!");
-        static_assert(std::is_nothrow_copy_constructible_v<T>, "Value type bad!");
+        //static_assert(std::is_nothrow_move_constructible_v<T>, "Value type bad!");
+        //static_assert(std::is_nothrow_constructible_v<T>, "Value type bad!");
+        //static_assert(std::is_nothrow_copy_constructible_v<T>, "Value type bad!");
         static_assert(std::is_nothrow_swappable_v<T>, "Value type bad!");
         static_assert(!std::is_array_v<T>, "Value type bad!");
 
