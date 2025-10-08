@@ -2,7 +2,6 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
-#include <chrono> 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -124,7 +123,7 @@ namespace fstlog {
          * - Assumes output buffer and format have been properly initialized.
          */
         void encode_timestamp(stamp_type timestamp) noexcept {
-            if (timestamp < std::chrono::system_clock::time_point{}) {
+            if (timestamp < 0) {
                 this->set_error(__FILE__, __LINE__, error_code::input_bad);
                 return;
             }
@@ -133,11 +132,12 @@ namespace fstlog {
                 return;
             }
 
-            const auto minutes{ std::chrono::floor<std::chrono::minutes>(timestamp) };
-            const auto nanoseconds{ std::chrono::duration_cast<std::chrono::nanoseconds>(
-                timestamp - minutes) };
+            const stamp_type minutes{ timestamp / 60'000'000'000LL };
+            const stamp_type nanoseconds{ timestamp - minutes * 60'000'000'000LL };
             
-            const auto key{ minutes.time_since_epoch().count() };
+            static_assert((std::numeric_limits<stamp_type>::max)() / 60'000'000'000LL
+                <= (std::numeric_limits<std::int32_t>::max)(), "stamp_type too big, key can overflow!");
+            const auto key{ static_cast<std::int32_t>(minutes) };
             // search the minute in the cache
             auto time_string{ time_string_cache_.find(key) };
             // if not found create and store
@@ -447,8 +447,8 @@ namespace fstlog {
          * - Used internally for timestamp formatting and caching.
          */
         small_string<64> create_time_string(stamp_type minutes) noexcept {
-            time_t const t{ std::chrono::system_clock::to_time_t(minutes) };
-            tm time;        
+            time_t const t{ static_cast<time_t>(minutes * 60) };
+            tm time;
         #ifdef _WIN32
             errno_t error{};
             if (tzone_ == tz_format::UTC) error = gmtime_s(&time, &t);
@@ -612,12 +612,12 @@ namespace fstlog {
          * @see encode_timestamp
          */
         inline void write_second(
-            std::chrono::nanoseconds nanoseconds, 
+            stamp_type nanoseconds, 
             unsigned char* timestring_begin)
         {
             if (second_pos_ == 255) return; // no second in format string
             
-            auto nano_ticks = nanoseconds.count();
+            auto nano_ticks = nanoseconds;
             FSTLOG_ASSERT(nano_ticks < 60'000'000'000LL);
 
             const long long pow10[10] { 1, 10, 100, 1'000, 10'000, 100'000,

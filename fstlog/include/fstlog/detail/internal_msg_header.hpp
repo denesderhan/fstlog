@@ -28,7 +28,7 @@ namespace fstlog {
         msg_counter argnum;
         stamp_type timestamp;
         log_policy policy;
-        unsigned char version[3]{1, 0, 0};
+        unsigned char version[3]{2, 0, 0};
         
         static constexpr std::size_t unpadded_data_size =
             sizeof(msg_type) +
@@ -47,6 +47,12 @@ namespace fstlog {
 #endif
     };
 #ifdef FSTLOG_DEBUG
+    static_assert(std::is_nothrow_constructible_v<internal_msg_header>,
+        "Message header constructor must be noexcept!");
+    static_assert(std::is_trivially_copyable_v<internal_msg_header>,
+        "Message header must be trivially copyable for memcpy usage!");
+    static_assert(std::is_standard_layout_v<internal_msg_header>,
+        "Message header must be standard layout for offsetof()!");
     static_assert(
         offsetof(internal_msg_header, version) + sizeof(internal_msg_header::version) 
         == internal_msg_header::unpadded_data_size);

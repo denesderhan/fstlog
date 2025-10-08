@@ -160,7 +160,7 @@ namespace fstlog {
             message_locators_.clear();
             message_buffer_.clear();
             sorted_block_sizes_.clear();
-            last_timestamp_ = (stamp_type::max)();
+            last_timestamp_ = (std::numeric_limits<stamp_type>::max)();
         }
 
         void inplace_merge(std::size_t start, std::size_t block_l_size, std::size_t block_r_size) noexcept {
@@ -332,15 +332,15 @@ namespace fstlog {
         dyn_array<message_locator> merge_buffer_;
         dyn_array<std::size_t> sorted_block_sizes_;
         dyn_array<unsigned char> message_buffer_;
-        stamp_type last_timestamp_{ (stamp_type::max)() };
+        stamp_type last_timestamp_{ (std::numeric_limits<stamp_type>::max)() };
 
         static_assert(std::is_nothrow_constructible_v<dyn_array<unsigned char>, memory_resource_type*>, 
             "Container constructor must be noexcept!");
-        //static_assert(std::is_nothrow_constructible_v<dyn_array<message_locator>, memory_resource_type*>,
-        //    "Container constructor must be noexcept!");
-        //static_assert(std::is_trivially_copyable_v<message_locator>,
-        //    "message_locator must be trivially copyable for memcpy/memmove/qsort usage!");
-        //static_assert(std::is_standard_layout_v<internal_msg_header> && std::is_standard_layout_v<stamp_type>,
-        //    "types must be standard layout for offsetof()!");
+        static_assert(std::is_nothrow_constructible_v<dyn_array<message_locator>, memory_resource_type*>,
+            "Container constructor must be noexcept!");
+        static_assert(std::is_trivially_copyable_v<message_locator>,
+            "message_locator must be trivially copyable for memcpy/memmove/qsort usage!");
+        static_assert(std::is_standard_layout_v<internal_msg_header> && std::is_standard_layout_v<stamp_type>,
+            "types must be standard layout for offsetof()!");
     };
 }

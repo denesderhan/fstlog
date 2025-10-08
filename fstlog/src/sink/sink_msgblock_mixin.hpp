@@ -1,7 +1,6 @@
 //Copyright © 2023, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <chrono>
 #include <cstring>
 
 #include <detail/unaligned_span.hpp>

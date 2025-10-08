@@ -22,7 +22,7 @@
  * @see fstlog::compatible() in @ref compatible.hpp
  * @note For major version 0, all components must match exactly
  */
-#define FSTLOG_HEADER_VERSION_MINOR 56
+#define FSTLOG_HEADER_VERSION_MINOR 57
   
 /**
  * @brief Patch version number of the header files
@@ -30,7 +30,7 @@
  * @see fstlog::compatible() in @ref compatible.hpp
  * @note For major version 0, all components must match exactly
  */
-#define FSTLOG_HEADER_VERSION_PATCH 14
+#define FSTLOG_HEADER_VERSION_PATCH 0
 
 namespace fstlog {
     /**

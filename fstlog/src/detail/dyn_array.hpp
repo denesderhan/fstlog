@@ -291,9 +291,9 @@ namespace fstlog {
         }
 
         static_assert(std::is_default_constructible_v<T>, "Type must be default constructible");
-        //static_assert(std::is_nothrow_move_constructible_v<T>, "Value type bad!");
-        //static_assert(std::is_nothrow_constructible_v<T>, "Value type bad!");
-        //static_assert(std::is_nothrow_copy_constructible_v<T>, "Value type bad!");
+        static_assert(std::is_nothrow_move_constructible_v<T>, "Value type bad!");
+        static_assert(std::is_nothrow_constructible_v<T>, "Value type bad!");
+        static_assert(std::is_nothrow_copy_constructible_v<T>, "Value type bad!");
         static_assert(std::is_nothrow_swappable_v<T>, "Value type bad!");
         static_assert(!std::is_array_v<T>, "Value type bad!");
 

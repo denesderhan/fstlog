@@ -30,11 +30,11 @@ static bool encode_timestamp(
     std::size_t buff_size, 
     bool local = false)
 {
-    if (timestamp < std::chrono::system_clock::time_point{}) {
+    if (timestamp < 0) {
         return false;
     }
-    // forcing floor rounding to seconds
-    time_t const t{ std::chrono::system_clock::to_time_t(std::chrono::floor<std::chrono::seconds>(timestamp)) };
+    // floor rounding to seconds
+    time_t const t{ static_cast<time_t>(timestamp / 1'000'000'000LL) };
     tm time;
 #ifdef _WIN32
     if (local) {
@@ -154,8 +154,7 @@ TEST_CASE("encoder_timestamp_mixin") {
         
         long long microsecond = -1000000LL;
         CAPTURE(microsecond);
-        encoder.encode_timestamp(
-            std::chrono::system_clock::time_point{ std::chrono::microseconds{ microsecond } });
+        encoder.encode_timestamp( microsecond * 1000 );
         CHECK(encoder.get_error().code() == fstlog::error_code::input_bad);
     }
 
@@ -248,8 +247,11 @@ TEST_CASE("encoder_timestamp_mixin") {
             encoder.output_span_init(buff2);
             encoder.init_encoder_timestamp(init_string);
             
-            for (auto timestamp : times) {
-                CAPTURE(timestamp);
+            for (auto time : times) {
+                CAPTURE(time);
+                fstlog::stamp_type timestamp =
+                    std::chrono::duration_cast<std::chrono::duration<fstlog::stamp_type, std::nano>>(
+                        time.time_since_epoch()).count();
                 buff1.fill(0);
                 buff2.fill(0);
                 encoder.output_span_init(buff2);
@@ -280,8 +282,11 @@ TEST_CASE("encoder_timestamp_mixin") {
             encoder.output_span_init(buff2);
             encoder.init_encoder_timestamp(init_string);
 
-            for (auto timestamp : times) {
-                CAPTURE(timestamp);
+            for (auto time : times) {
+                CAPTURE(time);
+                fstlog::stamp_type timestamp =
+                    std::chrono::duration_cast<std::chrono::duration<fstlog::stamp_type, std::nano>>(
+                        time.time_since_epoch()).count();
                 buff1.fill(0);
                 buff2.fill(0);
                 encoder.output_span_init(buff2);
@@ -297,65 +302,44 @@ TEST_CASE("encoder_timestamp_mixin") {
     }
 
     SECTION("second_formatting") {
-        auto test_data = std::chrono::nanoseconds(59'999'999'999LL);
-        auto floored_data = std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::duration_cast<std::chrono::system_clock::duration>(test_data));
-        std::intmax_t dat = test_data.count();
-        std::intmax_t f_dat = floored_data.count();
-        int zeroed_digits = 0;
-        while (dat % 10 != f_dat % 10) {
-            zeroed_digits++;
-            dat /= 10;
-            f_dat /= 10;
-        }
-        CHECK(zeroed_digits <= 6); // millisecond precision
-
-        auto data = GENERATE(
-            std::make_tuple(0, std::string_view(".0AAA%SBBB"), 0LL, std::string_view("AAA00BBB"), 4),
-            std::make_tuple(1, ".1%S", 0, "00.0", 3),
-            std::make_tuple(3, ".3%S", 0, "00.000", 5),
-            std::make_tuple(9, ".9%S", 0, "00.000000000", 11),
-            std::make_tuple(9, ".12AAA%SBBB", 0, "AAA00.000000000BBB", 14),
-            std::make_tuple(9, ".12%S", 1000, "00.000001000", 11),
-            std::make_tuple(0, ".0AAA%SBBB", 1'999'000'000, "AAA01BBB", 4),
-            std::make_tuple(1, ".1%S", 1'000'000'000, "01.0", 3),
-            std::make_tuple(2, ".2%S", 1'000'000'000, "01.00", 4),
-            std::make_tuple(6, ".6%S", 1'000'000'000, "01.000000", 8),
-            std::make_tuple(7, ".7%S", 1'000'000'000, "01.0000000", 9),
-            std::make_tuple(0, ".0%S", 30'000'000'000, "30", 1),
-            std::make_tuple(6, ".6%S", 2'456'129'999, "02.456129", 8),
-            std::make_tuple(5, ".5%S", 40'432'015'000, "40.43201", 7),
-            std::make_tuple(4, ".4%S", 40'123'470'000, "40.1234", 6),
-            std::make_tuple(3, ".3%S", 49'791'654'000, "49.791", 5),
-            std::make_tuple(2, ".2%S", 32'456'004'000, "32.45", 4),
-            std::make_tuple(1, ".1%S", 40'678'004'000, "40.6", 3),
-            std::make_tuple(7, ".7ABCDE%SFGHIJ", 123'456'789, "ABCDE00.1234567FGHIJ", 14),
-            std::make_tuple(8, ".8%S", 23'364'635'251, "23.36463525", 10),
-            std::make_tuple(9, ".9%S", 57'456'785'123, "57.456785123", 11),
-            std::make_tuple(1, ".1%S", 40'900'004'000, "40.9", 3),
-            std::make_tuple(0, ".0%S", 40'900'005'000, "40", 1),
-            std::make_tuple(4, ".4%S", 59'995'450'000, "59.9954", 6),
-            std::make_tuple(3, ".3%S", 59'995'450'000, "59.995", 5),
-            std::make_tuple(1, ".1%S", 59'995'450'000, "59.9", 3),
-            std::make_tuple(0, ".0%S", 59'995'450'000, "59", 1),
-            std::make_tuple(9, ".12%S", 59'999'999'999LL, "59.999999999", 11),
-            std::make_tuple(9, ".12FOO%SBAR", 56'789'123'689LL, "FOO56.789123689BAR", 14)
+        std::tuple<std::string_view, fstlog::stamp_type, std::string_view> 
+        data = GENERATE(
+            std::make_tuple(".0AAA%SBBB", 0LL, "AAA00BBB"),
+            std::make_tuple(".1%S", 0LL, "00.0"),
+            std::make_tuple(".3%S", 0LL, "00.000"),
+            std::make_tuple(".9%S", 0LL, "00.000000000"),
+            std::make_tuple(".12AAA%SBBB", 0LL, "AAA00.000000000BBB"),
+            std::make_tuple(".12%S", 1000LL, "00.000001000"),
+            std::make_tuple(".0AAA%SBBB", 1'999'000'000LL, "AAA01BBB"),
+            std::make_tuple(".1%S", 1'000'000'000LL, "01.0"),
+            std::make_tuple(".2%S", 1'000'000'000LL, "01.00"),
+            std::make_tuple(".6%S", 1'000'000'000LL, "01.000000"),
+            std::make_tuple(".7%S", 1'000'000'000LL, "01.0000000"),
+            std::make_tuple(".0%S", 30'000'000'000LL, "30"),
+            std::make_tuple(".6%S", 2'456'129'999LL, "02.456129"),
+            std::make_tuple(".5%S", 40'432'015'000LL, "40.43201"),
+            std::make_tuple(".4%S", 40'123'470'000LL, "40.1234"),
+            std::make_tuple(".3%S", 49'791'654'000LL, "49.791"),
+            std::make_tuple(".2%S", 32'456'004'000LL, "32.45"),
+            std::make_tuple(".1%S", 40'678'004'000LL, "40.6"),
+            std::make_tuple(".7ABCDE%SFGHIJ", 123'456'789LL, "ABCDE00.1234567FGHIJ"),
+            std::make_tuple(".8%S", 23'364'635'251LL, "23.36463525"),
+            std::make_tuple(".9%S", 57'456'785'123LL, "57.456785123"),
+            std::make_tuple(".1%S", 40'900'004'000LL, "40.9"),
+            std::make_tuple(".0%S", 40'900'005'000LL, "40"),
+            std::make_tuple(".4%S", 59'995'450'000LL, "59.9954"),
+            std::make_tuple(".3%S", 59'995'450'000LL, "59.995"),
+            std::make_tuple(".1%S", 59'995'450'000LL, "59.9"),
+            std::make_tuple(".0%S", 59'995'450'000LL, "59"),
+            std::make_tuple(".12%S", 59'999'999'999LL, "59.999999999"),
+            std::make_tuple(".12FOO%SBAR", 56'789'123'689LL, "FOO56.789123689BAR")
         );
 
-        auto precision = std::get<0>(data);
-        auto format = std::get<1>(data);
-        auto nanosec = std::chrono::system_clock::time_point(
-            std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::nanoseconds(std::get<2>(data))));
+        auto format = std::get<0>(data);
+        fstlog::stamp_type nanosec = std::get<1>(data);
         std::array<unsigned char, 64> control{ 0 };
-        std::memcpy(control.data(), std::get<3>(data).data(), std::get<3>(data).size());
+        std::memcpy(control.data(), std::get<2>(data).data(), std::get<2>(data).size());
         
-        // zeroing out digits (chrono resolution precision loss)
-        int digits_to_zero = zeroed_digits - (9 - precision);
-        auto digit_pos = control.data() + std::get<4>(data);
-        while (digits_to_zero-- > 0) {
-            *digit_pos-- = '0';
-        }
-
         enc_type_noalign encoder(fstlog::get_default_resource());
         std::array<unsigned char, 64> result{ 0 };
         encoder.output_span_init(result);
@@ -387,20 +371,18 @@ TEST_CASE("encoder_timestamp_mixin_benchmark", "[.][benchmark]") {
     error = encoder_utc.init_encoder_timestamp(time_format);
     CHECK(error == fstlog::error_code::none);
         
-    long long seconds = 42;
+    long long seconds = 42'000'000'000LL;
     BENCHMARK_ADVANCED("local_non_cached")(Catch::Benchmark::Chronometer meter) {
         meter.measure([&buffer, &encoder_loc, &seconds] {
                 encoder_loc.output_span_init(buffer);
                 seconds += 60;
-                encoder_loc.encode_timestamp(
-                    std::chrono::system_clock::time_point{ std::chrono::seconds{ seconds } });
+                encoder_loc.encode_timestamp(seconds);
             });
     };
     BENCHMARK_ADVANCED("local_cached")(Catch::Benchmark::Chronometer meter) {
         meter.measure([&buffer, &encoder_loc, &seconds] {
                 encoder_loc.output_span_init(buffer);
-                encoder_loc.encode_timestamp(
-                    std::chrono::system_clock::time_point{ std::chrono::seconds{ seconds } });
+                encoder_loc.encode_timestamp(seconds);
             });
     };
     seconds = 42;
@@ -408,15 +390,13 @@ TEST_CASE("encoder_timestamp_mixin_benchmark", "[.][benchmark]") {
         meter.measure([&buffer, &encoder_utc, &seconds] {
             encoder_utc.output_span_init(buffer);
             seconds += 60;
-            encoder_utc.encode_timestamp(
-                std::chrono::system_clock::time_point{ std::chrono::seconds{ seconds } });
+            encoder_utc.encode_timestamp(seconds);
             });
     };
     BENCHMARK_ADVANCED("utc_cached")(Catch::Benchmark::Chronometer meter) {
         meter.measure([&buffer, &encoder_utc, &seconds] {
             encoder_utc.output_span_init(buffer);
-            encoder_utc.encode_timestamp(
-                std::chrono::system_clock::time_point{ std::chrono::seconds{ seconds } });
+            encoder_utc.encode_timestamp(seconds);
             });
     };
 }
