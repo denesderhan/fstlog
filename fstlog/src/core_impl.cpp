@@ -357,6 +357,14 @@ namespace fstlog {
         bool flush_all = sink_flush ? true : flush_all_buffers;
         std::lock_guard<std::mutex> bs_guard(bufferstore_mutex_);
         auto buffer_num{ bufferstore_.size() };
+        
+        // take a snapshot of the current write positions
+        // this minimizes the possibilty of unordered messages appearing in the output sink
+        // but can not completely guarantee that all messages will be ordered
+        for (std::size_t buff_ind = 0; buff_ind < buffer_num; buff_ind++) {
+            bufferstore_[buff_ind].pimpl()->snapshot_write_pos();
+        }
+
         std::size_t buff_ind{ 0 };
         while (buff_ind < buffer_num) {
             log_buffer_impl& buffer = *bufferstore_[buff_ind].pimpl();
@@ -366,9 +374,9 @@ namespace fstlog {
             const bool flushing{ flush_all || buff_half_full || flush_requested || buffer_unused };
             if (flushing) {
                 read_buffer(buffer, sink_flush);
-                if (flush_requested) buffer.wake_up();
+                if (flush_requested) buffer.wake_producer();
                 //deleting unused buffer
-                if (buffer_unused) {
+                if (buffer_unused && buffer.empty()) {
                     LOG_LL_TRACE(logger_, "Core: {}, removed buffer: {:p} ({} Kb).",
                         name(),
                         &buffer,

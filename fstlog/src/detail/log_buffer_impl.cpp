@@ -67,7 +67,7 @@ namespace fstlog {
         FSTLOG_ASSERT(unread.pos1 == nullptr && unread.pos2 == nullptr
             && unread.size1 == 0 && unread.size2 == 0);
         const std::uint32_t read_p = read_pos();
-        const std::uint32_t write_p = write_pos();
+        const std::uint32_t write_p = snapshot_write_pos_;
         //empty
         if (write_p == read_p) return;
         const std::uint32_t read_index{ read_p & buffer_mask_ };
@@ -112,7 +112,7 @@ namespace fstlog {
         } while (flush_requested_.load(std::memory_order_acquire));
     }
 
-    void log_buffer_impl::wake_up() noexcept {
+    void log_buffer_impl::wake_producer() noexcept {
         std::lock_guard<std::mutex> grd{ buffer_mutex_ };
         flush_requested_.store(false, std::memory_order_release);
         //This always tries to wake logging thread (even if it is not sleeping) bad perf.?

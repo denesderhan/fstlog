@@ -54,11 +54,15 @@ namespace fstlog {
             [[maybe_unused]] const auto prev_pos = write_pos_.fetch_add(adv_size, std::memory_order_release);
             FSTLOG_ASSERT((prev_pos & buffer_mask_) <= size() - adv_size);
         }
-        //called only by consumer
+        //called only by consumer, always call snapshot_write_pos() before calling this function
         FSTLOG_TEST_API void get_unread(log_buffer_unread_data& unread) noexcept;
         //called only by consumer
         FSTLOG_TEST_API void advance_read_pos(std::uint32_t size) noexcept;
         
+        bool empty() const noexcept {
+            return (write_pos() == read_pos());
+        }
+
         bool half_full() const noexcept {
             return (write_pos() - read_pos()) > half_buffer_mask_;
         }
@@ -130,11 +134,15 @@ namespace fstlog {
             return write_pos_.load(std::memory_order_acquire);
         }
 
+        void snapshot_write_pos() noexcept {
+            snapshot_write_pos_ = write_pos();
+        }
+
         //called by producer
         FSTLOG_API void wait_for_buffer_flush(core const& core) noexcept;
 
         //called by consumer
-        void wake_up() noexcept;
+        void wake_producer() noexcept;
 
         memory_resource_type* get_memory_resource() const noexcept {
             return memory_resource_;
@@ -164,6 +172,9 @@ namespace fstlog {
         std::atomic<bool> flush_requested_{ false };
         //consumer write, producer read
         std::atomic<std::uint32_t> read_pos_{ 0 };
+        //consumer read/write
+        std::uint32_t snapshot_write_pos_{ 0 };
+
 #ifdef FSTLOG_DEBUG
         static_assert(decltype(read_pos_)::is_always_lock_free, "Type not lock_free!");
 #endif

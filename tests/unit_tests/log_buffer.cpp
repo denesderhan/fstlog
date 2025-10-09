@@ -45,6 +45,7 @@ TEST_CASE("log_buffer") {
         CHECK(!test_log_buffer.half_full());
 
         fstlog::log_buffer_unread_data unr;
+        test_log_buffer.snapshot_write_pos();
         test_log_buffer.get_unread(unr);
         CHECK((unr.size1 == 0 && unr.size2 == 0));
 
@@ -54,6 +55,7 @@ TEST_CASE("log_buffer") {
         CHECK(!test_log_buffer.half_full());
         test_log_buffer.advance_write_pos(2 * fstlog::constants::internal_msg_alignment);
         CHECK(!test_log_buffer.half_full());
+        test_log_buffer.snapshot_write_pos();
         test_log_buffer.get_unread(unr);
         CHECK((unr.pos1 == wptr_0 
             && unr.size1 == fstlog::constants::internal_msg_alignment));
@@ -82,6 +84,7 @@ TEST_CASE("log_buffer") {
             - fstlog::constants::internal_msg_alignment);
 
         fstlog::log_buffer_unread_data unr;
+        test_log_buffer.snapshot_write_pos();
         test_log_buffer.get_unread(unr);
         CHECK((unr.size1 == 0 && unr.size2 == 0));
         CHECK(!test_log_buffer.half_full());
@@ -89,6 +92,7 @@ TEST_CASE("log_buffer") {
         CHECK(!test_log_buffer.half_full());
         CHECK((test_log_buffer.write_pos_ == 0
             && test_log_buffer.write_ptr() == test_log_buffer.begin_));
+        test_log_buffer.snapshot_write_pos();
         test_log_buffer.get_unread(unr);
         CHECK((unr.pos1 == wptr_0
             && unr.size1 == fstlog::constants::internal_msg_alignment));
