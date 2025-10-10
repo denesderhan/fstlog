@@ -55,6 +55,10 @@ namespace fstlog {
         "Message header must be standard layout for offsetof()!");
     static_assert(
         offsetof(internal_msg_header, version) + sizeof(internal_msg_header::version) 
-        == internal_msg_header::unpadded_data_size);
+        == internal_msg_header::unpadded_data_size, "Struct not packed!");
+    static_assert(offsetof(internal_msg_header, msg_type) == 0, 
+        "First byte of header must be the log_msg_type byte (it is used in sink_msg_block()!!");
+    static_assert(internal_msg_header::padded_data_size% constants::internal_msg_data_alignment == 0,
+        "Header size not multipla of msg_data alignment!");
 #endif
 }

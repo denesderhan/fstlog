@@ -2,7 +2,6 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <detail/log_buffer_impl.hpp>
 
-#include <chrono>
 #include <limits>
 
 #include <config_buffer.hpp>
@@ -103,12 +102,7 @@ namespace fstlog {
         flush_requested_.store(true, std::memory_order_release);
         core.detail_notify_data_ready();
         do {
-#ifdef FSTLOG_DEBUG
             buff_cond_var_.wait(lock);
-#else
-            //failsafe
-            buff_cond_var_.wait_for(lock, std::chrono::milliseconds{ 15 });
-#endif
         } while (flush_requested_.load(std::memory_order_acquire));
     }
 
@@ -133,17 +127,7 @@ namespace fstlog {
         FSTLOG_ASSERT(prev_count != 0);
         return prev_count == 1;
     }
-    //For the indexes to work:
-    //wrap around
-    static_assert((std::numeric_limits<std::uint32_t>::max)() + 1 == std::uint32_t{ 0 }, "Index type does not wrap!");
+    
     //max half can be used
     static_assert(config::max_ringbuffer_size <= (std::numeric_limits<std::uint32_t>::max)() / 2, "Max buffer size wrong!");
-    
-    //First byte of header must be the log_msg_type byte (it is used in sink_msg_block()!!)
-    static_assert(offsetof(internal_msg_header, msg_type) == 0);
-    //Asserting struct is packed
-    static_assert(offsetof(internal_msg_header, version) +
-        sizeof(internal_msg_header::version) ==
-        internal_msg_header::unpadded_data_size);
-    static_assert(internal_msg_header::padded_data_size% constants::internal_msg_data_alignment == 0);
 }
