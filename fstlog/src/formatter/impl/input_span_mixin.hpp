@@ -41,11 +41,18 @@ namespace fstlog {
         }
         
         void set_input_ptr_unchecked(unsigned char const* input_ptr) noexcept {
+            FSTLOG_ASSERT(
+                input_ptr != nullptr
+                && input_msg_begin_ != nullptr
+                && input_msg_end_ != nullptr
+                && "Can not compare nullptr to object pointer (not UB but unspecifed)");
             FSTLOG_ASSERT(input_ptr >= input_msg_begin_ && input_ptr <= input_msg_end_);
             input_msg_ptr_ = input_ptr;
         }
 
         void advance_input(std::size_t bytes) noexcept {
+            FSTLOG_ASSERT(input_msg_end_ != nullptr && input_msg_ptr_ != nullptr
+                && input_msg_end_ >= input_msg_ptr_);
             if (bytes <= static_cast<std::size_t>(input_msg_end_ -  input_msg_ptr_)) {
                 input_msg_ptr_ += bytes;
             }
@@ -55,6 +62,8 @@ namespace fstlog {
         }
 
         void advance_input_unchecked(std::size_t bytes) noexcept {
+            FSTLOG_ASSERT(input_msg_end_ != nullptr && input_msg_ptr_ != nullptr
+                && input_msg_end_ >= input_msg_ptr_);
             FSTLOG_ASSERT(bytes <= static_cast<std::size_t>(input_msg_end_ - input_msg_ptr_));
             input_msg_ptr_ += bytes;
         }

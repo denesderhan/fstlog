@@ -44,15 +44,24 @@ namespace fstlog {
             return output_ptr_ < output_end_;
         }
         bool output_has_space(std::size_t bytes) const noexcept {
+            FSTLOG_ASSERT(output_end_ != nullptr && output_ptr_ != nullptr
+                && output_end_ >= output_ptr_);
             return bytes <= static_cast<std::size_t>(output_end_ - output_ptr_);
         }
 
         void set_output_ptr_unchecked(unsigned char* output_ptr) noexcept {
+            FSTLOG_ASSERT(
+                output_ptr != nullptr
+                && output_begin_ != nullptr
+                && output_end_ != nullptr
+                && "Can not compare nullptr to object pointer (not UB but unspecifed)");
             FSTLOG_ASSERT(output_ptr >= output_begin_ && output_ptr <= output_end_);
             output_ptr_ = output_ptr;
         }
 
         void advance_output(std::size_t bytes) noexcept {
+            FSTLOG_ASSERT(output_end_ != nullptr && output_ptr_ != nullptr
+                && output_end_ >= output_ptr_);
             if (bytes <= static_cast<std::size_t>(output_end_ - output_ptr_)) {
                 output_ptr_ += bytes;
             }
@@ -62,6 +71,8 @@ namespace fstlog {
         }
 
         void advance_output_unchecked(std::size_t bytes) noexcept {
+            FSTLOG_ASSERT(output_end_ != nullptr && output_ptr_ != nullptr
+                && output_end_ >= output_ptr_);
             FSTLOG_ASSERT(bytes <= static_cast<std::uintptr_t>(output_end_ - output_ptr_));
             output_ptr_ += bytes;
         }
