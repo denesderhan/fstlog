@@ -28,9 +28,9 @@ namespace fstlog {
         header_internal_mixin(const header_internal_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const header_internal_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         header_internal_mixin(header_internal_mixin&& other) = delete;
         header_internal_mixin& operator=(const header_internal_mixin& rhs) = delete;

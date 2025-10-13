@@ -103,7 +103,7 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(Args const&... args) noexcept(
-            noexcept(std::declval<logger_impl>().template log<level, policy, flags>(args...)))
+            noexcept(std::declval<logger_impl&>().template log<level, policy, flags>(args...)))
         {
             logger_impl::template log<level, policy, flags>(args...);
         }
@@ -113,7 +113,7 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(fstlog::level level, Args const&... args) noexcept(
-            noexcept(std::declval<logger_impl>().template log<policy, flags>(level, args...)))
+            noexcept(std::declval<logger_impl&>().template log<policy, flags>(level, args...)))
         {
             logger_impl::template log<policy, flags>(level, args...);
         }

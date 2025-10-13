@@ -1,6 +1,8 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <utility>
+
 #include <fstlog/detail/level.hpp>
 #include <fstlog/detail/log_metaargs.hpp>
 #include <fstlog/detail/types.hpp>
@@ -16,9 +18,9 @@ namespace fstlog {
             log_call_flag flags,
             typename... Args>
         void log(Args const&... args) noexcept(
-            noexcept(L{}.template log<level, policy, flags>(args...))
-            && noexcept(this->name())
-            && noexcept(this->thread()))
+            noexcept(std::declval<L&>().template log<level, policy, flags>(args...))
+            && noexcept(std::declval<L&>().name())
+            && noexcept(std::declval<L&>().thread()))
         {
             constexpr std::size_t meta_arg_num{
                 static_cast<bool>(flags & ut_cast(log_metaargs::File))
@@ -50,9 +52,9 @@ namespace fstlog {
             log_call_flag flags,
             typename... Args>
         void log(level level, Args const&... args) noexcept(
-            noexcept(L{}.template log<policy, flags>(level, args...))
-            && noexcept(this->name())
-            && noexcept(this->thread()))
+            noexcept(std::declval<L&>().template log<policy, flags>(level, args...))
+            && noexcept(std::declval<L&>().name())
+            && noexcept(std::declval<L&>().thread()))
         {
             constexpr std::size_t meta_arg_num{
                 static_cast<bool>(flags & ut_cast(log_metaargs::File))

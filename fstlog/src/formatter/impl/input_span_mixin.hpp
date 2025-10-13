@@ -30,9 +30,9 @@ namespace fstlog {
         input_span_mixin(const input_span_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const input_span_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         input_span_mixin(input_span_mixin&& other) = delete;
         input_span_mixin& operator=(const input_span_mixin& rhs) = delete;

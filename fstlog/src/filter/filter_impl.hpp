@@ -1,6 +1,7 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <type_traits>
 
 #include <detail/mixin/memory_resource_mixin.hpp>
 #include <filter/filter_mixin.hpp>
@@ -21,16 +22,24 @@ namespace fstlog {
         using wrapper_type = filter_impl*;
 
         explicit filter_impl(memory_resource* resource) noexcept(
-            noexcept(filter_mixin(nullptr)))
+            std::is_nothrow_constructible_v<
+                filter_mixin,
+                memory_resource*>)
             : filter_mixin(resource) {}
 
         filter_impl(const filter_impl& other) noexcept(
-            noexcept(this->get_memory_resource())
-            && noexcept(filter_mixin(filter_impl{nullptr}, nullptr)))
+            noexcept(std::declval<const filter_impl&>().get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                filter_impl,
+                const filter_impl&,
+                memory_resource*>)
             : filter_impl(other, other.get_memory_resource()) {}
         filter_impl(const filter_impl& other, memory_resource* resource) noexcept(
-            noexcept(filter_mixin(filter_impl{nullptr}, nullptr)))
-            : filter_mixin(other, resource) {}
+            std::is_nothrow_constructible_v<
+                filter_mixin,
+                const filter_mixin&,
+                memory_resource*>)
+            : filter_mixin(static_cast<const filter_mixin&>(other), resource) {}
         filter_impl& operator=(const filter_impl&) = delete;
         filter_impl(filter_impl&&) = delete;
         filter_impl& operator=(filter_impl&&) = delete;

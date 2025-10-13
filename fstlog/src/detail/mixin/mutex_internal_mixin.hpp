@@ -24,10 +24,11 @@ namespace fstlog {
             : mutex_internal_mixin(other, other.get_memory_resource()) {}
         mutex_internal_mixin(const mutex_internal_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
-                L, 
-                const mutex_internal_mixin&, 
+                L,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {
+        }
 
         mutex_internal_mixin(mutex_internal_mixin&& other) = delete;
         mutex_internal_mixin& operator=(const mutex_internal_mixin& rhs) = delete;

@@ -37,9 +37,9 @@ namespace fstlog {
         decoder_internal_mixin(const decoder_internal_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const decoder_internal_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         decoder_internal_mixin(decoder_internal_mixin&& other) = delete;
         decoder_internal_mixin& operator=(const decoder_internal_mixin& rhs) = delete;

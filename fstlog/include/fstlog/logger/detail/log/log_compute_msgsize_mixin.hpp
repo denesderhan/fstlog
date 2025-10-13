@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+#include <utility>
 
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>
@@ -24,8 +25,8 @@ namespace fstlog {
             log_call_flag flags, 
             typename... Args>
         void log(Args const&... args) noexcept(
-            noexcept(this->compute_msg_size(args...))
-            && noexcept(L{}.template log<level, policy, flags>(args...)))
+            noexcept(compute_msg_size(args...))
+            && noexcept(std::declval<L&>().template log<level, policy, flags>(args...)))
         {
             compute_msg_size(args...);
             L::template log<level, policy, flags>(args...);
@@ -35,8 +36,8 @@ namespace fstlog {
             log_call_flag flags,
             typename... Args>
         void log(level level, Args const&... args) noexcept(
-            noexcept(this->compute_msg_size(args...))
-            && noexcept(L{}.template log<policy, flags>(level, args...)))
+            noexcept(compute_msg_size(args...))
+            && noexcept(std::declval<L&>().template log<policy, flags>(level, args...)))
         {
             compute_msg_size(args...);
             L::template log<policy, flags>(level, args...);
@@ -44,9 +45,9 @@ namespace fstlog {
     
         template<typename... Args>
         constexpr void compute_msg_size(Args const&... args) noexcept(
-            noexcept(this->buffer().max_message_size())
-            && noexcept(this->set_msg_size(0))
-            && noexcept(this->set_arg_num(0)))
+            noexcept(std::declval<L&>().buffer().max_message_size())
+            && noexcept(std::declval<L&>().set_msg_size(0))
+            && noexcept(std::declval<L&>().set_arg_num(0)))
         {
             constexpr bool compt_size =
                 (bool{ true } && ... && log_arg_size_compile_time<Args>::value);
@@ -72,7 +73,7 @@ namespace fstlog {
             typename L::msg_size_type& msg_size, 
             typename L::arg_num_type& arg_num, 
             const T& arg) noexcept(
-                noexcept(this->buffer().max_message_size()))
+                noexcept(std::declval<L&>().buffer().max_message_size()))
         {
             const std::uintmax_t msg_s{ msg_size };
             const std::uintmax_t new_size = msg_s + log_arg_size(arg);

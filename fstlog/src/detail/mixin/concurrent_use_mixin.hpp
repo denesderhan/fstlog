@@ -24,10 +24,10 @@ namespace fstlog {
             : concurrent_use_mixin(other, other.get_memory_resource()) {}
         concurrent_use_mixin(const concurrent_use_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
-                L, 
-                const concurrent_use_mixin&, 
+                L,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         concurrent_use_mixin(concurrent_use_mixin&& other) = delete;
         concurrent_use_mixin& operator=(const concurrent_use_mixin& rhs) = delete;

@@ -43,9 +43,9 @@ namespace fstlog {
         formatter_txt_mixin(const formatter_txt_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const formatter_txt_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource),
+            : L(static_cast<const L&>(other), resource),
             formatting_buffer_ { other.formatting_buffer_ }, //noexcept
             log_fmt_str_len_{ other.log_fmt_str_len_ }, //noexcept
             msg_fmt_str_start_{ other.msg_fmt_str_start_ }, //noexcept

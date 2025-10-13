@@ -44,9 +44,9 @@ namespace fstlog {
         encoder_charconv_fast_mixin(const encoder_charconv_fast_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const encoder_charconv_fast_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         encoder_charconv_fast_mixin(encoder_charconv_fast_mixin&& other) = delete;
         encoder_charconv_fast_mixin& operator=(const encoder_charconv_fast_mixin& rhs) = delete;

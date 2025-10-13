@@ -35,9 +35,9 @@ namespace fstlog {
         formatter_interface_mixin(const formatter_interface_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const formatter_interface_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
         formatter_interface_mixin& operator=(const formatter_interface_mixin&) = delete;
         formatter_interface_mixin(formatter_interface_mixin&&) = delete;
         formatter_interface_mixin& operator=(formatter_interface_mixin&&) = delete;
@@ -52,19 +52,8 @@ namespace fstlog {
         }
 
         // allocates and constructs a new type erased formatter object
-        error_code clone(wrapper_type& out) const noexcept final {
-            return clone( out, L::get_memory_resource() );
-        }
-
-        // allocates and constructs a new type erased formatter object
-        error_code clone(
-            wrapper_type& out,
-            memory_resource_type* resource) const noexcept final
-        {
-            out = make_allocated<formatter_interface_mixin<L>>(resource, *this);
-            if (out.pimpl() == nullptr) return error_code::alloc_fail;
-            else return error_code::none;
-        }
+        error_code clone(wrapper_type& out) const noexcept final;
+        error_code clone(wrapper_type& out, memory_resource_type* resource) const noexcept final;
 
         bool use() noexcept final {
             return L::use();
@@ -96,4 +85,18 @@ namespace fstlog {
             Args&&... args) noexcept;
         friend wrapper_type;
     };
+
+    template<class L>
+    error_code formatter_interface_mixin<L>::clone(wrapper_type& out) const noexcept {
+        return clone(out, L::get_memory_resource());
+    }
+
+    template<class L>
+    error_code formatter_interface_mixin<L>::clone(
+        wrapper_type& out,
+        memory_resource_type* resource) const noexcept {
+        out = make_allocated<formatter_interface_mixin<L>>(resource, *this);
+        if (out.pimpl() == nullptr) return error_code::alloc_fail;
+        else return error_code::none;
+    }
 }

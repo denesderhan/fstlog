@@ -83,7 +83,7 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(Args const&... args) noexcept(
-            noexcept(std::declval<logger_mt_impl>().template log<level, policy, flags>(args...)))
+            noexcept(std::declval<logger_mt_impl&>().template log<level, policy, flags>(args...)))
         {
             std::lock_guard grd{ logger_mutex_ };
             logger_mt_impl::template log<level, policy, flags>(args...);
@@ -94,7 +94,7 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(fstlog::level level, Args const&... args) noexcept(
-            noexcept(std::declval<logger_mt_impl>().template log<policy, flags>(level, args...)))
+            noexcept(std::declval<logger_mt_impl&>().template log<policy, flags>(level, args...)))
         {
             std::lock_guard grd{ logger_mutex_ };
             logger_mt_impl::template log<policy, flags>(level, args...);

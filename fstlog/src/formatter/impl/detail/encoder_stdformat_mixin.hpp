@@ -49,9 +49,9 @@ namespace fstlog {
         encoder_stdformat_mixin(const encoder_stdformat_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const encoder_stdformat_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         encoder_stdformat_mixin(encoder_stdformat_mixin&& other) = delete;
         encoder_stdformat_mixin& operator=(const encoder_stdformat_mixin& rhs) = delete;

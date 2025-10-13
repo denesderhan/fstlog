@@ -1,6 +1,8 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <utility>
+
 #include <fstlog/detail/level.hpp>
 #include <fstlog/detail/log_policy.hpp>
 #include <fstlog/detail/types.hpp>
@@ -11,25 +13,25 @@ namespace fstlog {
     public:
         template<level level, log_call_flag flags, typename... Args>
         void log(Args const&... args) noexcept(
-            noexcept(this->can_write())
-            && noexcept(this->template write_message<level, log_policy::LowLatency, flags>(args...)))
+            noexcept(can_write())
+            && noexcept(std::declval<L&>().template write_message<level, log_policy::LowLatency, flags>(args...)))
         {
             if (can_write())
                 L::template write_message<level, log_policy::LowLatency, flags>(args...);
         }
         template<log_call_flag flags, typename... Args>
         void log(level level, Args const&... args) noexcept(
-            noexcept(this->can_write())
-            && noexcept(this->template write_message<log_policy::LowLatency, flags>(level, args...)))
+            noexcept(can_write())
+            && noexcept(std::declval<L&>().template write_message<log_policy::LowLatency, flags>(level, args...)))
         {
             if (can_write())
                 L::template write_message<log_policy::LowLatency, flags>(level, args...);
         }
     private:
         bool can_write() noexcept(
-            noexcept(this->message_fits())
-            && noexcept(this->update_buffer_state())
-            && noexcept(this->count_dropped()))
+            noexcept(std::declval<L&>().message_fits())
+            && noexcept(std::declval<L&>().update_buffer_state())
+            && noexcept(std::declval<L&>().count_dropped()))
         {
             if (L::message_fits()) return true;
             L::update_buffer_state();

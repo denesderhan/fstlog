@@ -1,6 +1,8 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <utility>
+
 #ifndef FSTLOG_COMPILETIME_LOGLEVEL
 #define FSTLOG_COMPILETIME_LOGLEVEL All
 #endif
@@ -18,8 +20,8 @@ namespace fstlog {
             log_call_flag flags,  
             class... Args>
         void log(Args const&... args) noexcept(
-            noexcept(this->level())
-            && noexcept(L{}.template log<level, policy, flags>(args...)))
+            noexcept(std::declval<L&>().level())
+            && noexcept(std::declval<L&>().template log<level, policy, flags>(args...)))
         {
             //This if constexpr is not redundant!! (needed if not the LOG macro is used)
             if constexpr (ut_cast(level) <= ut_cast(level::FSTLOG_COMPILETIME_LOGLEVEL)) {
@@ -36,8 +38,8 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(level level, Args const&... args) noexcept(
-            noexcept(this->level())
-            && noexcept(L{}.template log<policy, flags>(level, args...)))
+            noexcept(std::declval<L&>().level())
+            && noexcept(std::declval<L&>().template log<policy, flags>(level, args...)))
         {
             if (ut_cast(level) <= ut_cast(level::FSTLOG_COMPILETIME_LOGLEVEL)
                 && ut_cast(level) <= ut_cast(L::level()))

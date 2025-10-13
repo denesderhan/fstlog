@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <type_traits>
+#include <utility>
 
 #include <fstlog/detail/level.hpp>
 #include <fstlog/detail/types.hpp>
@@ -13,10 +14,10 @@ namespace fstlog {
         template<
             level level,
             template<class T> class policy,
-            log_call_flag flags, 
+            log_call_flag flags,
             typename... Args>
         void log(Args const&... args) noexcept(
-            noexcept(static_cast<P<log_policy_fix_mixin>*>(this)->
+            noexcept(std::declval<P<log_policy_fix_mixin>&>().
                 template log<level, flags>(args...)))
         {
             static_assert(std::is_same_v<P<L>, policy<L>>, 
@@ -29,7 +30,7 @@ namespace fstlog {
             log_call_flag flags,
             typename... Args>
         void log(level level, Args const&... args) noexcept(
-            noexcept(static_cast<P<log_policy_fix_mixin>*>(this)->
+            noexcept(std::declval<P<log_policy_fix_mixin>&>().
                 template log<flags>(level, args...)))
         {
             static_assert(std::is_same_v<P<L>, policy<L>>, 

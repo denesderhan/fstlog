@@ -30,9 +30,9 @@ namespace fstlog {
         logfield_pos_mixin(const logfield_pos_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const logfield_pos_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         logfield_pos_mixin(logfield_pos_mixin&& other) = delete;
         logfield_pos_mixin& operator=(const logfield_pos_mixin& rhs) = delete;

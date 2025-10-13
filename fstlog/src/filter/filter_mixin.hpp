@@ -28,12 +28,12 @@ namespace fstlog {
         filter_mixin(const filter_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const filter_mixin&,
+                const L&,
                 memory_resource_type*>
             && std::is_nothrow_constructible_v<
                 filter_internal,
                 const filter_internal&>)
-            : L(other, resource),
+            : L(static_cast<const L&>(other), resource),
             message_filter_{ other.message_filter_ } {}
 
         filter_mixin& operator=(const filter_mixin&) = delete;

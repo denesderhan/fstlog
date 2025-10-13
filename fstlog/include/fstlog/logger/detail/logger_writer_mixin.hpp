@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstring>
 #include <limits>
+#include <utility>
 
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -21,42 +22,44 @@ namespace fstlog {
     class logger_writer_mixin : public L {
     public:
         bool message_fits() noexcept(
-            noexcept(this->buffer())
-            && noexcept(this->buffer().writeable_size())
-            && noexcept(this->msg_size()))
+            noexcept(std::declval<L&>().buffer())
+            && noexcept(std::declval<L&>().buffer().writeable_size())
+            && noexcept(std::declval<L&>().msg_size()))
         {
             return L::buffer().writeable_size() >=
                 padded_size<constants::internal_msg_alignment>(L::msg_size());
         }
 
         void update_buffer_state() noexcept(
-            noexcept(this->buffer())
-            && noexcept(this->msg_size())
-            && noexcept(this->buffer().update_producer_state(this->msg_size())))
+            noexcept(std::declval<L&>().buffer())
+            && noexcept(std::declval<L&>().msg_size())
+            && noexcept(std::declval<L&>().buffer().update_producer_state(0)))
         {
             L::buffer().update_producer_state(
                 padded_size<constants::internal_msg_alignment>(L::msg_size()));
         }
 
         void wait_for_buffer_flush() noexcept(
-            noexcept(this->buffer())
-            && noexcept(this->get_core())
-            && noexcept(this->buffer().wait_for_buffer_flush(this->get_core())))
+            noexcept(std::declval<L&>().buffer())
+            && noexcept(std::declval<L&>().get_core())
+            && noexcept(std::declval<L&>().buffer().wait_for_buffer_flush(
+                std::declval<L&>().get_core())))
         {
             L::buffer().wait_for_buffer_flush(L::get_core());
         }
 
         std::uint32_t write_pos() noexcept(
-            noexcept(this->buffer())
-            && noexcept(this->buffer().write_pos()))
+            noexcept(std::declval<L&>().buffer())
+            && noexcept(std::declval<L&>().buffer().write_pos()))
         {
             return L::buffer().write_pos();
         }
 
         void request_flush_if_needed(std::uint32_t prev_write_pos) noexcept(
-            noexcept(this->buffer())
-            && noexcept(this->get_core())
-            && noexcept(this->buffer().request_flush_if_needed(prev_write_pos, this->get_core())))
+            noexcept(std::declval<L&>().buffer())
+            && noexcept(std::declval<L&>().get_core())
+            && noexcept(std::declval<L&>().buffer().request_flush_if_needed(
+                prev_write_pos, std::declval<L&>().get_core())))
         {
             L::buffer().request_flush_if_needed(prev_write_pos, L::get_core());
         }
@@ -66,13 +69,13 @@ namespace fstlog {
             log_call_flag flags,
             typename... Args>
         void write_message(level level, Args const&... args) noexcept(
-            noexcept(this->buffer())
-            && noexcept(this->buffer().write_ptr())
-            && noexcept(this->msg_size())
-            && noexcept(this->channel())
-            && noexcept(this->timestamp())
-            && noexcept(this->arg_num())
-            && noexcept(this->buffer().advance_write_pos(this->msg_size())))
+            noexcept(std::declval<L&>().buffer())
+            && noexcept(std::declval<L&>().buffer().write_ptr())
+            && noexcept(std::declval<L&>().msg_size())
+            && noexcept(std::declval<L&>().channel())
+            && noexcept(std::declval<L&>().timestamp())
+            && noexcept(std::declval<L&>().arg_num())
+            && noexcept(std::declval<L&>().buffer().advance_write_pos(0)))
         {
             assert(ut_cast(level) > ut_cast(level::None) &&
                 ut_cast(level) < ut_cast(level::All) && "fstlog: Invalid log level!");
@@ -83,7 +86,8 @@ namespace fstlog {
 #endif
             std::uint32_t msg_size = L::msg_size();
             constexpr std::size_t orig_argnum{ sizeof...(Args) };
-            const auto padded_msg_size = padded_size<constants::internal_msg_alignment>(msg_size);
+            const auto padded_msg_size = 
+                padded_size<constants::internal_msg_alignment>(msg_size);
             const internal_msg_header header{
                 log_msg_type::Internal,
                 level,
@@ -99,7 +103,9 @@ namespace fstlog {
             static_assert(orig_argnum <=
                 (std::numeric_limits<decltype(header.argnum)>::max)(), "Too many arguments!");
             std::memcpy(buff_ptr, &header, internal_msg_header::unpadded_data_size);
-            if constexpr (internal_msg_header::unpadded_data_size != internal_msg_header::padded_data_size ) {
+            if constexpr (internal_msg_header::unpadded_data_size != 
+                internal_msg_header::padded_data_size )
+            {
                 std::memset(
                     buff_ptr + internal_msg_header::unpadded_data_size,
                     0,

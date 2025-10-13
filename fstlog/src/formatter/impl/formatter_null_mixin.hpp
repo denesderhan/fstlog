@@ -25,9 +25,9 @@ namespace fstlog {
         formatter_null_mixin(const formatter_null_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const formatter_null_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         formatter_null_mixin(formatter_null_mixin&& other) = delete;
         formatter_null_mixin& operator=(const formatter_null_mixin& rhs) = delete;

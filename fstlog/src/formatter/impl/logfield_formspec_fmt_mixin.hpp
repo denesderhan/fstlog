@@ -38,9 +38,9 @@ namespace fstlog {
         logfield_formspec_fmt_mixin(const logfield_formspec_fmt_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const logfield_formspec_fmt_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource),
+            : L(static_cast<const L&>(other), resource),
             field_formattings_{ other.field_formattings_ } {} //noexcept
         
         logfield_formspec_fmt_mixin(logfield_formspec_fmt_mixin&& other) = delete;

@@ -13,9 +13,9 @@ namespace fstlog {
     class log_policy_guaranteed : public L {
     private:
         void ensure_free_space() noexcept(
-            noexcept(this->message_fits())
-            && noexcept(this->update_buffer_state())
-            && noexcept(this->wait_for_buffer_flush()))
+            noexcept(std::declval<L&>().message_fits())
+            && noexcept(std::declval<L&>().update_buffer_state())
+            && noexcept(std::declval<L&>().wait_for_buffer_flush()))
         {
             const bool slow_path{ !L::message_fits() };
             // if message is greather than half buffer size, 
@@ -29,10 +29,10 @@ namespace fstlog {
     public:
         template<level level, log_call_flag flags, typename... Args>
         void log(Args const&... args) noexcept(
-            noexcept(this->write_pos())
-            && noexcept(this->ensure_free_space())
-            && noexcept(this->template write_message<level, log_policy::Guaranteed, flags>(args...))
-            && noexcept(this->request_flush_if_needed(std::declval<decltype(L::write_pos())&>())))
+            noexcept(std::declval<L&>().write_pos())
+            && noexcept(ensure_free_space())
+            && noexcept(std::declval<L&>().template write_message<level, log_policy::Guaranteed, flags>(args...))
+            && noexcept(std::declval<L&>().request_flush_if_needed(std::declval<decltype(L::write_pos())&>())))
         {
             const std::uint32_t w_pos_begin = L::write_pos();
             ensure_free_space();
@@ -41,10 +41,10 @@ namespace fstlog {
         }
         template<log_call_flag flags, typename... Args>
         void log(level level, Args const&... args) noexcept(
-            noexcept(this->write_pos())
-            && noexcept(this->ensure_free_space())
-            && noexcept(this->template write_message<log_policy::Guaranteed, flags>(level, args...))
-            && noexcept(this-> request_flush_if_needed(std::declval<decltype(L::write_pos())&>())))
+            noexcept(std::declval<L&>().write_pos())
+            && noexcept(ensure_free_space())
+            && noexcept(std::declval<L&>().template write_message<log_policy::Guaranteed, flags>(level, args...))
+            && noexcept(std::declval<L&>().request_flush_if_needed(std::declval<decltype(L::write_pos())&>())))
         {
             const std::uint32_t w_pos_begin = L::write_pos();
             ensure_free_space();

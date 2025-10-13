@@ -25,9 +25,9 @@ namespace fstlog {
         error_state_mixin(const error_state_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const error_state_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         error_state_mixin(error_state_mixin&& other) = delete;
         error_state_mixin& operator=(const error_state_mixin& rhs) = delete;

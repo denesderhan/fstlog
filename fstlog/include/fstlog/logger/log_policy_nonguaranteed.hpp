@@ -14,10 +14,10 @@ namespace fstlog {
     public:
         template<level level, log_call_flag flags, typename... Args>
         void log(Args const&... args) noexcept(
-            noexcept(this->write_pos())
-            && noexcept(this->can_write())
-            && noexcept(this->template write_message<level, log_policy::NonGuaranteed, flags>(args...))
-            && noexcept(this->request_flush_if_needed(std::declval<decltype(L::write_pos())&>())))
+            noexcept(std::declval<L&>().write_pos())
+            && noexcept(can_write())
+            && noexcept(std::declval<L&>().template write_message<level, log_policy::NonGuaranteed, flags>(args...))
+            && noexcept(std::declval<L&>().request_flush_if_needed(std::declval<decltype(L::write_pos())&>())))
         {
             std::uint32_t w_pos_begin = L::write_pos();
             if (can_write()) {
@@ -27,10 +27,10 @@ namespace fstlog {
         }
         template<log_call_flag flags, typename... Args>
         void log(level level, Args const&... args) noexcept(
-            noexcept(this->write_pos())
-            && noexcept(this->can_write())
-            && noexcept(this->template write_message<log_policy::NonGuaranteed, flags>(level, args...))
-            && noexcept(this->request_flush_if_needed(std::declval<decltype(L::write_pos())&>())))
+            noexcept(std::declval<L&>().write_pos())
+            && noexcept(can_write())
+            && noexcept(std::declval<L&>().template write_message<log_policy::NonGuaranteed, flags>(level, args...))
+            && noexcept(std::declval<L&>().request_flush_if_needed(std::declval<decltype(L::write_pos())&>())))
         {
             std::uint32_t w_pos_begin = L::write_pos();
             if (can_write()) {
@@ -40,9 +40,9 @@ namespace fstlog {
         }
     private:
         bool can_write() noexcept(
-            noexcept(this->message_fits())
-            && noexcept(this->update_buffer_state())
-            && noexcept(this->count_dropped()))
+            noexcept(std::declval<L&>().message_fits())
+            && noexcept(std::declval<L&>().update_buffer_state())
+            && noexcept(std::declval<L&>().count_dropped()))
         {
             if (L::message_fits()) return true;
             L::update_buffer_state();

@@ -1,6 +1,8 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <utility>
+
 #include <fstlog/detail/error_handling.hpp>
 #include <fstlog/detail/level.hpp>
 #include <fstlog/detail/types.hpp>
@@ -16,8 +18,8 @@ namespace fstlog {
             class... Args>
         void log(Args const&... args)  noexcept(
             noexcept(error_if(true, error_code::none))
-            && noexcept(this->is_buffer_set())
-            && noexcept(L{}.template log<level, policy, flags>(args...)))
+            && noexcept(std::declval<L&>().is_buffer_set())
+            && noexcept(std::declval<L&>().template log<level, policy, flags>(args...)))
         {
             //Safe to throw here: (not through API boundary.)
             error_if(!L::is_buffer_set(), error_code::buff_null);
@@ -29,8 +31,8 @@ namespace fstlog {
             class... Args>
         void log(level level, Args const&... args)   noexcept(
             noexcept(error_if(true, error_code::none))
-            && noexcept(this->is_buffer_set())
-            && noexcept(L{}.template log<policy, flags>(level, args...)))
+            && noexcept(std::declval<L&>().is_buffer_set())
+            && noexcept(std::declval<L&>().template log<policy, flags>(level, args...)))
         {
             //Safe to throw here: (not through API boundary.)
             error_if(!L::is_buffer_set(), error_code::buff_null);

@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <mutex>
+#include <utility>
 
 #include <detail/constants_src.hpp>
 #include <fstlog/detail/constants.hpp>
@@ -72,7 +73,7 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(Args const&... args) noexcept(
-            noexcept(logger_background_impl{}.template log<level, policy, flags>(args...)))
+            noexcept(std::declval<logger_background_impl&>().template log<level, policy, flags>(args...)))
         {
             std::lock_guard grd{ logger_mutex_ };
             logger_background_impl::template log<level, policy, flags>(args...);
@@ -83,39 +84,29 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(fstlog::level level, Args const&... args) noexcept(
-            noexcept(logger_background_impl{}.template log<policy, flags>(level, args...)))
+            noexcept(std::declval<logger_background_impl&>().template log<policy, flags>(level, args...)))
         {
             std::lock_guard grd{ logger_mutex_ };
             logger_background_impl::template log<policy, flags>(level, args...);
         }
         //thread safe
-        small_string<32> name() const noexcept(
-            noexcept(logger_background_impl::name()))
-        {
+        small_string<32> name() const noexcept {
             return logger_background_impl::name();
         }
         //thread safe
-        std::uint32_t thread() const noexcept(
-            noexcept(logger_background_impl::thread()))
-        {
+        std::uint32_t thread() const noexcept {
             return logger_background_impl::thread();
         }
         //thread safe
-        channel_type channel() const noexcept (
-            noexcept(logger_background_impl::channel()))
-        {
+        channel_type channel() const noexcept {
             return logger_background_impl::channel();
         }
         //thread safe
-        fstlog::level level() noexcept (
-            noexcept(logger_background_impl::level()))
-        {
+        fstlog::level level() const noexcept {
             return logger_background_impl::level();
         }
         //thread safe
-        std::uintmax_t dropped() noexcept(
-            noexcept(logger_background_impl::dropped()))
-        {
+        std::uintmax_t dropped() const noexcept {
             return logger_background_impl::dropped();
         }
     private:

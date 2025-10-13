@@ -43,9 +43,9 @@ namespace fstlog {
             memory_resource_type* resource) noexcept(
                 std::is_nothrow_constructible_v<
                     L,
-                    const arg_parser_mixin&,
+                    const L&,
                     memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         arg_parser_mixin(arg_parser_mixin&& other) = delete;
         arg_parser_mixin& operator=(const arg_parser_mixin& rhs) = delete;

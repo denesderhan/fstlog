@@ -44,9 +44,9 @@ namespace fstlog {
         encoder_timestamp_mixin(const encoder_timestamp_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const encoder_timestamp_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource),
+            : L(static_cast<const L&>(other), resource),
             time_string_cache_{ other.time_string_cache_ },
             time_format_{ other.time_format_ },
             tzone_{ other.tzone_ },

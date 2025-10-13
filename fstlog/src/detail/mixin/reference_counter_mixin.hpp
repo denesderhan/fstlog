@@ -27,9 +27,9 @@ namespace fstlog {
         reference_counter_mixin(const reference_counter_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const reference_counter_mixin&,
-                reference_counter_mixin*>)
-            : L(other, resource) {}    //ref count is not copied
+                const L&,
+                memory_resource_type*>)
+            : L(static_cast<const L&>(other), resource) {}    //ref count is not copied
 
         reference_counter_mixin(reference_counter_mixin&& other) = delete;
         reference_counter_mixin& operator=(const reference_counter_mixin& rhs) = delete;

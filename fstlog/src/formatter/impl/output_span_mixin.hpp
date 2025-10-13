@@ -29,9 +29,9 @@ namespace fstlog {
         output_span_mixin(const output_span_mixin& other, memory_resource_type* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
-                const output_span_mixin&,
+                const L&,
                 memory_resource_type*>)
-            : L(other, resource) {}
+            : L(static_cast<const L&>(other), resource) {}
 
         output_span_mixin(output_span_mixin&& other) = delete;
         output_span_mixin& operator=(const output_span_mixin& rhs) = delete;

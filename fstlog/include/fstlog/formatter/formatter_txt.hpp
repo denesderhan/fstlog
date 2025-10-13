@@ -45,7 +45,8 @@ namespace fstlog {
 #ifdef __cpp_char8_t
     inline formatter formatter_txt(
         std::u8string_view format_string,
-        memory_resource* resource = fstlog::get_default_resource()) noexcept(noexcept(handle_error(error_code::none)))
+        memory_resource* resource = fstlog::get_default_resource()) noexcept(
+            noexcept(handle_error(error_code::none)))
     {
         return formatter_txt(
             std::string_view{ 
