@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <limits>
 #include <string_view>
+#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 #include <detail/error.hpp>
@@ -29,15 +30,21 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit formatter_txt_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         formatter_txt_mixin(const formatter_txt_mixin& other) noexcept(
-            noexcept(this->get_memory_resource())
-            && noexcept(L(formatter_txt_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                formatter_txt_mixin,
+                const formatter_txt_mixin&,
+                memory_resource_type*>)
             : formatter_txt_mixin(other, other.get_memory_resource()) {}
         formatter_txt_mixin(const formatter_txt_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(formatter_txt_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const formatter_txt_mixin&,
+                memory_resource_type*>)
             : L(other, resource),
             formatting_buffer_ { other.formatting_buffer_ }, //noexcept
             log_fmt_str_len_{ other.log_fmt_str_len_ }, //noexcept
@@ -60,7 +67,7 @@ namespace fstlog {
             return parse_format_string(format_string);
         }
 
-        inline error_code parse_format_string(byte_span_const format_string) {
+        inline error_code parse_format_string(byte_span_const format_string) noexcept {
             byte_span output(formatting_buffer_);
             bool has_message_field = false;
             while (true) {
@@ -234,7 +241,7 @@ namespace fstlog {
             }
         }
 
-        void write_message_text(byte_span_const& input) {
+        void write_message_text(byte_span_const& input) noexcept {
             byte_span output(this->output_ptr(), static_cast<std::size_t>(this->output_end() - this->output_ptr()));
             auto error = parse_fmt_text(input, output);
             this->set_output_ptr_unchecked(output.data_bytes());
@@ -243,7 +250,7 @@ namespace fstlog {
             }
         }
 
-        void write_message_data(byte_span_const format_spec) {
+        void write_message_data(byte_span_const format_spec) noexcept {
             auto type_signature = L::get_signature_skip_arg_header();
             // no data
             if (this->has_error()) return;

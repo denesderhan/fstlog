@@ -1,6 +1,8 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <type_traits>
+
 #include <detail/unaligned_span.hpp>
 
 namespace fstlog {
@@ -10,7 +12,7 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit out_null_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         out_null_mixin(const out_null_mixin& other) = delete;

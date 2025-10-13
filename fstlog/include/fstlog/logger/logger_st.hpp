@@ -3,6 +3,7 @@
 #pragma once
 #include <cstdint>
 #include <string_view>
+#include <utility>
 
 #include <fstlog/compatible.hpp>
 #include <fstlog/core.hpp>
@@ -101,7 +102,7 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(Args const&... args) noexcept(
-            noexcept(logger_st_impl{}.template log<level, policy, flags>(args...)))
+            noexcept(std::declval<logger_st_impl>().template log<level, policy, flags>(args...)))
         {
             logger_st_impl::template log<level, policy, flags>(args...);
         }
@@ -111,86 +112,60 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(fstlog::level level, Args const&... args) noexcept(
-            noexcept(logger_st_impl{}.template log<policy, flags>(level, args...)))
+            noexcept(std::declval<logger_st_impl>().template log<policy, flags>(level, args...)))
         {
             logger_st_impl::template log<policy, flags>(level, args...);
         }
 
-        void set_core(core core) noexcept(
-            noexcept(logger_st_impl::set_core(fstlog::core{ nullptr })))
-        {
+        void set_core(core core) noexcept {
             logger_st_impl::set_core(std::move(core));
         }
         
-        core get_core() noexcept(
-            noexcept(logger_st_impl::get_core()))
-        {
+        core get_core() noexcept {
             return logger_st_impl::get_core();
         }
         
-        small_string<32> name() const noexcept(
-            noexcept(logger_st_impl::name()))
-        {
+        small_string<32> name() const noexcept {
             return logger_st_impl::name();
         }
         
-        void set_name(small_string<32> name) noexcept (
-            noexcept(logger_st_impl::set_name(small_string<32>{})))
-        {
+        void set_name(small_string<32> name) noexcept {
             logger_st_impl::set_name(name);
         }
         
-        small_string<32> thread() const noexcept(
-            noexcept(logger_st_impl::thread()))
-        {
+        small_string<32> thread() const noexcept {
             return logger_st_impl::thread();
         }
         
-        void set_thread(small_string<32> thread) noexcept (
-            noexcept(logger_st_impl::set_thread(small_string<32>{})))
-        {
+        void set_thread(small_string<32> thread) noexcept {
             logger_st_impl::set_thread(thread);
         }
         
-        channel_type channel() const noexcept (
-            noexcept(logger_st_impl::channel()))
-        {
+        channel_type channel() const noexcept {
             return logger_st_impl::channel();
         }
         
-        void set_channel(channel_type channel) noexcept (
-            noexcept(logger_st_impl::set_channel(channel_type{})))
-        {
+        void set_channel(channel_type channel) noexcept {
             logger_st_impl::set_channel(channel);
         }
         
-        fstlog::level level() noexcept (
-            noexcept(logger_st_impl::level()))
-        {
+        fstlog::level level() noexcept {
             return logger_st_impl::level();
         }
         
-        void set_level(fstlog::level level) noexcept (
-            noexcept(logger_st_impl::set_level(fstlog::level{})))
-        {
+        void set_level(fstlog::level level) noexcept {
             logger_st_impl::set_level(level);
         }
         
-        std::uintmax_t dropped() noexcept(
-            noexcept(logger_st_impl::dropped()))
-        {
+        std::uintmax_t dropped() noexcept {
             return logger_st_impl::dropped();
         }
         
-        void new_buffer() noexcept(
-            noexcept(logger_st_impl::new_buffer()))
-        {
+        void new_buffer() noexcept {
             logger_st_impl::new_buffer();
         }
         
-        void new_buffer(std::uint32_t buffer_size) noexcept(
-            noexcept(logger_st_impl::new_buffer(std::uint32_t{})))
-        {
+        void new_buffer(std::uint32_t buffer_size) noexcept {
             logger_st_impl::new_buffer(buffer_size);
         }
         

@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <mutex>
+#include <type_traits>
 
 #include <fstlog/detail/fstlog_assert.hpp>
 
@@ -13,7 +14,7 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
         
         explicit mutex_external_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         //No copy constructor! copy would use the same mutex!

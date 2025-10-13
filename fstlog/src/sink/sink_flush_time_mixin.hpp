@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <chrono>
+#include <type_traits>
 
 namespace fstlog {
     template<class L>
@@ -11,7 +12,7 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit sink_flush_time_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         sink_flush_time_mixin(const sink_flush_time_mixin& other) = delete;

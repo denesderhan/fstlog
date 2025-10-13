@@ -1,8 +1,11 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <type_traits>
+
 #include <formatter/formatter_interface.hpp>
 #include <fstlog/detail/error_code.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <detail/make_allocated.hpp>
 
 namespace fstlog {
@@ -19,15 +22,21 @@ namespace fstlog {
         using wrapper_type = formatter;
         
         explicit formatter_interface_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         formatter_interface_mixin(const formatter_interface_mixin& other) noexcept(
-            noexcept(formatter_interface_mixin::get_memory_resource())
-            && noexcept(formatter_interface_mixin(formatter_interface_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                formatter_interface_mixin,
+                const formatter_interface_mixin&,
+                memory_resource_type*>)
             : formatter_interface_mixin(other, other.get_memory_resource()) {}
         formatter_interface_mixin(const formatter_interface_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(formatter_interface_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const formatter_interface_mixin&,
+                memory_resource_type*>)
             : L(other, resource) {}
         formatter_interface_mixin& operator=(const formatter_interface_mixin&) = delete;
         formatter_interface_mixin(formatter_interface_mixin&&) = delete;

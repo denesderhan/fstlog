@@ -3,8 +3,9 @@
 #pragma once
 
 #include <detail/mixin/memory_resource_mixin.hpp>
-#include <fstlog/detail/fstlog_assert.hpp>
 #include <filter/filter_mixin.hpp>
+#include <fstlog/detail/fstlog_assert.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     template<class T>

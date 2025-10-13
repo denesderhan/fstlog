@@ -3,6 +3,7 @@
 #pragma once
 #include <atomic>
 #include <cstdint>
+#include <type_traits>
 
 namespace fstlog {
     template<class L>
@@ -12,15 +13,22 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
         
        explicit reference_counter_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         reference_counter_mixin(const reference_counter_mixin& other) noexcept(
-            noexcept(reference_counter_mixin::get_memory_resource())
-            && noexcept(reference_counter_mixin(reference_counter_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                reference_counter_mixin,
+                const reference_counter_mixin&,
+                memory_resource_type*>)
             : reference_counter_mixin(other, other.get_memory_resource()) {}
+
         reference_counter_mixin(const reference_counter_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(reference_counter_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const reference_counter_mixin&,
+                reference_counter_mixin*>)
             : L(other, resource) {}    //ref count is not copied
 
         reference_counter_mixin(reference_counter_mixin&& other) = delete;

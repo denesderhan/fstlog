@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <mutex>
+#include <type_traits>
 
 namespace fstlog {
     template<class L>
@@ -11,17 +12,22 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
         
         explicit concurrent_use_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         concurrent_use_mixin(const concurrent_use_mixin& other) noexcept(
-            noexcept(concurrent_use_mixin::get_memory_resource())
-            && noexcept(concurrent_use_mixin(concurrent_use_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                concurrent_use_mixin, 
+                const concurrent_use_mixin&, 
+                memory_resource_type*>)
             : concurrent_use_mixin(other, other.get_memory_resource()) {}
-        concurrent_use_mixin(const concurrent_use_mixin& other, memory_resource_type* resource) noexcept (
-            noexcept(L(concurrent_use_mixin{nullptr}, nullptr)))
-            : L(other, resource){
-        }
+        concurrent_use_mixin(const concurrent_use_mixin& other, memory_resource_type* resource) noexcept(
+            std::is_nothrow_constructible_v<
+                L, 
+                const concurrent_use_mixin&, 
+                memory_resource_type*>)
+            : L(other, resource) {}
 
         concurrent_use_mixin(concurrent_use_mixin&& other) = delete;
         concurrent_use_mixin& operator=(const concurrent_use_mixin& rhs) = delete;

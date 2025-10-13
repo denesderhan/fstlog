@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
+#include <type_traits>
 
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/log_metaargs.hpp>
@@ -16,15 +17,21 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
         
         explicit logfield_pos_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         logfield_pos_mixin(const logfield_pos_mixin& other) noexcept(
-            noexcept(logfield_pos_mixin::get_memory_resource()) &&
-            noexcept(logfield_pos_mixin(logfield_pos_mixin{ nullptr }, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                logfield_pos_mixin,
+                const logfield_pos_mixin&,
+                memory_resource_type*>)
             : logfield_pos_mixin(other, other.get_memory_resource()) {}
         logfield_pos_mixin(const logfield_pos_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(logfield_pos_mixin{ nullptr }, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const logfield_pos_mixin&,
+                memory_resource_type*>)
             : L(other, resource) {}
 
         logfield_pos_mixin(logfield_pos_mixin&& other) = delete;

@@ -1,9 +1,9 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <cstring>
 #include <limits>
 #include <type_traits>
-#include <cstring>
 
 #include <fstlog/detail/error_code.hpp>
 #include <detail/unaligned_span.hpp>
@@ -23,15 +23,22 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit decoder_internal_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         decoder_internal_mixin(const decoder_internal_mixin& other) noexcept(
-            noexcept(decoder_internal_mixin::get_memory_resource())
-            && noexcept(decoder_internal_mixin(decoder_internal_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                decoder_internal_mixin,
+                const decoder_internal_mixin&,
+                memory_resource_type*>)
             : decoder_internal_mixin(other, other.get_memory_resource()) {}
+
         decoder_internal_mixin(const decoder_internal_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(decoder_internal_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const decoder_internal_mixin&,
+                memory_resource_type*>)
             : L(other, resource) {}
 
         decoder_internal_mixin(decoder_internal_mixin&& other) = delete;

@@ -1,6 +1,8 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <type_traits>
+
 #include <output/output_interface.hpp>
 
 #include <detail/unaligned_span.hpp>
@@ -14,7 +16,7 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit sink_output_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         sink_output_mixin(const sink_output_mixin& other) = delete;

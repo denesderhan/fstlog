@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <ostream>
+#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
@@ -16,7 +17,7 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit out_stream_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         out_stream_mixin(const out_stream_mixin& other) = delete;

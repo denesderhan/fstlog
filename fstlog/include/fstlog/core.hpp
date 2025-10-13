@@ -17,9 +17,9 @@ namespace fstlog {
     class core_impl;
     class core {
     public:
-        FSTLOG_API core() noexcept(noexcept(fstlog::get_default_resource()) 
+        FSTLOG_API core() noexcept(noexcept(get_default_resource()) 
             && noexcept(handle_error(error_code::none)))
-            :core(fstlog::get_default_resource()) {}
+            :core(get_default_resource()) {}
 
         FSTLOG_API explicit core(memory_resource* resource) noexcept(
             noexcept(handle_error(error_code::none)))
@@ -56,7 +56,7 @@ namespace fstlog {
         FSTLOG_API std::chrono::milliseconds poll_interval(std::chrono::milliseconds poll_interval) noexcept;
         FSTLOG_API std::chrono::milliseconds poll_interval() const noexcept;
         FSTLOG_API bool add_sink(sink sink) noexcept;
-        FSTLOG_API bool release_sink(sink& sink) noexcept ;
+        FSTLOG_API bool release_sink(sink& sink) noexcept;
         FSTLOG_API void flush() const noexcept;
         FSTLOG_API std::string_view name() const noexcept;
         FSTLOG_API bool good() const noexcept;

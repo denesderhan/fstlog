@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string_view>
 #include <mutex>
+#include <utility>
 
 #include <fstlog/compatible.hpp>
 #include <fstlog/core.hpp>
@@ -82,7 +83,7 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(Args const&... args) noexcept(
-            noexcept(logger_mt_impl{}.template log<level, policy, flags>(args...)))
+            noexcept(std::declval<logger_mt_impl>().template log<level, policy, flags>(args...)))
         {
             std::lock_guard grd{ logger_mutex_ };
             logger_mt_impl::template log<level, policy, flags>(args...);
@@ -93,91 +94,67 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(fstlog::level level, Args const&... args) noexcept(
-            noexcept(logger_mt_impl{}.template log<policy, flags>(level, args...)))
+            noexcept(std::declval<logger_mt_impl>().template log<policy, flags>(level, args...)))
         {
             std::lock_guard grd{ logger_mutex_ };
             logger_mt_impl::template log<policy, flags>(level, args...);
         }
 
-        void set_core(core core) noexcept(
-            noexcept(logger_mt_impl::set_core(fstlog::core{ nullptr })))
-        {
+        void set_core(core core) noexcept {
             std::lock_guard grd{ logger_mutex_ };
             logger_mt_impl::set_core(std::move(core));
         }
 
-        core get_core() noexcept(
-            noexcept(logger_mt_impl::get_core()))
-        {
+        core get_core() noexcept {
             std::lock_guard grd{ logger_mutex_ };
             return logger_mt_impl::get_core();
         }
 
-        small_string<32> name() const noexcept(
-            noexcept(logger_mt_impl::name()))
-        {
+        small_string<32> name() const noexcept {
             std::lock_guard grd{ logger_mutex_ };
             return logger_mt_impl::name();
         }
 
-        void set_name(small_string<32> name) noexcept (
-            noexcept(logger_mt_impl::set_name(small_string<32>{})))
-        {
+        void set_name(small_string<32> name) noexcept {
             std::lock_guard grd{ logger_mutex_ }; 
             logger_mt_impl::set_name(name);
         }
 
-        auto thread() const noexcept(
-            noexcept(logger_mt_impl::thread()))
-        {
+        auto thread() const noexcept {
             return logger_mt_impl::thread();
         }
 
-        channel_type channel() const noexcept (
-            noexcept(logger_mt_impl::channel()))
-        {
+        channel_type channel() const noexcept {
             std::lock_guard grd{ logger_mutex_ };
             return logger_mt_impl::channel();
         }
 
-        void set_channel(channel_type channel) noexcept (
-            noexcept(logger_mt_impl::set_channel(channel_type{})))
-        {
+        void set_channel(channel_type channel) noexcept {
             std::lock_guard grd{ logger_mutex_ };
             logger_mt_impl::set_channel(channel);
         }
 
-        fstlog::level level() noexcept (
-            noexcept(logger_mt_impl::level()))
-        {
+        fstlog::level level() noexcept {
             std::lock_guard grd{ logger_mutex_ };
             return logger_mt_impl::level();
         }
 
-        void set_level(fstlog::level level) noexcept (
-            noexcept(logger_mt_impl::set_level(fstlog::level{})))
-        {
+        void set_level(fstlog::level level) noexcept {
             std::lock_guard grd{ logger_mutex_ };
             logger_mt_impl::set_level(level);
         }
 
-        std::uintmax_t dropped() noexcept(
-            noexcept(logger_mt_impl::dropped()))
-        {
+        std::uintmax_t dropped() noexcept {
             std::lock_guard grd{ logger_mutex_ };
             return logger_mt_impl::dropped();
         }
 
-        void new_buffer() noexcept(
-            noexcept(logger_mt_impl::new_buffer()))
-        {
+        void new_buffer() noexcept {
             std::lock_guard grd{ logger_mutex_ };
             logger_mt_impl::new_buffer();
         }
 
-        void new_buffer(std::uint32_t buffer_size) noexcept(
-            noexcept(logger_mt_impl::new_buffer(std::uint32_t{})))
-        {
+        void new_buffer(std::uint32_t buffer_size) noexcept {
             std::lock_guard grd{ logger_mutex_ };
             logger_mt_impl::new_buffer(buffer_size);
         }

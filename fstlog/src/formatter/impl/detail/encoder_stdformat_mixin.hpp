@@ -36,15 +36,21 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit encoder_stdformat_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         encoder_stdformat_mixin(const encoder_stdformat_mixin& other) noexcept(
-            noexcept(encoder_stdformat_mixin::get_memory_resource())
-            && noexcept(encoder_stdformat_mixin(encoder_stdformat_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                encoder_stdformat_mixin,
+                const encoder_stdformat_mixin&,
+                memory_resource_type*>)
             : encoder_stdformat_mixin(other, other.get_memory_resource()) {}
         encoder_stdformat_mixin(const encoder_stdformat_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(encoder_stdformat_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const encoder_stdformat_mixin&,
+                memory_resource_type*>)
             : L(other, resource) {}
 
         encoder_stdformat_mixin(encoder_stdformat_mixin&& other) = delete;

@@ -3,6 +3,7 @@
 #pragma once
 #include <limits>
 #include <cstdint>
+#include <utility>
 
 #include <fstlog/core.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -14,7 +15,8 @@ namespace fstlog {
     public:
 
         void set_core(core core) noexcept(
-            noexcept(L::set_core(fstlog::core{ nullptr })))
+            noexcept(std::declval<L&>().get_core().pimpl())
+            && noexcept(std::declval<L&>().set_core(std::move(core))))
         {
             if (core.pimpl() != L::get_core().pimpl()) {
                 log_buffer_ = log_buffer{};
@@ -22,7 +24,7 @@ namespace fstlog {
             }
         }
 
-        void new_buffer() noexcept(noexcept(buffer().size()))
+        void new_buffer() noexcept
         {
             std::uint32_t buff_size{ 0 };
             if (is_buffer_set()) {

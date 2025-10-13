@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
+#include <type_traits>
 
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -15,15 +16,21 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit output_span_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         output_span_mixin(const output_span_mixin& other) noexcept(
-            noexcept(output_span_mixin::get_memory_resource())
-            && noexcept(output_span_mixin(output_span_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                output_span_mixin,
+                const output_span_mixin&,
+                memory_resource_type*>)
             : output_span_mixin(other, other.get_memory_resource()) {}
         output_span_mixin(const output_span_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(output_span_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const output_span_mixin&,
+                memory_resource_type*>)
             : L(other, resource) {}
 
         output_span_mixin(output_span_mixin&& other) = delete;

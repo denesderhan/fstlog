@@ -1,6 +1,8 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <type_traits>
+
 #include <detail/unaligned_span.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 #include <formatter/impl/detail/format_setting_txt_fast.hpp>
@@ -15,16 +17,21 @@ namespace fstlog {
         typedef format_setting_txt_fast format_type;
     
         explicit logfield_formspec_txt_fast_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         logfield_formspec_txt_fast_mixin(const logfield_formspec_txt_fast_mixin& other) noexcept(
-            noexcept(logfield_formspec_txt_fast_mixin::get_memory_resource())
-            && noexcept(logfield_formspec_txt_fast_mixin(
-                logfield_formspec_txt_fast_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                logfield_formspec_txt_fast_mixin,
+                const logfield_formspec_txt_fast_mixin&,
+                memory_resource_type*>)
             : logfield_formspec_txt_fast_mixin(other, other.get_memory_resource()) {}
         logfield_formspec_txt_fast_mixin(const logfield_formspec_txt_fast_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(logfield_formspec_txt_fast_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const logfield_formspec_txt_fast_mixin&,
+                memory_resource_type*>)
             : L(other, resource) {}
         
         logfield_formspec_txt_fast_mixin(logfield_formspec_txt_fast_mixin&& other) = delete;

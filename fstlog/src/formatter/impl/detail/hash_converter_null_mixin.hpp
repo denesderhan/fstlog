@@ -2,6 +2,8 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <string_view>
+#include <type_traits>
+
 #include <fstlog/detail/str_hash_fnv.hpp>
 
 namespace fstlog {
@@ -11,15 +13,21 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit hash_converter_null_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         hash_converter_null_mixin(const hash_converter_null_mixin& other) noexcept(
-            noexcept(hash_converter_null_mixin::get_memory_resource())
-            && noexcept(hash_converter_null_mixin(hash_converter_null_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                hash_converter_null_mixin,
+                const hash_converter_null_mixin&,
+                memory_resource_type*>)
             : hash_converter_null_mixin(other, other.get_memory_resource()) {}
         hash_converter_null_mixin(const hash_converter_null_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(hash_converter_null_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const hash_converter_null_mixin&,
+                memory_resource_type*>)
             : L(other, resource) {}
 
         hash_converter_null_mixin(hash_converter_null_mixin&& other) = delete;

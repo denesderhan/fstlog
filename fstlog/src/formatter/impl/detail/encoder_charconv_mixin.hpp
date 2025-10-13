@@ -32,15 +32,21 @@ namespace fstlog {
         typedef format_setting_txt format_type;
 
         explicit encoder_charconv_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         encoder_charconv_mixin(const encoder_charconv_mixin& other) noexcept(
-            noexcept(encoder_charconv_mixin::get_memory_resource())
-            && noexcept(encoder_charconv_mixin(encoder_charconv_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                encoder_charconv_mixin,
+                const encoder_charconv_mixin&,
+                memory_resource_type*>)
             : encoder_charconv_mixin(other, other.get_memory_resource()) {}
         encoder_charconv_mixin(const encoder_charconv_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(encoder_charconv_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const encoder_charconv_mixin&,
+                memory_resource_type*>)
             : L(other, resource) {}
 
         encoder_charconv_mixin(encoder_charconv_mixin&& other) = delete;

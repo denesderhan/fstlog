@@ -318,7 +318,7 @@ namespace fstlog {
             return (valid_type_spec_lut >> bit_pos) & 1;
         }
 
-        inline bool valid_format_spec(byte_span_const format_spec) {
+        inline bool valid_format_spec(byte_span_const format_spec) noexcept {
             if (format_spec.empty()) return true;
                         
             // skip the fill_char AND the alignment specifier if valid + safe

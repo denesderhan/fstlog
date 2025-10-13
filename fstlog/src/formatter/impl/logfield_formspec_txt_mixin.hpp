@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
+#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/ut_cast.hpp>
@@ -20,18 +21,24 @@ namespace fstlog {
         typedef format_setting_txt format_type;
 
         explicit logfield_formspec_txt_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource)
         {
             field_formattings_.fill(get_default_format()); //noexcept
         }
 
         logfield_formspec_txt_mixin(const logfield_formspec_txt_mixin& other) noexcept(
-            noexcept(logfield_formspec_txt_mixin::get_memory_resource())
-            && noexcept(logfield_formspec_txt_mixin(logfield_formspec_txt_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                logfield_formspec_txt_mixin,
+                const logfield_formspec_txt_mixin&,
+                memory_resource_type*>)
             : logfield_formspec_txt_mixin(other, other.get_memory_resource()) {}
         logfield_formspec_txt_mixin(const logfield_formspec_txt_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(logfield_formspec_txt_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const logfield_formspec_txt_mixin&,
+                memory_resource_type*>)
             : L(other, resource),
             field_formattings_{ other.field_formattings_ } {} //noexcept
         

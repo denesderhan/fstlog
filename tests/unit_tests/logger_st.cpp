@@ -1,5 +1,7 @@
 //Copyright © Dénes Derhán 2022.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
+#include <type_traits>
+
 #include <catch2/catch_all.hpp>
 
 #include <fstlog/core.hpp>
@@ -11,7 +13,37 @@ TEST_CASE("logger_st") {
     fstlog::core core;
     core.poll_interval(std::chrono::milliseconds{0});
 
+    SECTION("no_throw") {
+        CHECK(std::is_nothrow_constructible_v<fstlog::logger_st_impl>);
+        CHECK(std::is_nothrow_copy_constructible_v<fstlog::logger_st_impl>);
+        CHECK(std::is_nothrow_move_constructible_v<fstlog::logger_st_impl>);
+        CHECK(std::is_nothrow_assignable_v<fstlog::logger_st_impl, fstlog::logger_st_impl>);
+        CHECK(std::is_nothrow_move_assignable_v<fstlog::logger_st_impl>);
+
+#ifdef FSTLOG_NOEXCEPTIONS
+        CHECK(noexcept(fstlog::handle_error(fstlog::error_code::none)));
+        CHECK(std::is_nothrow_constructible_v<fstlog::logger_st,
+            fstlog::core&,
+            std::string_view&,
+            fstlog::level&,
+            fstlog::channel_type&>);
+#else
+        CHECK(!noexcept(fstlog::handle_error(fstlog::error_code::none)));
+        CHECK(!std::is_nothrow_constructible_v<fstlog::logger_st,
+            fstlog::core&,
+            std::string_view&,
+            fstlog::level&,
+            fstlog::channel_type&>);
+#endif
+        CHECK(std::is_nothrow_copy_constructible_v<fstlog::logger_st>);
+        CHECK(std::is_nothrow_move_constructible_v<fstlog::logger_st>);
+        CHECK(std::is_nothrow_assignable_v<fstlog::logger_st, fstlog::logger_st>);
+        CHECK(std::is_nothrow_move_assignable_v<fstlog::logger_st>);
+    };
+
     SECTION("construct") {
+        CHECK(std::is_nothrow_constructible_v<fstlog::logger_st_impl>);
+        
         fstlog::logger_st logger(fstlog::core(nullptr));
         CHECK(logger.get_core().pimpl() == nullptr);
         CHECK(logger.name() == fstlog::small_string<32>{"Unnamed"});

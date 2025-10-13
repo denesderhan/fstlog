@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <iostream>
+#include <type_traits>
 
 #include <detail/safe_reinterpret_cast.hpp>
 #include <detail/unaligned_span.hpp>
@@ -16,7 +17,7 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit out_console_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         out_console_mixin(const out_console_mixin& other) = delete;
@@ -33,7 +34,7 @@ namespace fstlog {
             if (stream_ptr_ != nullptr) {
                 return error_code::double_init;
             }
-            // only global, standard cout cerr clog is useable
+            // only global, standard cout cerr clog is usable
             if (stream_ptr != &std::cout 
                 && stream_ptr != &std::cerr 
                 && stream_ptr != &std::clog)

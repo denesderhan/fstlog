@@ -3,6 +3,7 @@
 #pragma once
 #include <array>
 #include <cstddef>
+#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
@@ -17,7 +18,7 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit sink_formatter_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         sink_formatter_mixin(const sink_formatter_mixin& other) = delete;

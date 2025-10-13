@@ -3,6 +3,7 @@
 #pragma once
 #include <cstdint>
 #include <string_view>
+#include <utility>
 
 #include <fstlog/compatible.hpp>
 #include <fstlog/core.hpp>
@@ -102,7 +103,7 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(Args const&... args) noexcept(
-            noexcept(logger_impl{}.template log<level, policy, flags>(args...)))
+            noexcept(std::declval<logger_impl>().template log<level, policy, flags>(args...)))
         {
             logger_impl::template log<level, policy, flags>(args...);
         }
@@ -112,74 +113,52 @@ namespace fstlog {
             log_call_flag flags,
             class... Args>
         void log(fstlog::level level, Args const&... args) noexcept(
-            noexcept(logger_impl{}.template log<policy, flags>(level, args...)))
+            noexcept(std::declval<logger_impl>().template log<policy, flags>(level, args...)))
         {
             logger_impl::template log<policy, flags>(level, args...);
         }
         // not thread safe
-        void set_core(core core) noexcept(
-            noexcept(logger_impl::set_core(fstlog::core{ nullptr })))
-        {
+        void set_core(core core) noexcept {
             logger_impl::set_core(std::move(core));
         }
         // thread safe
-        core get_core() noexcept(
-            noexcept(logger_impl::get_core()))
-        {
+        core get_core() noexcept {
             return logger_impl::get_core();
         }
         // thread safe
-        small_string<32> name() const noexcept(
-            noexcept(logger_impl::name())) 
-        {
+        small_string<32> name() const noexcept {
             return logger_impl::name();
         }
         // not thread safe
-        void set_name(small_string<32> name) noexcept (
-            noexcept(logger_impl::set_name(small_string<32>{})))
-        {
+        void set_name(small_string<32> name) noexcept {
             logger_impl::set_name(name);
         }
         // thread safe
-        static small_string<32> thread() noexcept(
-            noexcept(logger_impl::thread()))
-        {
+        static small_string<32> thread() noexcept {
             return logger_impl::thread();
         }
         // thread safe
-        static void set_thread(small_string<32> thread) noexcept (
-            noexcept(logger_impl::set_thread(small_string<32>{})))
-        {
+        static void set_thread(small_string<32> thread) noexcept {
             logger_impl::set_thread(thread);
         }
         // thread safe
-        channel_type channel() const noexcept (
-            noexcept(logger_impl::channel()))
-        {
+        channel_type channel() const noexcept {
             return logger_impl::channel();
         }
         // not thread safe
-        void set_channel(channel_type channel) noexcept (
-            noexcept(logger_impl::set_channel(channel_type{})))
-        {
+        void set_channel(channel_type channel) noexcept {
             logger_impl::set_channel(channel);
         }
         // thread safe
-        fstlog::level level() noexcept (
-            noexcept(logger_impl::level()))
-        {
+        fstlog::level level() noexcept {
             return logger_impl::level();
         }
         // thread safe
-        void set_level(fstlog::level level) noexcept (
-            noexcept(logger_impl::set_level(fstlog::level{})))
-        {
+        void set_level(fstlog::level level) noexcept {
             logger_impl::set_level(level);
         }
         // thread safe
-        std::uintmax_t dropped() noexcept(
-            noexcept(logger_impl::dropped()))
-        {
+        std::uintmax_t dropped() noexcept {
             return logger_impl::dropped();
         }
         // thread safe, all loggers with the same core in the same thread

@@ -1,6 +1,7 @@
 //Copyright © 2023, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <type_traits>
 
 #include <fstlog/detail/aggregate_type.hpp>
 #include <fstlog/detail/types.hpp>
@@ -14,15 +15,21 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit encoder_aggregate_separator_txt_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         encoder_aggregate_separator_txt_mixin(const encoder_aggregate_separator_txt_mixin& other) noexcept(
-            noexcept(encoder_aggregate_separator_txt_mixin::get_memory_resource())
-            && noexcept(encoder_aggregate_separator_txt_mixin(encoder_aggregate_separator_txt_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                encoder_aggregate_separator_txt_mixin,
+                const encoder_aggregate_separator_txt_mixin&,
+                memory_resource_type*>)
             : encoder_aggregate_separator_txt_mixin(other, other.get_memory_resource()) {}
         encoder_aggregate_separator_txt_mixin(const encoder_aggregate_separator_txt_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(encoder_aggregate_separator_txt_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const encoder_aggregate_separator_txt_mixin&,
+                memory_resource_type*>)
             : L(other, resource) {}
 
         encoder_aggregate_separator_txt_mixin(encoder_aggregate_separator_txt_mixin&& other) = delete;

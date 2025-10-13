@@ -1,8 +1,8 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-
 #include <cstddef>
+#include <type_traits>
 
 #include <config_parser.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
@@ -28,17 +28,23 @@ namespace fstlog {
         using format_type = typename L::format_type;
 
         explicit arg_parser_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr))) 
+            std::is_nothrow_constructible_v<L, memory_resource_type*>) 
             : L(resource) {}
 
         arg_parser_mixin(const arg_parser_mixin& other) noexcept(
-            noexcept(arg_parser_mixin::get_memory_resource())
-            && noexcept(arg_parser_mixin(arg_parser_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                arg_parser_mixin,
+                const arg_parser_mixin&,
+                memory_resource_type*>)
             : arg_parser_mixin(other, other.get_memory_resource()) {}
         arg_parser_mixin(
             const arg_parser_mixin& other, 
             memory_resource_type* resource) noexcept(
-                noexcept(L(arg_parser_mixin{nullptr}, nullptr)))
+                std::is_nothrow_constructible_v<
+                    L,
+                    const arg_parser_mixin&,
+                    memory_resource_type*>)
             : L(other, resource) {}
 
         arg_parser_mixin(arg_parser_mixin&& other) = delete;

@@ -5,11 +5,33 @@
 #include <cstdint>
 #include <vector>
 #include <thread>
+#include <type_traits>
+#include <utility>
 
 #include <fstlog/core.hpp>
 #include <test_mem_resource.hpp>
 
 TEST_CASE("core") {
+    SECTION("no_throw") {
+#ifdef FSTLOG_NOEXCEPTIONS
+        CHECK(noexcept(fstlog::handle_error(fstlog::error_code::none)));
+        CHECK(std::is_nothrow_constructible_v<fstlog::core>);
+        CHECK(std::is_nothrow_constructible_v<fstlog::core, fstlog::memory_resource*>);
+        CHECK(std::is_nothrow_constructible_v<fstlog::core, std::string_view&, fstlog::memory_resource*>);
+#else
+        CHECK(!noexcept(fstlog::handle_error(fstlog::error_code::none)));
+        CHECK(!std::is_nothrow_constructible_v<fstlog::core>);
+        CHECK(!std::is_nothrow_constructible_v<fstlog::core, fstlog::memory_resource*>);
+        CHECK(!std::is_nothrow_constructible_v<fstlog::core, std::string_view&, fstlog::memory_resource*>);
+#endif
+        CHECK(std::is_nothrow_constructible_v<fstlog::core, std::nullptr_t&>);
+        
+        CHECK(std::is_nothrow_move_assignable_v<fstlog::core>);
+        CHECK(std::is_nothrow_move_constructible_v<fstlog::core>);
+        CHECK(std::is_nothrow_copy_constructible_v<fstlog::core>);
+        CHECK(std::is_nothrow_assignable_v<fstlog::core, fstlog::core>);
+    }
+    
     SECTION("default_construct") {
         fstlog::core core_instance;
         CHECK(core_instance.good());

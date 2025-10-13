@@ -7,6 +7,7 @@
 #include <cstring>
 #include <limits>
 #include <time.h>
+#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
@@ -31,15 +32,20 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
 
         explicit encoder_timestamp_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>)
             : L(resource) {}
 
         encoder_timestamp_mixin(const encoder_timestamp_mixin& other) noexcept(
-            noexcept(encoder_timestamp_mixin::get_memory_resource())
-            && noexcept(encoder_timestamp_mixin(encoder_timestamp_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                encoder_timestamp_mixin,
+                const encoder_timestamp_mixin&,
+                memory_resource_type*>)
             : encoder_timestamp_mixin(other, other.get_memory_resource()) {}
         encoder_timestamp_mixin(const encoder_timestamp_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(encoder_timestamp_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const encoder_timestamp_mixin&,
+                memory_resource_type*>)
             : L(other, resource),
             time_string_cache_{ other.time_string_cache_ },
             time_format_{ other.time_format_ },

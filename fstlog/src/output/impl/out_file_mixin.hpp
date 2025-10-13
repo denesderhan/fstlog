@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstdint>
+#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
@@ -17,10 +18,10 @@ namespace fstlog {
         using memory_resource_type = typename L::memory_resource_type;
         
         explicit out_file_mixin(memory_resource_type* resource) noexcept(
-            noexcept(L(nullptr))
-            && noexcept(decltype(file_)(nullptr)))
+            std::is_nothrow_constructible_v<L, memory_resource_type*>
+            && std::is_nothrow_constructible_v<decltype(file_), memory_resource_type*>)
             : L(resource),
-            file_{ resource } {}
+            file_(resource) {}
 
         out_file_mixin(const out_file_mixin& other) = delete;
         out_file_mixin(out_file_mixin&& other) = delete;

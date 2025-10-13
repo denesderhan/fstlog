@@ -1,6 +1,8 @@
 //Copyright © 2023, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <type_traits>
+
 #include <detail/error.hpp>
 
 namespace fstlog {
@@ -9,16 +11,22 @@ namespace fstlog {
     public:
         using memory_resource_type = typename L::memory_resource_type;
 
-        explicit error_state_mixin(memory_resource* resource) noexcept(
-            noexcept(L(nullptr))) 
+        explicit error_state_mixin(memory_resource_type* resource) noexcept(
+            std::is_nothrow_constructible_v<L, memory_resource_type*>) 
             : L(resource) {}
 
         error_state_mixin(const error_state_mixin& other) noexcept(
-            noexcept(error_state_mixin::get_memory_resource())
-            && noexcept(error_state_mixin(error_state_mixin{nullptr}, nullptr)))
+            noexcept(other.get_memory_resource())
+            && std::is_nothrow_constructible_v<
+                error_state_mixin,
+                const error_state_mixin&,
+                memory_resource_type*>)
             : error_state_mixin(other, other.get_memory_resource()) {}
         error_state_mixin(const error_state_mixin& other, memory_resource_type* resource) noexcept(
-            noexcept(L(error_state_mixin{nullptr}, nullptr)))
+            std::is_nothrow_constructible_v<
+                L,
+                const error_state_mixin&,
+                memory_resource_type*>)
             : L(other, resource) {}
 
         error_state_mixin(error_state_mixin&& other) = delete;

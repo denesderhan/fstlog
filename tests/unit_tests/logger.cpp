@@ -2,6 +2,8 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <catch2/catch_all.hpp>
 
+#include <type_traits>
+
 #include <fstlog/core.hpp>
 #include <fstlog/logger/log_macro.hpp>
 #include <fstlog/logger/logger.hpp>
@@ -11,8 +13,36 @@ TEST_CASE("logger") {
     fstlog::core core;
     core.poll_interval(std::chrono::milliseconds{0});
 
-    SECTION("construct") {
+
+    SECTION("no_throw") {
+        CHECK(std::is_nothrow_constructible_v<fstlog::logger_impl>);
+        CHECK(std::is_nothrow_copy_constructible_v<fstlog::logger_impl>);
+        CHECK(std::is_nothrow_move_constructible_v<fstlog::logger_impl>);
+        CHECK(std::is_nothrow_assignable_v<fstlog::logger_impl, fstlog::logger_impl>);
+        CHECK(std::is_nothrow_move_assignable_v<fstlog::logger_impl>);
         
+#ifdef FSTLOG_NOEXCEPTIONS
+        CHECK(noexcept(fstlog::handle_error(fstlog::error_code::none)));
+        CHECK(std::is_nothrow_constructible_v<fstlog::logger,
+            fstlog::core&,
+            std::string_view&,
+            fstlog::level&,
+            fstlog::channel_type&>);
+#else
+        CHECK(!noexcept(fstlog::handle_error(fstlog::error_code::none)));
+        CHECK(!std::is_nothrow_constructible_v<fstlog::logger,
+            fstlog::core&, 
+            std::string_view&, 
+            fstlog::level&,
+            fstlog::channel_type&>);
+#endif
+        CHECK(std::is_nothrow_copy_constructible_v<fstlog::logger>);
+        CHECK(std::is_nothrow_move_constructible_v<fstlog::logger>);
+        CHECK(std::is_nothrow_assignable_v<fstlog::logger, fstlog::logger>);
+        CHECK(std::is_nothrow_move_assignable_v<fstlog::logger>);
+    };
+
+    SECTION("construct") {
         // creating a logger with bad core (core.pimpl_ == nullptr)
         fstlog::logger logger(fstlog::core(nullptr));
         CHECK(logger.get_core().pimpl() == nullptr);
