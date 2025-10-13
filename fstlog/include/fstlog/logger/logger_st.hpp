@@ -78,24 +78,6 @@ namespace fstlog {
             handle_error(error);
         }
 
-        ~logger_st() noexcept = default;
-
-        logger_st(const logger_st& other) noexcept
-            : logger_st_impl(other) {}
-
-        logger_st(logger_st&& other) noexcept
-            : logger_st_impl(std::move(other)) {}
-
-        logger_st& operator=(const logger_st& other) noexcept {
-            logger_st_impl::operator=(other);
-            return *this;
-        }
-
-        logger_st& operator=(logger_st&& other) noexcept {
-            logger_st_impl::operator=(std::move(other));
-            return *this;
-        }
-
         template<
             fstlog::level level,
             template<class T> class policy,

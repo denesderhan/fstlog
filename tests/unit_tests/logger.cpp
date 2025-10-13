@@ -16,9 +16,7 @@ TEST_CASE("logger") {
 
     SECTION("no_throw") {
         CHECK(std::is_nothrow_constructible_v<fstlog::logger_impl>);
-        CHECK(std::is_nothrow_copy_constructible_v<fstlog::logger_impl>);
         CHECK(std::is_nothrow_move_constructible_v<fstlog::logger_impl>);
-        CHECK(std::is_nothrow_assignable_v<fstlog::logger_impl, fstlog::logger_impl>);
         CHECK(std::is_nothrow_move_assignable_v<fstlog::logger_impl>);
         
 #ifdef FSTLOG_NOEXCEPTIONS
@@ -36,9 +34,7 @@ TEST_CASE("logger") {
             fstlog::level&,
             fstlog::channel_type&>);
 #endif
-        CHECK(std::is_nothrow_copy_constructible_v<fstlog::logger>);
         CHECK(std::is_nothrow_move_constructible_v<fstlog::logger>);
-        CHECK(std::is_nothrow_assignable_v<fstlog::logger, fstlog::logger>);
         CHECK(std::is_nothrow_move_assignable_v<fstlog::logger>);
     };
 
@@ -74,12 +70,7 @@ TEST_CASE("logger") {
         CHECK(logger.dropped() > 0);
 
         const auto dropped_logs{ logger.dropped() };
-
-        //copy construct/assign
-        fstlog::logger logger_cpy{logger};
-        fstlog::logger logger_cpy2(fstlog::core(nullptr));
-        logger_cpy2 = logger;
-        
+                
         CHECK(logger.get_core().pimpl() == core.pimpl());
         CHECK(logger.name() == fstlog::small_string<32>{"logger_1"});
         CHECK(logger.channel() == 10);
@@ -87,47 +78,16 @@ TEST_CASE("logger") {
         CHECK(logger.level() == fstlog::level::Debug);
         CHECK(logger.dropped() == dropped_logs);
 
-        CHECK(logger_cpy.get_core().pimpl() == core.pimpl());
-        CHECK(logger_cpy.name() == fstlog::small_string<32>{"Unnamed"});
-        CHECK(logger_cpy.channel() == 10);
-        CHECK(logger_cpy.thread() == fstlog::small_string<32>{"thread_1"});
-        CHECK(logger_cpy.level() == fstlog::level::Debug);
-        CHECK(logger_cpy.dropped() == 0);
-
-        CHECK(logger_cpy2.get_core().pimpl() == core.pimpl());
-        CHECK(logger_cpy2.name() == fstlog::small_string<32>{"Unnamed"});
-        CHECK(logger_cpy2.channel() == 10);
-        CHECK(logger_cpy2.thread() == fstlog::small_string<32>{"thread_1"});
-        CHECK(logger_cpy2.level() == fstlog::level::Debug);
-        CHECK(logger_cpy2.dropped() == 0);
-
-        logger_cpy.set_name("logger_2");
-        CHECK(logger_cpy.name() == fstlog::small_string<32>{"logger_2"});
-        for (int i = 0; i < 10; i++) {
-            LOG_LL_FATAL(logger_cpy, "Test text, test text, test text, test text, test text, test text, test text.");
-        }
-        CHECK(logger_cpy.dropped() > 0);
-
-        const auto dropped_logs_2{ logger_cpy.dropped() };
-
         //move construct/assign
         fstlog::logger logger_mov{ std::move(logger) };
-        fstlog::logger logger_mov2(fstlog::core(nullptr));
-        logger_mov2 = std::move(logger_cpy);
-
+        
         CHECK(logger.get_core().pimpl() == nullptr);
         CHECK(logger.name() == fstlog::small_string<32>{"Unnamed"});
         CHECK(logger.channel() == 10);
         CHECK(logger.thread() == fstlog::small_string<32>{"thread_1"});
         CHECK(logger.level() == fstlog::level::Debug);
         CHECK(logger.dropped() == 0);
-        CHECK(logger_cpy.get_core().pimpl() == nullptr);
-        CHECK(logger_cpy.name() == fstlog::small_string<32>{"Unnamed"});
-        CHECK(logger_cpy.channel() == 10);
-        CHECK(logger_cpy.thread() == fstlog::small_string<32>{"thread_1"});
-        CHECK(logger_cpy.level() == fstlog::level::Debug);
-        CHECK(logger_cpy.dropped() == 0);
-
+        
         CHECK(logger_mov.get_core().pimpl() == core.pimpl());
         CHECK(logger_mov.name() == fstlog::small_string<32>{"logger_1"});
         CHECK(logger_mov.channel() == 10);
@@ -135,13 +95,14 @@ TEST_CASE("logger") {
         CHECK(logger_mov.level() == fstlog::level::Debug);
         CHECK(logger_mov.dropped() == dropped_logs);
 
+        fstlog::logger logger_mov2(fstlog::core(nullptr));
+        logger_mov2 = std::move(logger_mov);
+
         CHECK(logger_mov2.get_core().pimpl() == core.pimpl());
-        CHECK(logger_mov2.name() == fstlog::small_string<32>{"logger_2"});
+        CHECK(logger_mov2.name() == fstlog::small_string<32>{"logger_1"});
         CHECK(logger_mov2.channel() == 10);
         CHECK(logger_mov2.thread() == fstlog::small_string<32>{"thread_1"});
         CHECK(logger_mov2.level() == fstlog::level::Debug);
-        CHECK(logger_mov2.dropped() == dropped_logs_2);
-
     };
 
     SECTION("multi_core") {

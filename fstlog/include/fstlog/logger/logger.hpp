@@ -78,24 +78,6 @@ namespace fstlog {
             handle_error(error);
         }
 
-        ~logger() noexcept = default;
-
-        logger(const logger& other) noexcept
-            : logger_impl(other) {}
-
-        logger(logger&& other) noexcept
-            : logger_impl(std::move(other)){}
-        
-        // not thread safe
-        logger& operator=(const logger& other) noexcept {
-            logger_impl::operator=(other);
-            return *this;
-        }
-        // not thread safe
-        logger& operator=(logger&& other) noexcept {
-            logger_impl::operator=(std::move(other));
-            return *this;
-        }
         // thread safe
         template<
             fstlog::level level,

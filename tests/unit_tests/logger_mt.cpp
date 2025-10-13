@@ -16,9 +16,7 @@ TEST_CASE("logger_mt") {
     core.poll_interval(std::chrono::milliseconds{0});
     SECTION("no_throw") {
         CHECK(std::is_nothrow_constructible_v<fstlog::logger_mt_impl>);
-        CHECK(std::is_nothrow_copy_constructible_v<fstlog::logger_mt_impl>);
         CHECK(std::is_nothrow_move_constructible_v<fstlog::logger_mt_impl>);
-        CHECK(std::is_nothrow_assignable_v<fstlog::logger_mt_impl, fstlog::logger_mt_impl>);
         CHECK(std::is_nothrow_move_assignable_v<fstlog::logger_mt_impl>);
 
 #ifdef FSTLOG_NOEXCEPTIONS
@@ -68,7 +66,6 @@ TEST_CASE("logger_mt") {
         }
         CHECK(logger.dropped() > 0);
 
-        //copy construct/assign
         fstlog::logger_mt logger_2(core, "logger_2", fstlog::level::Debug, 10, 1024);
                 
         CHECK(logger_2.get_core().pimpl() == core.pimpl());

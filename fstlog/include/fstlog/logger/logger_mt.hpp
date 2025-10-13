@@ -75,8 +75,6 @@ namespace fstlog {
             handle_error(error);
         }
         
-        ~logger_mt() noexcept = default;
-
         template<
             fstlog::level level,
             template<class T> class policy,

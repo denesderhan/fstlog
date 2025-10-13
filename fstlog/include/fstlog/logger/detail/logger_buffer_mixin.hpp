@@ -13,10 +13,19 @@ namespace fstlog {
     template<class L>
     class logger_buffer_mixin : public L {
     public:
+        logger_buffer_mixin() noexcept = default;
 
+        // disable copy to prevent using the same buffer
+        logger_buffer_mixin(const logger_buffer_mixin&) = delete;
+        logger_buffer_mixin& operator=(const logger_buffer_mixin&) = delete;
+
+        // enable move
+        logger_buffer_mixin(logger_buffer_mixin&&) noexcept = default;
+        logger_buffer_mixin& operator=(logger_buffer_mixin&&) noexcept = default;
+        
         void set_core(core core) noexcept(
             noexcept(std::declval<L&>().get_core().pimpl())
-            && noexcept(std::declval<L&>().set_core(std::move(core))))
+            && noexcept(std::declval<L&>().set_core(std::declval<fstlog::core>())))
         {
             if (core.pimpl() != L::get_core().pimpl()) {
                 log_buffer_ = log_buffer{};

@@ -75,26 +75,8 @@ namespace fstlog {
             }
             handle_error(error);
         }
-
-        ~logger_st_fix() noexcept = default;
-
+        
         using logger_st_fix_t = logger_st_fix_impl<logger_name_, level_, log_channel_, thread_name_>;
-
-        logger_st_fix(const logger_st_fix& other) noexcept
-            : logger_st_fix_t(other) {}
-
-        logger_st_fix(logger_st_fix&& other) noexcept
-            : logger_st_fix_t(std::move(other)) {}
-
-        logger_st_fix& operator=(const logger_st_fix& other) noexcept {
-            logger_st_fix_t::operator=(other);
-            return *this;
-        }
-
-        logger_st_fix& operator=(logger_st_fix&& other) noexcept {
-            logger_st_fix_t::operator=(std::move(other));
-            return *this;
-        }
 
         template<
             fstlog::level level,

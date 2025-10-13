@@ -13,23 +13,18 @@ namespace fstlog {
     class logger_buffer_thread_local_mixin : public L {
     public:
         logger_buffer_thread_local_mixin() noexcept = default;
-        ~logger_buffer_thread_local_mixin() noexcept = default;
 
-        logger_buffer_thread_local_mixin(const logger_buffer_thread_local_mixin& other) noexcept = default;
-        logger_buffer_thread_local_mixin& operator=(const logger_buffer_thread_local_mixin& other) noexcept = default;
+        // disable copy constructor/ assignment to match another loggers
+        logger_buffer_thread_local_mixin(const logger_buffer_thread_local_mixin&) = delete;
+        logger_buffer_thread_local_mixin& operator=(const logger_buffer_thread_local_mixin&) = delete;
 
-        logger_buffer_thread_local_mixin(logger_buffer_thread_local_mixin&& other) noexcept
-            : L(std::move(other)) {}
-                
-        logger_buffer_thread_local_mixin& operator=(logger_buffer_thread_local_mixin&& other) noexcept {
-            L::operator=(std::move(other));
-            return *this;
-        }
+        // enable move
+        logger_buffer_thread_local_mixin(logger_buffer_thread_local_mixin&&) noexcept = default;
+        logger_buffer_thread_local_mixin& operator=(logger_buffer_thread_local_mixin&&) noexcept = default;
 
-        // this affects all loggers attached to this logger's core, 
+        // this affects all loggers attached to this logger's core,
         // in the thread this method is called
-        void new_buffer() noexcept(noexcept(buffer().size()))
-        {
+        void new_buffer() noexcept(noexcept(buffer().size())) {
             // we can call is_buffer_set() and set_buffer() only if core is set
             if (this->is_core_set()) {
                 std::uint32_t buffer_size{ 0 };
@@ -69,6 +64,5 @@ namespace fstlog {
         void set_buffer(log_buffer new_buffer) noexcept {
             buffer() = std::move(new_buffer);
         }
-
     };
 }
