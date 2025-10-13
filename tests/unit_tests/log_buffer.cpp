@@ -27,21 +27,36 @@ TEST_CASE("log_buffer") {
     };
 
     SECTION("wrap_around_update_producer_state") {
-        fstlog::log_buffer_impl test_log_buffer(1024);
-        using index_type = decltype(test_log_buffer.write_pos_)::value_type;
+        constexpr std::uint32_t buff_size = fstlog::config::max_ringbuffer_size;
+        fstlog::log_buffer_impl test_log_buffer(buff_size);
+        REQUIRE(test_log_buffer.good());
+        REQUIRE(test_log_buffer.size() == buff_size);
+        auto begin_pos = test_log_buffer.write_pos();
+        REQUIRE(begin_pos == 0);
+        auto end_pos = begin_pos + test_log_buffer.size();
+        REQUIRE(begin_pos == test_log_buffer.read_pos());
+        using index_type = decltype(begin_pos);
+        CHECK(std::is_unsigned_v<index_type>);
+        auto begin_ptr = test_log_buffer.write_ptr();
+        auto end_ptr = begin_ptr + test_log_buffer.size();
 
-        index_type custom_pos{ (std::numeric_limits<index_type>::max)()};
-        custom_pos -= static_cast<index_type>(fstlog::constants::internal_msg_alignment) - 1;
-
-        test_log_buffer.write_pos_ = custom_pos;
-        test_log_buffer.read_pos_ = custom_pos;
-        test_log_buffer.writeable_size_ = fstlog::constants::internal_msg_alignment;
+        constexpr index_type custom_pos = (std::numeric_limits<index_type>::max)() 
+            - static_cast<index_type>(fstlog::constants::internal_msg_alignment) + 1;
+        auto bytes_to_step = custom_pos;
+        while (bytes_to_step) {
+            const auto current_step = bytes_to_step < test_log_buffer.writeable_size() ?
+                bytes_to_step : test_log_buffer.writeable_size();
+            test_log_buffer.advance_write_pos(current_step);
+            test_log_buffer.advance_read_pos(current_step);
+            test_log_buffer.update_producer_state(0);
+            bytes_to_step -= current_step;
+        }
+        REQUIRE(custom_pos == test_log_buffer.write_pos());
+        REQUIRE(custom_pos == test_log_buffer.read_pos());
+        CHECK(test_log_buffer.writeable_size() == fstlog::constants::internal_msg_alignment);
 
         const auto wptr_0{ test_log_buffer.write_ptr() };
-
-        CHECK(wptr_0 == test_log_buffer.begin_
-            + test_log_buffer.size() 
-            - fstlog::constants::internal_msg_alignment);
+        CHECK(wptr_0 == end_ptr - fstlog::constants::internal_msg_alignment);
         CHECK(!test_log_buffer.half_full());
 
         fstlog::log_buffer_unread_data unr;
@@ -50,8 +65,8 @@ TEST_CASE("log_buffer") {
         CHECK((unr.size1 == 0 && unr.size2 == 0));
 
         test_log_buffer.update_producer_state(2 * fstlog::constants::internal_msg_alignment);
-        CHECK((test_log_buffer.write_pos_ == 0
-            && test_log_buffer.write_ptr() == test_log_buffer.begin_));
+        CHECK((test_log_buffer.write_pos() == 0
+            && test_log_buffer.write_ptr() == begin_ptr));
         CHECK(!test_log_buffer.half_full());
         test_log_buffer.advance_write_pos(2 * fstlog::constants::internal_msg_alignment);
         CHECK(!test_log_buffer.half_full());
@@ -59,28 +74,45 @@ TEST_CASE("log_buffer") {
         test_log_buffer.get_unread(unr);
         CHECK((unr.pos1 == wptr_0 
             && unr.size1 == fstlog::constants::internal_msg_alignment));
-        CHECK((unr.pos2 == test_log_buffer.begin_
+        CHECK((unr.pos2 == begin_ptr
             && unr.size2 == 2 * fstlog::constants::internal_msg_alignment));
         test_log_buffer.advance_read_pos(unr.size1 + unr.size2);
-        CHECK(test_log_buffer.read_pos_ == 2 * fstlog::constants::internal_msg_alignment);
+        CHECK(test_log_buffer.read_pos() == 2 * fstlog::constants::internal_msg_alignment);
         CHECK(!test_log_buffer.half_full());
     };
 
     SECTION("wrap_around_advance_write_pos") {
-        fstlog::log_buffer_impl test_log_buffer(1024);
-        using index_type = decltype(test_log_buffer.write_pos_)::value_type;
+        constexpr std::uint32_t buff_size = fstlog::config::max_ringbuffer_size;
+        fstlog::log_buffer_impl test_log_buffer(buff_size);
+        REQUIRE(test_log_buffer.good());
+        REQUIRE(test_log_buffer.size() == buff_size);
+        auto begin_pos = test_log_buffer.write_pos();
+        REQUIRE(begin_pos == 0);
+        auto end_pos = begin_pos + test_log_buffer.size();
+        REQUIRE(begin_pos == test_log_buffer.read_pos());
+        using index_type = decltype(begin_pos);
+        CHECK(std::is_unsigned_v<index_type>);
+        auto begin_ptr = test_log_buffer.write_ptr();
+        auto end_ptr = begin_ptr + test_log_buffer.size();
 
-        index_type custom_pos{ (std::numeric_limits<index_type>::max)() };
-        custom_pos -= static_cast<index_type>(fstlog::constants::internal_msg_alignment) - 1;
-
-        test_log_buffer.write_pos_ = custom_pos;
-        test_log_buffer.read_pos_ = custom_pos;
-        test_log_buffer.writeable_size_ = fstlog::constants::internal_msg_alignment;
+        constexpr index_type custom_pos = (std::numeric_limits<index_type>::max)()
+            - static_cast<index_type>(fstlog::constants::internal_msg_alignment) + 1;
+        auto bytes_to_step = custom_pos;
+        while (bytes_to_step) {
+            const auto current_step = bytes_to_step < test_log_buffer.writeable_size() ?
+                bytes_to_step : test_log_buffer.writeable_size();
+            test_log_buffer.advance_write_pos(current_step);
+            test_log_buffer.advance_read_pos(current_step);
+            test_log_buffer.update_producer_state(0);
+            bytes_to_step -= current_step;
+        }
+        REQUIRE(custom_pos == test_log_buffer.write_pos());
+        REQUIRE(custom_pos == test_log_buffer.read_pos());
+        CHECK(test_log_buffer.writeable_size() == fstlog::constants::internal_msg_alignment);
 
         const auto wptr_0{ test_log_buffer.write_ptr() };
 
-        CHECK(wptr_0 == test_log_buffer.begin_
-            + test_log_buffer.size()
+        CHECK(wptr_0 == end_ptr
             - fstlog::constants::internal_msg_alignment);
 
         fstlog::log_buffer_unread_data unr;
@@ -90,8 +122,8 @@ TEST_CASE("log_buffer") {
         CHECK(!test_log_buffer.half_full());
         test_log_buffer.advance_write_pos(fstlog::constants::internal_msg_alignment);
         CHECK(!test_log_buffer.half_full());
-        CHECK((test_log_buffer.write_pos_ == 0
-            && test_log_buffer.write_ptr() == test_log_buffer.begin_));
+        CHECK((test_log_buffer.write_pos() == 0
+            && test_log_buffer.write_ptr() == begin_ptr));
         test_log_buffer.snapshot_write_pos();
         test_log_buffer.get_unread(unr);
         CHECK((unr.pos1 == wptr_0
@@ -99,7 +131,7 @@ TEST_CASE("log_buffer") {
         CHECK(unr.size2 == 0);
         test_log_buffer.advance_read_pos(unr.size1 + unr.size2);
         CHECK(!test_log_buffer.half_full());
-        CHECK(test_log_buffer.read_pos_ == 0);
+        CHECK(test_log_buffer.read_pos() == 0);
     };
 }
 

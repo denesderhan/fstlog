@@ -151,9 +151,9 @@ namespace fstlog {
         std::size_t use_count() const noexcept {
             return reference_counter_.load(std::memory_order_relaxed);
         }
-#ifndef FSTLOG_TESTING
+
     private:
-#endif
+
         void add_reference() noexcept;
         // returns true if this was the last reference
         bool remove_reference() noexcept;
