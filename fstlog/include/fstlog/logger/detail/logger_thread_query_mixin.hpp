@@ -8,7 +8,7 @@ namespace fstlog {
     class logger_thread_query_mixin : public L {
     public:
         static auto thread() noexcept {
-            return this_thread::get_id();
+            return fstlog::this_thread::get_id();
         }
     };
 }

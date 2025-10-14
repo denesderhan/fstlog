@@ -431,7 +431,7 @@ namespace fstlog {
     {
         LOG_LL_INFO(logger_, 
             "fstlog v{}, core: {} started a background thread, thread id: {}, polling interval: {} millisec.", 
-            fstlog::version(), name(), this_thread::get_id(), poll_interval().count());
+            fstlog::version(), name(), fstlog::this_thread::get_id(), poll_interval().count());
         
         steady_msec current_time;
         std::uintmax_t cycle_count = 0;

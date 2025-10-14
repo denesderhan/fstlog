@@ -111,7 +111,7 @@ namespace fstlog {
             return logger_st_fix_t::name();
         }
 
-        small_string<32> thread() const noexcept {
+        auto thread() const noexcept {
             return logger_st_fix_t::thread();
         }
 

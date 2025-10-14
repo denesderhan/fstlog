@@ -116,7 +116,7 @@ namespace fstlog {
             logger_impl::set_name(name);
         }
         // thread safe
-        static small_string<32> thread() noexcept {
+        static auto thread() noexcept {
             return logger_impl::thread();
         }
         // thread safe

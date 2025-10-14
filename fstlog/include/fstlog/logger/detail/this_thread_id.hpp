@@ -1,29 +1,73 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <cstdint>
-#include <cstring>
-#include <thread>
+#if defined(_WIN32)
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #include <windows.h>
+#elif defined(__linux__)
+    #ifndef _GNU_SOURCE
+        #define _GNU_SOURCE
+    #endif
+    #include <sys/types.h>
+    #include <unistd.h>
+#elif defined(__APPLE__) 
+    #include <cstdint>
+    #include <pthread.h>
+#else
+    #include <cstdint>
+    #include <cstring>
+    #include <functional>
+    #include <thread>
+    #include <type_traits>
 
-namespace fstlog {
-    namespace this_thread {
-        inline std::uint32_t get_id() noexcept {
-            const auto thread_id{ std::this_thread::get_id() };
-            if constexpr (sizeof(thread_id) <= sizeof(std::uint32_t)) {
-                std::uint32_t thr_id_num{ 0 };
-                std::memcpy(&thr_id_num, &thread_id, sizeof(thread_id));
-                return thr_id_num;
+    #include <detail/safe_reinterpret_cast.hpp>
+#endif
+
+namespace fstlog::this_thread {
+    /**
+     * Get the current thread's system ID.
+     * @return Platform-specific thread identifier
+     * @note Return type varies by platform
+     */
+    inline auto get_id() noexcept {
+#if defined(_WIN32)
+        return GetCurrentThreadId();
+#elif defined(__linux__)
+        return gettid();
+#elif defined(__APPLE__)
+        std::uint64_t id;
+        pthread_threadid_np(NULL, &id);
+        return id;
+#else
+        const auto data = std::this_thread::get_id();
+        if constexpr (std::is_trivially_copyable_v<decltype(data)>) {
+            if constexpr (sizeof(data) == sizeof(unsigned char)) {
+                return *safe_reinterpret_cast<const unsigned char*>(&data);
+            }
+            if constexpr (sizeof(data) == sizeof(std::uint16_t)) {
+                std::uint16_t id;
+                std::memcpy(&id, &data, sizeof(data));
+                return id;
+            }
+            if constexpr (sizeof(data) == sizeof(std::uint32_t)) {
+                std::uint32_t id;
+                std::memcpy(&id, &data, sizeof(data));
+                return id;
+            }
+            else if constexpr (sizeof(data) == sizeof(std::uint64_t)) {
+                std::uint64_t id;
+                std::memcpy(&id, &data, sizeof(data));
+                return id;
             }
             else {
-                std::uint64_t thr_id_num{ 0 };
-                if constexpr (sizeof(thread_id) <= sizeof(std::uint64_t)) {
-                    std::memcpy(&thr_id_num, &thread_id, sizeof(thread_id));
-                }
-                else {
-                    std::memcpy(&thr_id_num, &thread_id, sizeof(thr_id_num));
-                }
-                return static_cast<std::uint32_t>((thr_id_num >> 32) ^ (thr_id_num & 0xffffffff));
+                return std::hash<std::thread::id>{}(std::this_thread::get_id());
             }
         }
+        else {
+            return std::hash<std::thread::id>{}(std::this_thread::get_id());
+        }
+#endif
     }
 }

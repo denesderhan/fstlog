@@ -94,7 +94,7 @@ namespace fstlog {
             return logger_background_impl::name();
         }
         //thread safe
-        std::uint32_t thread() const noexcept {
+        auto thread() const noexcept {
             return logger_background_impl::thread();
         }
         //thread safe
