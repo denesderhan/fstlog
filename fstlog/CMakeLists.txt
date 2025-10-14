@@ -185,7 +185,6 @@ set(src_filter
     "src/filter/filter.cpp"
     "src/filter/filter_impl.hpp"
     "src/filter/filter_internal.hpp"
-    "src/filter/filter_mixin.hpp"
 )
 
 set(src_formatter
@@ -262,6 +261,7 @@ set(src_output_impl
 
 set(src_sink
     "src/sink/sink.cpp"
+    "src/sink/sink_filter_mixin.hpp"
     "src/sink/sink_flush_time_mixin.hpp"
     "src/sink/sink_formatter_mixin.hpp"
     "src/sink/sink_interface.hpp"

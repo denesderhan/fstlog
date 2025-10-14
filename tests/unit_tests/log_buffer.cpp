@@ -33,7 +33,7 @@ TEST_CASE("log_buffer") {
         REQUIRE(test_log_buffer.size() == buff_size);
         auto begin_pos = test_log_buffer.write_pos();
         REQUIRE(begin_pos == 0);
-        auto end_pos = begin_pos + test_log_buffer.size();
+        //auto end_pos = begin_pos + test_log_buffer.size();
         REQUIRE(begin_pos == test_log_buffer.read_pos());
         using index_type = decltype(begin_pos);
         CHECK(std::is_unsigned_v<index_type>);
@@ -88,7 +88,7 @@ TEST_CASE("log_buffer") {
         REQUIRE(test_log_buffer.size() == buff_size);
         auto begin_pos = test_log_buffer.write_pos();
         REQUIRE(begin_pos == 0);
-        auto end_pos = begin_pos + test_log_buffer.size();
+        //auto end_pos = begin_pos + test_log_buffer.size();
         REQUIRE(begin_pos == test_log_buffer.read_pos());
         using index_type = decltype(begin_pos);
         CHECK(std::is_unsigned_v<index_type>);

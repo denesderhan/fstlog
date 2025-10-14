@@ -12,7 +12,7 @@
 #include <filter/filter_impl.hpp>
 #include <filter/filter_internal.hpp>
 #include <sink/impl/sink_unsort_mixin.hpp>
-#include <filter/filter_mixin.hpp>
+#include <sink/sink_filter_mixin.hpp>
 #include <sink/sink_flush_time_mixin.hpp>
 #include <sink/sink_formatter_mixin.hpp>
 #include <sink/sink_interface_mixin.hpp>
@@ -26,7 +26,7 @@ namespace fstlog {
         sink_unsort_mixin<
         sink_formatter_mixin<2048,
         sink_output_mixin<
-        filter_mixin<
+        sink_filter_mixin<
         sink_flush_time_mixin<
         reference_counter_mixin<
         exclusive_use_mixin<
