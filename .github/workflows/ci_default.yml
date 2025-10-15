@@ -90,6 +90,31 @@ jobs:
       run: |
         ${{ runner.os == 'Windows' && '.\Release\hello_world.exe' || './hello_world' }}
     
+    - name: Run log_calls
+      working-directory: ./build/bin/Static
+      run: |
+        ${{ runner.os == 'Windows' && '.\Release\log_calls.exe' || './log_calls' }}
+      
+    - name: Run formatter_config
+      working-directory: ./build/bin/Static
+      run: |
+        ${{ runner.os == 'Windows' && '.\Release\formatter_config.exe' || './formatter_config' }}
+
+    - name: Run filter
+      working-directory: ./build/bin/Static
+      run: |
+        ${{ runner.os == 'Windows' && '.\Release\filter.exe' || './filter' }}
+      
+    - name: Run multi_threaded
+      working-directory: ./build/bin/Static
+      run: |
+        ${{ runner.os == 'Windows' && '.\Release\multi_threaded.exe' || './multi_threaded' }}
+      
+    - name: Run sink_output
+      working-directory: ./build/bin/Static
+      run: |
+        ${{ runner.os == 'Windows' && '.\Release\sink_output.exe' || './sink_output' }}
+    
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
