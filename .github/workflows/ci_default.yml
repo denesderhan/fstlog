@@ -88,7 +88,7 @@ jobs:
     - name: Run hello_world
       working-directory: ./build/bin/Static
       run: |
-        ${{ runner.os == 'Windows' && 'hello_world.exe' || './hello_world' }}
+        ${{ runner.os == 'Windows' && '.\Release\hello_world.exe' || './hello_world' }}
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
