@@ -6,6 +6,7 @@
 #include <limits>
 #include <string_view>
 
+#include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/is_pow2.hpp>
 
 namespace fstlog {
@@ -46,6 +47,16 @@ namespace fstlog {
 
         constexpr bool empty() const noexcept {
             return free_ == capacity();
+        }
+
+        char& operator[](std::size_t ind) noexcept {
+            FSTLOG_ASSERT(ind < size());
+            return string_[ind];
+        }
+
+        char const& operator[](std::size_t ind) const noexcept {
+            FSTLOG_ASSERT(ind < size());
+            return string_[ind];
         }
 
         constexpr operator std::string_view() const noexcept {

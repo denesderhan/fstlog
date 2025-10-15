@@ -95,22 +95,22 @@ int main()
 
     // Logging containers
     std::tuple<std::vector<int>, std::pair<bool, float>, int> var3{ {1, 2}, {true, 1.5f}, 2 };
-    LOG_INFO(my_logger, "Logging containers: std::tuple<std::vector<int>, std::pair<bool, float>, int>: {}", var3);
+    LOG_TRACE(my_logger, "Logging containers: std::tuple<std::vector<int>, std::pair<bool, float>, int>: {}", var3);
 
     // All containers are loggable that have: a value_type, a size() method, an iterator
     // and contain loggable types
     example_container<std::vector<int>> var4{ {{1, 2}, {3, 4}} };
-    LOG_INFO(my_logger, "Logging custom containers: {}", var4);
+    LOG_DEBUG(my_logger, "Logging custom containers: {}", var4);
     example_container<example_container<std::vector<int>>> var5{ {var4, var4} };
     LOG_INFO(my_logger, "Logging custom containers: {}", var5);
 
     // Formatting messages
     // the syntax of std::format is used, (available formatting options are dependent on formatter type)
     // align message parameters with filler chars
-    LOG_INFO(my_logger, "Logging aligned: {:.>10}, {:ʘ^10}", 3, "TEXT");
+    LOG_WARN(my_logger, "Logging aligned: {:.>10}, {:ʘ^10}", 3, "TEXT");
     // number formatting
-    LOG_INFO(my_logger, "Number formatting: hex: {:#X}, binary: {:+#b}, precision: {:.2}, scientific: {:.3e}", -10, (signed char)10, 1.23456f, 100000.5f);
+    LOG_ERROR(my_logger, "Number formatting: hex: {:#X}, binary: {:+#b}, precision: {:.2}, scientific: {:.3e}", -10, (signed char)10, 1.23456f, 100000.5f);
     
     // Unsafe unicode code points are escaped in the formatted log message.
-    LOG_INFO(my_logger, "Escaping unsafe characters:\t\a {} ", "\b\r\nThis should be in the same line!");
+    LOG_FATAL(my_logger, "Escaping unsafe characters:\t\a {} ", "\b\r\nThis should be in the same line!");
 }
