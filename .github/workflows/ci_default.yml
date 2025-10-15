@@ -33,7 +33,7 @@ jobs:
       uses: actions/checkout@v4
            
     - name: Configure CMake
-      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DFSTLOG_EXAMPLES=ON -DFSTLOG_TESTS=ON
                 
     - name: Build
       run: cmake --build build --config Release
@@ -84,7 +84,16 @@ jobs:
           exit 1
         fi
         echo "Unix install verification passed."
-
+        
+    - name: Run tests
+      working-directory: ./build/tests
+      run: ctest --output-on-failure
+    
+    - name: Run hello_world
+      working-directory: ./build/bin/Static
+      run: |
+        ${{ runner.os == 'Windows' && '.\hello_world.exe' || './hello_world' }}
+    
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
