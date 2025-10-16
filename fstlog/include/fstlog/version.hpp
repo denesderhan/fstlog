@@ -30,7 +30,7 @@
  * @see fstlog::compatible() in @ref compatible.hpp
  * @note For major version 0, all components must match exactly
  */
-#define FSTLOG_HEADER_VERSION_PATCH 3
+#define FSTLOG_HEADER_VERSION_PATCH 4
 
 namespace fstlog {
     /**

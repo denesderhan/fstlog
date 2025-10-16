@@ -2,7 +2,16 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <catch2/catch_all.hpp>
 
-#if __cpp_nontype_template_args == 201911L
+
+#if ((not defined(FSTLOG_CLANG_NTTP)) && defined(__clang__)) 
+#if __has_extension(cxx_generalized_nttp)
+#define FSTLOG_CLANG_NTTP
+#endif
+#endif
+#if (defined(__cpp_nontype_template_args) && __cpp_nontype_template_args >= 201911L)\
+    || (defined(__GNUC__) && defined(__cpp_nontype_template_parameter_class)\
+        && __cpp_nontype_template_parameter_class >= 201806L)\
+    || defined(FSTLOG_CLANG_NTTP)
 #define FSTLOG_TEST_FIX_LOGGER
 #include <fstlog/logger/logger_st_fix.hpp>
 #endif
