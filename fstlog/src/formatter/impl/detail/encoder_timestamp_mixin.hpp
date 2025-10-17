@@ -331,7 +331,7 @@ namespace fstlog {
         error_code apply_fill_align(format_setting_txt format) noexcept {
             if constexpr (use_fill_align) {
                 // compute string lengths for the formatted timestamp
-                auto stamp_str = create_time_string(stamp_type{});
+                const auto stamp_str = create_time_string(stamp_type{});
                 const detail::utf8_len formatted_len =
                     detail::utf::utf8_str_trim(unaligned_span{ stamp_str.data(), stamp_str.size() });
 

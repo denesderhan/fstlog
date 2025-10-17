@@ -146,14 +146,6 @@ namespace fstlog {
                      safe_reinterpret_cast<const unsigned char*>(to_encode.data()),
                      to_encode.size() }, format);
             }
-            else if (meta == 8) {
-                small_string<256> to_encode;
-                this->get_data(to_encode);
-                if (!this->has_error())
-                    this->encode(byte_span_const{
-                    safe_reinterpret_cast<const unsigned char*>(to_encode.data()),
-                    to_encode.size() }, format);
-            }
             else {
                 this->set_error(__FILE__, __LINE__, 
                     error_code::input_bad);

@@ -126,22 +126,22 @@ namespace fstlog {
 #if defined(_MSC_VER)
 #pragma warning(pop)
 #endif
-        static constexpr std::array<small_string<6>, 6> severities_{
-            small_string<6>{"TRACE"},
-            small_string<6>{"DEBUG"},
-            small_string<6>{"INFO"},
-            small_string<6>{"WARN"},
-            small_string<6>{"ERROR"},
-            small_string<6>{"FATAL"}
+        static constexpr std::array<small_string<8>, 6> severities_{
+            small_string<8>{"TRACE"},
+            small_string<8>{"DEBUG"},
+            small_string<8>{"INFO"},
+            small_string<8>{"WARN"},
+            small_string<8>{"ERROR"},
+            small_string<8>{"FATAL"}
         };
 
-        static constexpr std::array<small_string<30>, 6> colored_severities_{
-            small_string<30>{"\033[38;5;30;1mTRACE\033[0m"},
-            small_string<30>{"\033[38;5;37;1mDEBUG\033[0m"},
-            small_string<30>{"\033[38;5;34;1mINFO\033[0m"},
-            small_string<30>{"\033[38;5;208;1mWARN\033[0m"},
-            small_string<30>{"\033[38;5;160;1mERROR\033[0m"},
-            small_string<30>{"\033[38;5;196;1mFATAL\033[0m"}
+        static constexpr std::array<small_string<24>, 6> colored_severities_{
+            small_string<24>{"\033[38;5;30;1mTRACE\033[0m"},
+            small_string<24>{"\033[38;5;37;1mDEBUG\033[0m"},
+            small_string<24>{"\033[38;5;34;1mINFO\033[0m"},
+            small_string<24>{"\033[38;5;208;1mWARN\033[0m"},
+            small_string<24>{"\033[38;5;160;1mERROR\033[0m"},
+            small_string<24>{"\033[38;5;196;1mFATAL\033[0m"}
         };
     };
 }

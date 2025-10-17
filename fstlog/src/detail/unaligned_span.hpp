@@ -10,7 +10,7 @@
 #include <fstlog/detail/fstlog_assert.hpp>
 
 namespace fstlog {
-    template<typename T = unsigned char>
+    template<typename T>
     class unaligned_span final {
     public:
         using element_type = T;
@@ -270,6 +270,8 @@ namespace fstlog {
         // --------------------------------------------------------------------------------
     };
 
+    template<typename T>
+    unaligned_span(T*, std::size_t) -> unaligned_span<T>;
     // Deduction guide for unaligned_span to propagate const.
     template<typename U, std::size_t N>
     unaligned_span(const std::array<U, N>&) -> unaligned_span<const U>;
