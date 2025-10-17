@@ -2,7 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 
-#if ((not defined(FSTLOG_CLANG_NTTP)) && defined(__clang__)) 
+#if !defined(FSTLOG_CLANG_NTTP) && defined(__clang__)
 #if __has_extension(cxx_generalized_nttp)
 #define FSTLOG_CLANG_NTTP
 #endif

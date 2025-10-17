@@ -1,7 +1,7 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <cstddef> // __cpp_lib_format is defined here in windows
-#if not defined(__cpp_lib_format) && (defined(__cplusplus) && __cplusplus >= 202000L)
+#if !defined(__cpp_lib_format) && (defined(__cplusplus) && __cplusplus >= 202000L)
 #include <format> // __cpp_lib_format is defined here in gcc if __cplusplus >= 202000L
 #endif
 #include <iostream>

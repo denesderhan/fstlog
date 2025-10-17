@@ -10,7 +10,7 @@
 #include <fstlog/logger/logger.hpp>
 #include <fstlog/logger/logger_mt.hpp>
 #include <fstlog/logger/logger_st.hpp>
-#if ((not defined(FSTLOG_CLANG_NTTP)) && defined(__clang__)) 
+#if !defined(FSTLOG_CLANG_NTTP) && defined(__clang__)
 #if __has_extension(cxx_generalized_nttp)
 #define FSTLOG_CLANG_NTTP
 #endif

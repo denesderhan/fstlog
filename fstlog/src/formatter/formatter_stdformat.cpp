@@ -3,7 +3,7 @@
 #include <fstlog/formatter/formatter_stdformat.hpp>
 
 #include <cstddef> // __cpp_lib_format is defined here in windows
-#if not defined(__cpp_lib_format) && (defined(__cplusplus) && __cplusplus >= 202000L)
+#if !defined(__cpp_lib_format) && (defined(__cplusplus) && __cplusplus >= 202000L)
 #include <format> // __cpp_lib_format is defined here in gcc if __cplusplus >= 202000L
 #endif
 #include <config_formatter_txt.hpp>

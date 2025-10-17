@@ -3,7 +3,7 @@
 #include <catch2/catch_all.hpp>
 
 
-#if ((not defined(FSTLOG_CLANG_NTTP)) && defined(__clang__)) 
+#if !defined(FSTLOG_CLANG_NTTP) && defined(__clang__)
 #if __has_extension(cxx_generalized_nttp)
 #define FSTLOG_CLANG_NTTP
 #endif
