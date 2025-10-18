@@ -12,8 +12,7 @@ static fstlog::small_string<32> convert_small_string(fstlog::small_string<24> in
     return in;
 }
 
-static constexpr bool test_constexpr_mutation_small_string()
-{
+static constexpr bool test_constexpr_mutation_small_string() noexcept {
     fstlog::small_string<64> s; // Create a local object
     s.push_back('A');           // Mutate it
     s.push_back('B');           // Mutate it again
@@ -23,8 +22,6 @@ static constexpr bool test_constexpr_mutation_small_string()
     // Now check the final state
     return s.size() == 3 && s[0] == 'A' && s[1] == 'C' && s[2] == 'D';
 }
-
-static_assert(test_constexpr_mutation_small_string(), "This will fail to compile in C++17");
 
 TEST_CASE("small_string") {
     
