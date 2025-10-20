@@ -114,7 +114,7 @@ namespace fstlog {
             return logger_st_fix_t::get_core();
         }
 
-        small_string<32> name() const noexcept {
+        auto name() const noexcept {
             return logger_st_fix_t::name();
         }
 

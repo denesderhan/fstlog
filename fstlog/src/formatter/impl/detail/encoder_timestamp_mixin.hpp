@@ -262,12 +262,13 @@ namespace fstlog {
             if (error != error_code::none) return error;
 
             // try to format a timestamp ( without replacing the seconds placeholder )
+            FSTLOG_ASSERT(second_pos_ == 255);
             auto stamp_str = create_time_string(stamp_type{});
             // if empty, there was not enough space (string size can grow do to formatting)
             if (stamp_str.empty()) {
                 return error_code::str_long;
             }
-            // the formatted string size will be a constant ( no variable length strftime format specifiers are allowed)
+            // the formatted string size will be a constant ( no variable length strftime format specifiers are use/allowed)
             formatted_length_ = static_cast<unsigned char>(stamp_str.size());
                                     
             return error_code::none;
@@ -297,17 +298,22 @@ namespace fstlog {
          * @post All 0x1 bytes in time_format_ will be replaced with '0' characters
          */
         void prepare_seconds_placeholder() noexcept {
+            FSTLOG_ASSERT(second_pos_ == 255);
             auto stamp_str = create_time_string(stamp_type{});
-            std::size_t sec_pos = 0;
-            while (sec_pos < stamp_str.size() && *(stamp_str.data() + sec_pos) != 1) sec_pos++;
-            if (sec_pos == stamp_str.size()) sec_pos = 255;
-            second_pos_ = static_cast<unsigned char>(sec_pos);
-            
-            // replace 0x1-s with '0'-s
-            std::array<char, 64> temp{ 0 };
-            std::memcpy(temp.data(), time_format_.data(), time_format_.size());
-            for (auto& c : temp) if (c == 1) c = '0';
-            time_format_ = small_string<64>(temp.data(), time_format_.size());
+            unsigned char sec_pos = 0;
+            for (auto c : stamp_str) {
+                if (c == 1) break;
+                sec_pos++;
+            }
+            if (sec_pos != stamp_str.size()) {
+                // position of seconds in the formatted timestamp
+                second_pos_ = sec_pos;
+            }
+                        
+            // replace 0x1-s with '0'-s in the original format string
+            for (auto& c : time_format_) {
+                if (c == 1) c = '0';
+            }
         }
 
         /**
@@ -379,62 +385,52 @@ namespace fstlog {
         * This function is noexcept and modifies internal state.
         */
         error_code preformat_time_format() noexcept {
-            unaligned_span<const char> input{
-                time_format_.data(),
-                time_format_.size() };
-            std::array<char, decltype(time_format_)::capacity()> temp{0};
-            unaligned_span<char> output{
-                temp.data(),
-                temp.size() };
-            while (input.size() > 1) {
+            decltype(time_format_) pref_time_format;
+            FSTLOG_ASSERT(time_format_.size() > 0);
+            const int last_ind = static_cast<int>(time_format_.size() - 1);
+            int ind = 0;
+            while (ind < last_ind) {
                 // replace %S conversion specifier
-                if (input.template get<0>() == '%' 
-                    && input.template get<1>() == 'S')
+                if (time_format_[ind] == '%'
+                    && time_format_[ind + 1] == 'S')
                 {
-                    second_pos_ = static_cast<unsigned char>(temp.size() - output.size());
                     const std::size_t second_charnum = second_precision_ == 0 ? 2 : second_precision_ + 3;
-                    if(output.size() < second_charnum) {
+                    if (pref_time_format.free_size() < second_charnum) {
                         return error_code::str_long; // not enough space
                     }
-                    std::memset(output.data_bytes(), 1, second_charnum);
-                    output.drop_front(second_charnum);
-                    input.template drop_front<2>();
+                    for (int i = 0; i < second_charnum; i++) pref_time_format.push_back(1);
+                    ind += 2;
                 }
                 // replace %z conversion specifier only if tzone_ is UTC
-                else if (input.template get<0>() == '%'
-                    && input.template get<1>() == 'z'
+                else if (time_format_[ind] == '%'
+                    && time_format_[ind + 1] == 'z'
                     && tzone_ == tz_format::UTC)
                 {
-                    if (output.size() < 5) {
+                    if (pref_time_format.free_size() < 5) {
                         return error_code::str_long; // not enough space
                     }
-                    std::memcpy(output.data_bytes(), "+0000", 5);
-                    output.template drop_front<5>();
-                    input.template drop_front<2>();
+                    pref_time_format += "+0000";
+                    ind += 2;
                 }
                 else {
-                    if (output.empty()){
+                    if (pref_time_format.free_size() == 0) {
                         return error_code::str_long; // not enough space
                     }
-                    output.template set<0>(input. template get<0>());
-                    input.template drop_front<1>();
-                    output.template drop_front<1>();
+                    pref_time_format.push_back(time_format_[ind]);
+                    ind++;
                 }
             }
             // copy the remaining character if any
-            if(!input.empty()) {
-                if(output.empty()){
+            if (ind < time_format_.size()) {
+                if (pref_time_format.free_size() == 0) {
                     return error_code::str_long; // not enough space
                 }
-                else {
-                    output.template set<0>(input.template get<0>());
-                    output.template drop_front<1>();
-                }
+                pref_time_format.push_back(time_format_[ind]);
             }
-            time_format_ = small_string<64>(temp.data(), temp.size() - output.size());
+            time_format_ = pref_time_format;
             return error_code::none;
         }
-
+                
         /**
          * @brief Creates a formatted time string with "00....0" second placeholder for the given timestamp.
          *
@@ -505,15 +501,15 @@ namespace fstlog {
             std::size_t form_pos = 0;
             std::size_t pos = 0;
             while (form_pos < form_str_len - 1) {
-                char c0 = *(time_format_.data() + form_pos++);
+                char c0 = time_format_[form_pos++];
                 // not a format specifier
                 if (c0 != '%') {
                     buff[pos++] = c0;
                     continue;
                 }
-                
+
                 int num{ 0 };
-                const char c1 = *(time_format_.data() + form_pos++);
+                const char c1 = time_format_[form_pos++];
                 // %% (%)
                 if (c1 == '%') {
                     buff[pos++] = '%';
@@ -585,7 +581,7 @@ namespace fstlog {
             }
             // if there is a 1 char remainder at the end of form_str
             if (form_pos < form_str_len) {
-                buff[pos++] = *(time_format_.data() + form_pos++);
+                buff[pos++] = time_format_[form_pos];
             }
             FSTLOG_ASSERT(pos < buff.size());
             // if not enough space in small_string<64>
