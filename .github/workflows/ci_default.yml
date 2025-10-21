@@ -19,7 +19,7 @@ on:
      
 jobs:
   build:
-    name: Default build ${{ matrix.os }}
+    name: Default ${{ matrix.label }} build ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     
@@ -27,13 +27,19 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        label: ['Static', 'Shared']
+        include:
+          - label: 'Static'
+            cmake_flags: '-DBUILD_SHARED_LIBS=OFF'
+          - label: 'Shared'
+            cmake_flags: '-DBUILD_SHARED_LIBS=ON'
         
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
            
     - name: Configure CMake
-      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DFSTLOG_EXAMPLES=ON
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DFSTLOG_EXAMPLES=ON ${{ matrix.cmake_flags }}
                 
     - name: Build
       run: cmake --build build --config Release
@@ -52,17 +58,17 @@ jobs:
       run: |
         # Check using Powershell Test-Path
         # Check if the include files installed
-        if (!(Test-Path -Path "./build/bin/Static/fstlog/include/fstlog/version.hpp")) {
+        if (!(Test-Path -Path "./build/bin/${{ matrix.label }}/fstlog/include/fstlog/version.hpp")) {
           Write-Output "Error: Include files did not install!"
           exit 1
         }
         # Check if cmake files installed
-        if (!(Test-Path -Path "./build/bin/Static/fstlog/lib/cmake/fstlog/fstlogConfig.cmake")) {
+        if (!(Test-Path -Path "./build/bin/${{ matrix.label }}/fstlog/lib/cmake/fstlog/fstlogConfig.cmake")) {
           Write-Output "Error: Cmake files did not install!"
           exit 1
         }
         # Check if lib files installed
-        if (!(Test-Path -Path "./build/bin/Static/fstlog/lib/fstlog.lib")) {
+        if (!(Test-Path -Path "./build/bin/${{ matrix.label }}/fstlog/lib/fstlog.lib")) {
           Write-Output "Error: Lib file did not install!"
           exit 1
         }
@@ -86,39 +92,39 @@ jobs:
         echo "Unix install verification passed."
         
     - name: Run hello_world
-      working-directory: ./build/bin/Static
+      working-directory: ./build/bin/${{ matrix.label }}
       run: |
         ${{ runner.os == 'Windows' && '.\Release\hello_world.exe' || './hello_world' }}
     
     - name: Run log_calls
-      working-directory: ./build/bin/Static
+      working-directory: ./build/bin/${{ matrix.label }}
       run: |
         ${{ runner.os == 'Windows' && '.\Release\log_calls.exe' || './log_calls' }}
       
     - name: Run formatter_config
-      working-directory: ./build/bin/Static
+      working-directory: ./build/bin/${{ matrix.label }}
       run: |
         ${{ runner.os == 'Windows' && '.\Release\formatter_config.exe' || './formatter_config' }}
 
     - name: Run filter
-      working-directory: ./build/bin/Static
+      working-directory: ./build/bin/${{ matrix.label }}
       run: |
         ${{ runner.os == 'Windows' && '.\Release\filter.exe' || './filter' }}
       
     - name: Run multi_threaded
-      working-directory: ./build/bin/Static
+      working-directory: ./build/bin/${{ matrix.label }}
       run: |
         ${{ runner.os == 'Windows' && '.\Release\multi_threaded.exe' || './multi_threaded' }}
       
     - name: Run sink_output
-      working-directory: ./build/bin/Static
+      working-directory: ./build/bin/${{ matrix.label }}
       run: |
         ${{ runner.os == 'Windows' && '.\Release\sink_output.exe' || './sink_output' }}
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: default-build-${{ runner.os }}
+        name: default-${{ matrix.label }}-build-${{ runner.os }}
         path: |
           ./build/bin
           ./build/CMakeFiles/CMakeConfigureLog.yaml
