@@ -16,14 +16,10 @@ namespace fstlog {
         public sink_interface
     {
         typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
-    public:
-        using memory_resource_type = typename L::memory_resource_type;
     private:
         using wrapper_type = sink;
 
-        explicit sink_interface_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        sink_interface_mixin() noexcept = default;
 
         sink_interface_mixin(const sink_interface_mixin&) = delete;
         sink_interface_mixin& operator=(const sink_interface_mixin&) = delete;

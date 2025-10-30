@@ -6,30 +6,27 @@
 #include <fstlog/detail/aggregate_type.hpp>
 #include <fstlog/detail/types.hpp>
 #include <fstlog/detail/error_code.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     template<typename L>
     class encoder_aggregate_separator_txt_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit encoder_aggregate_separator_txt_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        encoder_aggregate_separator_txt_mixin() noexcept = default;
 
         encoder_aggregate_separator_txt_mixin(const encoder_aggregate_separator_txt_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 encoder_aggregate_separator_txt_mixin,
                 const encoder_aggregate_separator_txt_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : encoder_aggregate_separator_txt_mixin(other, other.get_memory_resource()) {}
-        encoder_aggregate_separator_txt_mixin(const encoder_aggregate_separator_txt_mixin& other, memory_resource_type* resource) noexcept(
+        encoder_aggregate_separator_txt_mixin(const encoder_aggregate_separator_txt_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
         encoder_aggregate_separator_txt_mixin(encoder_aggregate_separator_txt_mixin&& other) = delete;

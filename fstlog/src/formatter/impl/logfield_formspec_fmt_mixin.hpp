@@ -8,6 +8,7 @@
 
 #include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/small_string.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
@@ -18,13 +19,9 @@ namespace fstlog {
     class logfield_formspec_fmt_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
         typedef small_string<24> format_type;
 
-        explicit logfield_formspec_fmt_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource)
-        {
+        logfield_formspec_fmt_mixin() noexcept {
             field_formattings_.fill(get_default_format()); //noexcept
         }
 
@@ -33,13 +30,13 @@ namespace fstlog {
             && std::is_nothrow_constructible_v<
                 logfield_formspec_fmt_mixin,
                 const logfield_formspec_fmt_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : logfield_formspec_fmt_mixin(other, other.get_memory_resource()) {}
-        logfield_formspec_fmt_mixin(const logfield_formspec_fmt_mixin& other, memory_resource_type* resource) noexcept(
+        logfield_formspec_fmt_mixin(const logfield_formspec_fmt_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource),
             field_formattings_{ other.field_formattings_ } {} //noexcept
         

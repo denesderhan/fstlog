@@ -20,7 +20,8 @@ using enc_type = fstlog::encoder_charconv_fast_mixin<
 TEST_CASE("encoder_charconv_fast_mixin") {
     
     SECTION("no_space_in_buffer") {
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 10> buffer{'!'};
         buffer.fill('!');
         enc_type::format_type format;
@@ -67,7 +68,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 
         CAPTURE(to_encode, char(format.type));
 
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 128> buffer{ '!' };
         buffer.fill('!');
         encoder.output_span_init(buffer);
@@ -81,7 +83,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
     };
 
     SECTION("bool_bad_format_type") {
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 8> buffer{ '!' };
         fstlog::format_setting_txt_fast format{};
         for (int i = 1; i < 256; i++) {
@@ -116,7 +119,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 
         CAPTURE(to_encode, char(format.type));
 
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 128> buffer{ '!' };
         buffer.fill('!');
         encoder.output_span_init(buffer);
@@ -130,7 +134,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
     };
 
     SECTION("void*_bad_format_type") {
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 8> buffer{ '!' };
         fstlog::format_setting_txt_fast format{};
         for (int i = 1; i < 256; i++) {
@@ -174,7 +179,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 
         CAPTURE(to_encode, char(format.type));
 
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 128> buffer{ '!' };
         buffer.fill('!');
         encoder.output_span_init(buffer);
@@ -188,7 +194,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
     };
 
     SECTION("integer_bad_format_type") {
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 8> buffer{ '!' };
         fstlog::format_setting_txt_fast format{};
         for (int i = 1; i < 256; i++) {
@@ -239,7 +246,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
 
         CAPTURE(to_encode, char(format.type), format.precision);
 
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 128> buffer{ '!' };
         buffer.fill('!');
         encoder.output_span_init(buffer);
@@ -253,7 +261,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
     };
 
     SECTION("floating_point_bad_format_type") {
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 8> buffer{ '!' };
         fstlog::format_setting_txt_fast format{};
         for (int i = 1; i < 256; i++) {
@@ -274,7 +283,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
     };
 
     SECTION("char") {
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         auto format = enc_type::format_type{};
         std::array<unsigned char, 128> buffer;
 
@@ -337,7 +347,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
     }
 
     SECTION("string") {
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         auto format = enc_type::format_type{};
         std::array<unsigned char, 1024> buffer;
 
@@ -359,7 +370,8 @@ TEST_CASE("encoder_charconv_fast_mixin") {
     }
 
     SECTION("string_format_type") {
-        enc_type encoder(fstlog::get_default_resource());
+        enc_type encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 8> buffer{ '!' };
         fstlog::format_setting_txt_fast format{};
         for (int i = 1; i < 256; i++) {

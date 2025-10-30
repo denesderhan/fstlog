@@ -4,30 +4,27 @@
 #include <string_view>
 #include <type_traits>
 
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
 
 namespace fstlog {
     template<typename L>
     class hash_converter_null_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit hash_converter_null_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        hash_converter_null_mixin() noexcept = default;
 
         hash_converter_null_mixin(const hash_converter_null_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 hash_converter_null_mixin,
                 const hash_converter_null_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : hash_converter_null_mixin(other, other.get_memory_resource()) {}
-        hash_converter_null_mixin(const hash_converter_null_mixin& other, memory_resource_type* resource) noexcept(
+        hash_converter_null_mixin(const hash_converter_null_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
         hash_converter_null_mixin(hash_converter_null_mixin&& other) = delete;

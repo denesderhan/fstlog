@@ -12,6 +12,7 @@ namespace fstlog {
         if (pimpl_ != nullptr) return error_code::double_init;
         pimpl_ = make_allocated<filter_impl>(resource);
         if (pimpl_ == nullptr) return error_code::alloc_fail;
+        pimpl_->set_memory_resource(resource);
         return error_code::none;
     }
     error_code filter::init(
@@ -53,31 +54,27 @@ namespace fstlog {
     error_code filter::init(const filter& other, memory_resource* resource) noexcept {
         if (pimpl_ != nullptr) return error_code::double_init;
         if (other.pimpl_ == nullptr) return error_code::none;
-        pimpl_ = make_allocated<filter_impl>(
-            resource, 
-            *other.pimpl_);
+        pimpl_ = make_allocated<filter_impl>(resource, *other.pimpl_);
         if (pimpl_ == nullptr) return error_code::alloc_fail;
+        pimpl_->set_memory_resource(resource);
         return error_code::none;
     }
     filter& filter::operator=(const filter& other) noexcept {
-        if (this != &other && pimpl_ != nullptr) {
-            if (other.pimpl_ != nullptr) {
-                pimpl_->message_filter_ = other.pimpl_->message_filter_;
-            }
-            else {
-                memory_resource* resource{ pimpl_->get_memory_resource() };
-                pimpl_->~filter_impl();
-                nothrow_deallocate(pimpl_, resource);
-                pimpl_ = nullptr;
-            }
+        if (this != &other 
+            && pimpl_ != nullptr
+            && other.pimpl_ != nullptr)
+        {
+           pimpl_->message_filter_ = other.pimpl_->message_filter_;
         }
         return *this;
     }
+
     filter::filter(filter&& other) noexcept 
         : pimpl_{ other.pimpl_ } 
     {
         other.pimpl_ = nullptr;
     }
+
     filter& filter::operator=(filter&& other) noexcept {
         assert(this != &other);
         if (pimpl_ != nullptr) {
@@ -89,14 +86,17 @@ namespace fstlog {
         other.pimpl_ = nullptr;
         return *this;
     }
+
     bool filter::operator==(const filter& other) const noexcept {
         if (pimpl_ == nullptr && other.pimpl_ == nullptr) return true;
         if (pimpl_ == nullptr || other.pimpl_ == nullptr) return false;
         return pimpl_->message_filter_ == other.pimpl_->message_filter_;
     }
+
     bool filter::operator!=(const filter& other) const noexcept {
         return !(*this == other);
     }
+
     filter::~filter() noexcept {
         if (pimpl_ != nullptr) {
             memory_resource* resource{ pimpl_->get_memory_resource() };
@@ -105,6 +105,7 @@ namespace fstlog {
             pimpl_ = nullptr;
         }
     }
+
     bool filter::good() const noexcept {
         return pimpl_ != nullptr;
     }
@@ -134,6 +135,7 @@ namespace fstlog {
     //this is needed, to be able to nothrow construct an empty filter
     filter::filter(filter_impl* pimpl) noexcept
         : pimpl_{ pimpl } {}
+
     filter_impl* filter::pimpl() const noexcept {
         return pimpl_;
     }

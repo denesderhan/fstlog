@@ -10,8 +10,8 @@ using test_type = typename
     fstlog::memory_resource_mixin>;
 
 TEST_CASE("logfield_formspec_txt_fast_mixin") {
-    test_type instance(fstlog::get_default_resource());
-    
+    test_type instance;
+    instance.set_memory_resource(fstlog::get_default_resource());
     SECTION("01") {
         auto data = GENERATE(
             std::make_tuple(std::string_view("\xea\xb0\x80>+#30.12x"), fstlog::format_setting_txt_fast{ 'x', 0, 12}),

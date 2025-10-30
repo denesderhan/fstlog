@@ -29,10 +29,11 @@ namespace fstlog {
    {
        out = make_allocated<output_stream_mt_impl_type>(resource);
        if (out.pimpl() == nullptr) return error_code::alloc_fail;
-       auto error =
-           static_cast<output_stream_mt_impl_type*>(out.pimpl())->set_mutex(std::move(mutex));
+       const auto pimpl = static_cast<output_stream_mt_impl_type*>(out.pimpl());
+       pimpl->set_memory_resource(resource);
+       auto error = pimpl->set_mutex(std::move(mutex));
        if (error == error_code::none) {
-           error = static_cast<output_stream_mt_impl_type*>(out.pimpl())->set_stream(stream);
+           error = pimpl->set_stream(stream);
        }
        if (error != error_code::none) {
            out = output{};

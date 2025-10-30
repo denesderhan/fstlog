@@ -27,7 +27,8 @@ using enc_type = fstlog::encoder_stdformat_mixin<
                     fstlog::memory_resource_mixin>>>>;
 
 TEST_CASE("encoder_stdformat_mixin") {
-    enc_type encoder(fstlog::get_default_resource());
+    enc_type encoder;
+    encoder.set_memory_resource(fstlog::get_default_resource());
     std::array<unsigned char, 128> buffer;
     encoder.clear_error();
     encoder.output_span_init(fstlog::byte_span(buffer.data(), buffer.size()));

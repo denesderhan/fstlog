@@ -48,9 +48,10 @@ namespace fstlog {
         if (pimpl == nullptr) {
             return error_code::alloc_fail;
         }
+        pimpl->set_memory_resource(resource); 
         pimpl->set_filter(filter);
         pimpl->set_flush_interval(flush_interval);
-        auto error = pimpl->init_sink_sort(max_buffer_bytes);
+        auto error = pimpl->init_sink_sort(resource, max_buffer_bytes);
         if (error == error_code::none) error = pimpl->set_formatter(std::move(formatter));
         if (error == error_code::none) error = pimpl->set_output(std::move(output));
         if (error != error_code::none) {

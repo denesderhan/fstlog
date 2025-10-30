@@ -6,6 +6,7 @@
 
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <detail/unaligned_span.hpp>
 
 namespace fstlog {
@@ -13,24 +14,20 @@ namespace fstlog {
     class output_span_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit output_span_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        output_span_mixin() noexcept = default;
 
         output_span_mixin(const output_span_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 output_span_mixin,
                 const output_span_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : output_span_mixin(other, other.get_memory_resource()) {}
-        output_span_mixin(const output_span_mixin& other, memory_resource_type* resource) noexcept(
+        output_span_mixin(const output_span_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
         output_span_mixin(output_span_mixin&& other) = delete;

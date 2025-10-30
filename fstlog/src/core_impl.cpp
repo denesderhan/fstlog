@@ -15,15 +15,6 @@
 #include <sink/sink_interface.hpp>
 
 namespace fstlog {
-    core_impl::core_impl(std::string_view name, memory_resource* resource) noexcept
-        : name_(name),
-        bufferstore_(resource),
-        sinkstore_(resource)
-    {
-        if (buffer_poll_interval_ == std::chrono::milliseconds{0})
-            next_buffer_poll_ = (steady_msec::max)();
-    }
-
     core_impl::~core_impl() noexcept {
         stop();
         {
@@ -40,7 +31,12 @@ namespace fstlog {
         }
     }
 
-    error_code core_impl::init() {
+    error_code core_impl::init(std::string_view name, memory_resource* resource) noexcept {
+        set_memory_resource(resource);
+        name_ = name;
+        if (buffer_poll_interval_ == std::chrono::milliseconds{ 0 }) {
+            next_buffer_poll_ = (steady_msec::max)();
+        }
         {
             std::lock_guard<std::mutex> grd(init_mutex_);
             if (next_id_ == (std::numeric_limits<decltype(next_id_)>::max)()) {
@@ -59,6 +55,8 @@ namespace fstlog {
                 return error_code::core_limit;
             }
         }
+        bufferstore_ = std::move(dyn_array<log_buffer>(resource));
+        sinkstore_ = std::move(dyn_array<sink>(resource));
         if (!bufferstore_.grow(32)) return error_code::alloc_fail;
         if (!sinkstore_.grow(8)) return error_code::alloc_fail;
         
@@ -290,7 +288,8 @@ namespace fstlog {
     }
 
     log_buffer core_impl::get_buffer(std::uint32_t buffer_size) noexcept {
-        auto out{ make_allocated<log_buffer_impl>(get_memory_resource(), buffer_size) };
+        const auto resource = get_memory_resource();
+        auto out{ make_allocated<log_buffer_impl>(resource, buffer_size, resource) };
         if (out.good()) {
             std::lock_guard<std::mutex> bs_guard(bufferstore_mutex_);
             if (bufferstore_.try_push_back(out)) {

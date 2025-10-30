@@ -9,9 +9,7 @@ namespace fstlog {
     public:
         using wrapper_type = filter_impl*;
 
-        explicit filter_impl(memory_resource* resource) noexcept
-            : resource_{ resource } {
-        }
+        filter_impl() noexcept = default;
 
         filter_impl(const filter_impl& other) noexcept
             : filter_impl(other, other.get_memory_resource()) {
@@ -39,6 +37,10 @@ namespace fstlog {
 
         memory_resource* get_memory_resource() const noexcept {
             return resource_;
+        }
+
+        void set_memory_resource(memory_resource* resource) noexcept {
+            resource_ = resource;
         }
 
         filter_internal message_filter_{};

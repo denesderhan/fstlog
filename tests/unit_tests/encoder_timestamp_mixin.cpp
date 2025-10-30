@@ -64,7 +64,8 @@ TEST_CASE("encoder_timestamp_mixin") {
     std::array<unsigned char, 128> buffer;
     
     SECTION("init_failure") {
-        enc_type_noalign encoder(fstlog::get_default_resource());
+        enc_type_noalign encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         auto extent = GENERATE(table<std::string_view, fstlog::error_code>({
             std::tuple<std::string_view, fstlog::error_code>{"HEAD_%S_TAIL", fstlog::error_code::none},
             std::tuple<std::string_view, fstlog::error_code>{"wrong%?", fstlog::error_code::fmt_bad},
@@ -86,7 +87,8 @@ TEST_CASE("encoder_timestamp_mixin") {
     };
     
     SECTION("noalign") {
-        enc_type_noalign encoder(fstlog::get_default_resource());
+        enc_type_noalign encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         SECTION("zone_offset") {
             buffer.fill('!');
             // length of formatted time zone (local time)
@@ -124,7 +126,8 @@ TEST_CASE("encoder_timestamp_mixin") {
     }
 
     SECTION("align") {
-        enc_type_align encoder(fstlog::get_default_resource());
+        enc_type_align encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         SECTION("all_format") {
             buffer.fill('!');
             // all format spec (UTC)
@@ -141,7 +144,8 @@ TEST_CASE("encoder_timestamp_mixin") {
     }
 
     SECTION("pre_epoch") {
-        enc_type_noalign encoder(fstlog::get_default_resource());
+        enc_type_noalign encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         buffer.fill(0);
         encoder.output_span_init(buffer);
         std::string_view form_temp{ ".7U%Y-%m-%d %H:%M:%S" };
@@ -159,7 +163,8 @@ TEST_CASE("encoder_timestamp_mixin") {
     }
 
     SECTION("buffer_size") {
-        enc_type_noalign encoder(fstlog::get_default_resource());
+        enc_type_noalign encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         buffer.fill(0);
         encoder.output_span_init(buffer);
         std::string_view form_temp{ "L%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%z%zX" };
@@ -239,7 +244,8 @@ TEST_CASE("encoder_timestamp_mixin") {
 
             std::string encoder_string(".0L"); // 0 second precision, local
             encoder_string += strft_string;
-            enc_type_noalign encoder(fstlog::get_default_resource()); // do not use fill align
+            enc_type_noalign encoder;
+            encoder.set_memory_resource(fstlog::get_default_resource()); // do not use fill align
             fstlog::byte_span_const init_string(
                 reinterpret_cast<const unsigned char*>(encoder_string.data()),
                 encoder_string.size());
@@ -274,7 +280,8 @@ TEST_CASE("encoder_timestamp_mixin") {
 
             std::string encoder_string(".0U"); // 0 second precision, utc
             encoder_string += strft_string;
-            enc_type_noalign encoder(fstlog::get_default_resource()); // do not use fill align
+            enc_type_noalign encoder;
+            encoder.set_memory_resource(fstlog::get_default_resource()); // do not use fill align
             fstlog::byte_span_const init_string(
                 reinterpret_cast<const unsigned char*>(encoder_string.data()),
                 encoder_string.size());
@@ -340,7 +347,8 @@ TEST_CASE("encoder_timestamp_mixin") {
         std::array<unsigned char, 64> control{ 0 };
         std::memcpy(control.data(), std::get<2>(data).data(), std::get<2>(data).size());
         
-        enc_type_noalign encoder(fstlog::get_default_resource());
+        enc_type_noalign encoder;
+        encoder.set_memory_resource(fstlog::get_default_resource());
         std::array<unsigned char, 64> result{ 0 };
         encoder.output_span_init(result);
         encoder.init_encoder_timestamp(
@@ -355,7 +363,8 @@ TEST_CASE("encoder_timestamp_mixin") {
 TEST_CASE("encoder_timestamp_mixin_benchmark", "[.][benchmark]") {
     std::array<unsigned char, 1024> buffer{ 0 };
 
-    enc_type_noalign encoder_loc(fstlog::get_default_resource());
+    enc_type_noalign encoder_loc;
+    encoder_loc.set_memory_resource(fstlog::get_default_resource());
     std::string_view form_loc{ ".6L%Y-%m-%d %H:%M:%S %z" };
     fstlog::byte_span_const time_format{
             reinterpret_cast<const unsigned char*>(form_loc.data()),
@@ -363,7 +372,8 @@ TEST_CASE("encoder_timestamp_mixin_benchmark", "[.][benchmark]") {
     auto error = encoder_loc.init_encoder_timestamp(time_format);
     CHECK(error == fstlog::error_code::none);
     
-    enc_type_noalign encoder_utc(fstlog::get_default_resource());
+    enc_type_noalign encoder_utc;
+    encoder_utc.set_memory_resource(fstlog::get_default_resource());
     std::string_view form_utc{ ".6U%Y-%m-%d %H:%M:%S +0000" };
     time_format = {
             reinterpret_cast<const unsigned char*>(form_utc.data()),

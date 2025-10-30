@@ -20,14 +20,10 @@ namespace fstlog {
         public L,
         public output_interface
     {
-    public:
-        using memory_resource_type = typename L::memory_resource_type;
-    private:
+    public:        
         using wrapper_type = output;
 
-        explicit output_interface_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        output_interface_mixin() noexcept = default;
 
         output_interface_mixin(const output_interface_mixin&) = delete;
         output_interface_mixin& operator=(const output_interface_mixin&) = delete;
@@ -35,7 +31,6 @@ namespace fstlog {
         output_interface_mixin& operator=(output_interface_mixin&&) = delete;
         ~output_interface_mixin() = default;
 
-    public:
         void write_message(byte_span_const msg) noexcept final {
             L::write_message(msg);
         }

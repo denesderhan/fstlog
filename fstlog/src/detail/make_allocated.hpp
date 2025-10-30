@@ -15,13 +15,11 @@ namespace fstlog {
         T* obj_ptr = nothrow_allocate<T>(resource);
         if (obj_ptr != nullptr) {
 #ifdef FSTLOG_NOEXCEPTIONS
-            static_assert(noexcept(T(resource)), "Constructor must be noexcept!");
-            // storing the memory_resource in the object!
-            obj_ptr = ::new(static_cast<void*>(obj_ptr)) T(resource);
+            static_assert(noexcept(T()), "Constructor must be noexcept!");
+            obj_ptr = ::new(static_cast<void*>(obj_ptr)) T();
 #else
             try {
-                // storing the memory_resource in the object!
-                obj_ptr = ::new(static_cast<void*>(obj_ptr)) T(resource);
+                obj_ptr = ::new(static_cast<void*>(obj_ptr)) T();
             }
             catch (...) {
                 //constructor failed cleaning up
@@ -41,16 +39,14 @@ namespace fstlog {
         T* obj_ptr = nothrow_allocate<T>(resource);
         if (obj_ptr != nullptr) {
 #ifdef FSTLOG_NOEXCEPTIONS
-            static_assert(noexcept(T(std::forward<Args>(args)..., resource)),
+            static_assert(noexcept(T(std::forward<Args>(args)...)),
                 "Constructor must be noexcept!");
-            // storing the memory_resource in the object!
             obj_ptr = ::new(static_cast<void*>(obj_ptr))
-                T(std::forward<Args>(args)..., resource);
+                T(std::forward<Args>(args)...);
 #else
             try {
-                // storing the memory_resource in the object!
                 obj_ptr = ::new(static_cast<void*>(obj_ptr))
-                    T(std::forward<Args>(args)..., resource);
+                    T(std::forward<Args>(args)...);
             }
             catch (...) {
                 //constructor failed cleaning up

@@ -16,6 +16,7 @@
 #include <formatter/impl/detail/format_setting_txt.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
 #include <formatter/impl/detail/local_utc_offset.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <formatter/impl/detail/shift_fill.hpp>
 #include <formatter/impl/detail/time_string_cache.hpp>
 #include <formatter/impl/detail/tz_format.hpp>
@@ -29,23 +30,19 @@ namespace fstlog {
     template<bool use_fill_align, typename L>
     class encoder_timestamp_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit encoder_timestamp_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        encoder_timestamp_mixin() noexcept = default;
 
         encoder_timestamp_mixin(const encoder_timestamp_mixin& other) noexcept(
             std::is_nothrow_constructible_v<
                 encoder_timestamp_mixin,
                 const encoder_timestamp_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : encoder_timestamp_mixin(other, other.get_memory_resource()) {}
-        encoder_timestamp_mixin(const encoder_timestamp_mixin& other, memory_resource_type* resource) noexcept(
+        encoder_timestamp_mixin(const encoder_timestamp_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource),
             time_string_cache_{ other.time_string_cache_ },
             time_format_{ other.time_format_ },

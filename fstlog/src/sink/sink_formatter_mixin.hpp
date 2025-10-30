@@ -15,11 +15,7 @@ namespace fstlog {
     template<std::size_t fmt_buff_size, class L>
     class sink_formatter_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit sink_formatter_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        sink_formatter_mixin() noexcept = default;
 
         sink_formatter_mixin(const sink_formatter_mixin& other) = delete;
         sink_formatter_mixin(sink_formatter_mixin&& other) = delete;

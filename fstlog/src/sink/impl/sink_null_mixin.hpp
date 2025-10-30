@@ -12,16 +12,12 @@ namespace fstlog {
     class sink_null_mixin : public L {
         typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
     public:
-        using memory_resource_type = typename L::memory_resource_type;
+        sink_null_mixin() noexcept = default;
 
-        explicit sink_null_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
-
-        sink_null_mixin(const sink_null_mixin& other) = delete;
-        sink_null_mixin(sink_null_mixin&& other) = delete;
-        sink_null_mixin& operator=(const sink_null_mixin& rhs) = delete;
-        sink_null_mixin& operator=(sink_null_mixin&& rhs) = delete;
+        sink_null_mixin(const sink_null_mixin&) = delete;
+        sink_null_mixin(sink_null_mixin&&) = delete;
+        sink_null_mixin& operator=(const sink_null_mixin&) = delete;
+        sink_null_mixin& operator=(sink_null_mixin&&) = delete;
 
         ~sink_null_mixin() = default;
 

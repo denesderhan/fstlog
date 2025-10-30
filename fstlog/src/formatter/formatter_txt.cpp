@@ -54,8 +54,9 @@ namespace fstlog {
     {
         out = make_allocated<formatter_txt_type>(resource);
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
-        auto error = static_cast<formatter_txt_type*>(out.pimpl())->
-            formatter_init(format_string);
+        const auto pimpl = static_cast<formatter_txt_type*>(out.pimpl());
+        pimpl->set_memory_resource(resource);
+        auto error = pimpl->formatter_init(format_string);
         if (error != error_code::none) out = formatter{};
         return error;
     }

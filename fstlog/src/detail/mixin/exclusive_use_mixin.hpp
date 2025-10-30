@@ -4,29 +4,27 @@
 #include <atomic>
 #include <type_traits>
 
+#include <fstlog/detail/memory_resource.hpp>
+
 namespace fstlog {
     template<class L>
     class exclusive_use_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-        
-        explicit exclusive_use_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        exclusive_use_mixin() noexcept = default;
 
         exclusive_use_mixin(const exclusive_use_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 exclusive_use_mixin,
                 const exclusive_use_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : exclusive_use_mixin(other, other.get_memory_resource()) {}
-        exclusive_use_mixin(const exclusive_use_mixin& other, memory_resource_type* resource) noexcept(
+        exclusive_use_mixin(const exclusive_use_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {
         }
 

@@ -19,6 +19,7 @@
 #include <detail/constants_src.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
+#include <fstlog/detail/memory_resource.hpp> 
 #include <fstlog/detail/padded_size.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 
@@ -27,24 +28,20 @@ namespace fstlog {
     class formatter_txt_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit formatter_txt_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        formatter_txt_mixin() noexcept = default;
 
         formatter_txt_mixin(const formatter_txt_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 formatter_txt_mixin,
                 const formatter_txt_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : formatter_txt_mixin(other, other.get_memory_resource()) {}
-        formatter_txt_mixin(const formatter_txt_mixin& other, memory_resource_type* resource) noexcept(
+        formatter_txt_mixin(const formatter_txt_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource),
             formatting_buffer_ { other.formatting_buffer_ }, //noexcept
             log_fmt_str_len_{ other.log_fmt_str_len_ }, //noexcept

@@ -14,41 +14,34 @@
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/types.hpp>
 
 namespace fstlog {
     template<class L>
     class sink_sort_mixin : public L {
-    public:
-        using memory_resource_type = typename L::memory_resource_type;
-    
     private:
         using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
         struct message_locator;
         
     public:
+        sink_sort_mixin() noexcept = default;
 
-        explicit sink_sort_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource),
-            message_locators_{ resource },
-            message_buffer_{ resource },
-            merge_buffer_{ resource },
-            sorted_block_sizes_{ resource } {
-        }
-
-        sink_sort_mixin(const sink_sort_mixin& other) = delete;
-        sink_sort_mixin(sink_sort_mixin&& other) = delete;
-        sink_sort_mixin& operator=(const sink_sort_mixin& rhs) = delete;
-        sink_sort_mixin& operator=(sink_sort_mixin&& rhs) = delete;
+        sink_sort_mixin(const sink_sort_mixin&) = delete;
+        sink_sort_mixin(sink_sort_mixin&&) = delete;
+        sink_sort_mixin& operator=(const sink_sort_mixin&) = delete;
+        sink_sort_mixin& operator=(sink_sort_mixin&&) = delete;
 
         ~sink_sort_mixin() noexcept {
             flush_impl();
         }
 
-        error_code init_sink_sort(std::uint32_t max_data_bytes) noexcept {
+        error_code init_sink_sort(memory_resource* resource, std::uint32_t max_data_bytes) noexcept {
             if (max_data_bytes < 512) max_data_bytes = 512;
             max_data_size_ = max_data_bytes;
+            message_buffer_ = std::move(dyn_array<unsigned char>{resource});
+            message_locators_ = std::move(dyn_array<message_locator>{resource});
+            merge_buffer_ = std::move(dyn_array<message_locator>{resource});
             if (!message_buffer_.grow(max_data_size_)) return error_code::alloc_fail;
             if (!message_locators_.grow(max_data_size_ / 64)) return error_code::alloc_fail;
             if (!merge_buffer_.grow(max_data_size_ / 64)) return error_code::alloc_fail;
@@ -334,9 +327,9 @@ namespace fstlog {
         dyn_array<unsigned char> message_buffer_;
         stamp_type last_timestamp_{ (std::numeric_limits<stamp_type>::max)() };
 
-        static_assert(std::is_nothrow_constructible_v<dyn_array<unsigned char>, memory_resource_type*>, 
+        static_assert(std::is_nothrow_constructible_v<dyn_array<unsigned char>, memory_resource*>, 
             "Container constructor must be noexcept!");
-        static_assert(std::is_nothrow_constructible_v<dyn_array<message_locator>, memory_resource_type*>,
+        static_assert(std::is_nothrow_constructible_v<dyn_array<message_locator>, memory_resource*>,
             "Container constructor must be noexcept!");
         static_assert(std::is_trivially_copyable_v<message_locator>,
             "message_locator must be trivially copyable for memcpy/memmove/qsort usage!");

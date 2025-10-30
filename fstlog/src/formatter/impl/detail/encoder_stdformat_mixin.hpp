@@ -20,6 +20,7 @@
 #include <fstlog/detail/is_char_type.hpp>
 #include <fstlog/detail/is_string_like.hpp>
 #include <fstlog/detail/log_type_metadata.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/types.hpp>
 #include <fstlog/detail/noexceptions.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
@@ -33,24 +34,21 @@ namespace fstlog {
     class encoder_stdformat_mixin : public L {
     public:
         typedef std::string_view format_type;
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit encoder_stdformat_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        
+        encoder_stdformat_mixin() noexcept = default;
 
         encoder_stdformat_mixin(const encoder_stdformat_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 encoder_stdformat_mixin,
                 const encoder_stdformat_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : encoder_stdformat_mixin(other, other.get_memory_resource()) {}
-        encoder_stdformat_mixin(const encoder_stdformat_mixin& other, memory_resource_type* resource) noexcept(
+        encoder_stdformat_mixin(const encoder_stdformat_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
         encoder_stdformat_mixin(encoder_stdformat_mixin&& other) = delete;

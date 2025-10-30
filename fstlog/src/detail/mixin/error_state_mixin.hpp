@@ -4,29 +4,26 @@
 #include <type_traits>
 
 #include <detail/error.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     template<typename L>
     class error_state_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit error_state_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>) 
-            : L(resource) {}
+        error_state_mixin() noexcept = default;
 
         error_state_mixin(const error_state_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 error_state_mixin,
                 const error_state_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : error_state_mixin(other, other.get_memory_resource()) {}
-        error_state_mixin(const error_state_mixin& other, memory_resource_type* resource) noexcept(
+        error_state_mixin(const error_state_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
         error_state_mixin(error_state_mixin&& other) = delete;

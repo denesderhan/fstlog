@@ -12,16 +12,12 @@ namespace fstlog {
     class out_cstream_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
+        out_cstream_mixin() noexcept = default;
 
-        explicit out_cstream_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
-
-        out_cstream_mixin(const out_cstream_mixin& other) = delete;
-        out_cstream_mixin(out_cstream_mixin&& other) = delete;
-        out_cstream_mixin& operator=(const out_cstream_mixin& rhs) = delete;
-        out_cstream_mixin& operator=(out_cstream_mixin&& rhs) = delete;
+        out_cstream_mixin(const out_cstream_mixin&) = delete;
+        out_cstream_mixin(out_cstream_mixin&&) = delete;
+        out_cstream_mixin& operator=(const out_cstream_mixin&) = delete;
+        out_cstream_mixin& operator=(out_cstream_mixin&&) = delete;
 
         ~out_cstream_mixin() noexcept {
             if (stream_ != nullptr) {

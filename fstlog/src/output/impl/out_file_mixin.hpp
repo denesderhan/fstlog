@@ -8,6 +8,7 @@
 #include <detail/safe_reinterpret_cast.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <output/impl/out_file_posix.hpp>
 
 namespace fstlog {
@@ -15,26 +16,22 @@ namespace fstlog {
     class out_file_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-        
-        explicit out_file_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>
-            && std::is_nothrow_constructible_v<decltype(file_), memory_resource_type*>)
-            : L(resource),
-            file_(resource) {}
+        out_file_mixin() noexcept = default;
 
-        out_file_mixin(const out_file_mixin& other) = delete;
-        out_file_mixin(out_file_mixin&& other) = delete;
-        out_file_mixin& operator=(const out_file_mixin& rhs) = delete;
-        out_file_mixin& operator=(out_file_mixin&& rhs) = delete;
+        out_file_mixin(const out_file_mixin&) = delete;
+        out_file_mixin(out_file_mixin&&) = delete;
+        out_file_mixin& operator=(const out_file_mixin&) = delete;
+        out_file_mixin& operator=(out_file_mixin&&) = delete;
         
         ~out_file_mixin() = default;
 
         error_code init_output(
+            memory_resource* resource, 
             const char* file_path,
             bool truncate,
             std::uint32_t buffer_size) noexcept
         {
+            file_ = std::move(out_file_posix{ resource });
             return file_.open(file_path, truncate, buffer_size);
         }
 

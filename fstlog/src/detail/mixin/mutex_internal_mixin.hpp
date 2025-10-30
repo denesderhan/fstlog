@@ -9,24 +9,20 @@ namespace fstlog {
     class mutex_internal_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-        
-        explicit mutex_internal_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        mutex_internal_mixin(memory_resource* resource) noexcept = default;
 
         mutex_internal_mixin(const mutex_internal_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 mutex_internal_mixin, 
                 const mutex_internal_mixin&, 
-                memory_resource_type*>)
+                memory_resource*>)
             : mutex_internal_mixin(other, other.get_memory_resource()) {}
-        mutex_internal_mixin(const mutex_internal_mixin& other, memory_resource_type* resource) noexcept(
+        mutex_internal_mixin(const mutex_internal_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {
         }
 

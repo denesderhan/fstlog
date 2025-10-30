@@ -13,16 +13,12 @@ namespace fstlog {
     template<class L>
     class sink_output_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
+        sink_output_mixin() noexcept = default;
 
-        explicit sink_output_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
-
-        sink_output_mixin(const sink_output_mixin& other) = delete;
-        sink_output_mixin(sink_output_mixin&& other) = delete;
-        sink_output_mixin& operator=(const sink_output_mixin& rhs) = delete;
-        sink_output_mixin& operator=(sink_output_mixin&& rhs) = delete;
+        sink_output_mixin(const sink_output_mixin&) = delete;
+        sink_output_mixin(sink_output_mixin&&) = delete;
+        sink_output_mixin& operator=(const sink_output_mixin&) = delete;
+        sink_output_mixin& operator=(sink_output_mixin&&) = delete;
 
         ~sink_output_mixin() noexcept {
             if (output_.pimpl() != nullptr) {

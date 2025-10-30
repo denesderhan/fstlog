@@ -14,11 +14,12 @@ namespace fstlog {
     error_code core::init(memory_resource* resource) noexcept {
         return init("Unnamed", resource);
     }
+
     error_code core::init(std::string_view name, memory_resource* resource) noexcept {
         if (pimpl_ != nullptr) return error_code::double_init;
-        pimpl_ = make_allocated<core_impl>(resource, name);
+        pimpl_ = make_allocated<core_impl>(resource);
         if (pimpl_ == nullptr) return error_code::alloc_fail;
-        const auto error = pimpl_->init();
+        const auto error = pimpl_->init(name, resource);
         if (error != error_code::none) {
             pimpl_->~core_impl();
             nothrow_deallocate(pimpl_, resource);
@@ -52,7 +53,9 @@ namespace fstlog {
     }
 
     core::core(const core& other) noexcept 
-        :core(other.pimpl_) {}
+        :core(other.pimpl_) {
+    }
+
     core& core::operator=(const core& other) noexcept {
         if (pimpl_ != other.pimpl_) {
             //temp is created to call destructor (deallocate) if last ref.
@@ -65,11 +68,13 @@ namespace fstlog {
         }
         return *this;
     }
+
     core::core(core&& other) noexcept 
         :pimpl_{ other.pimpl_ } 
     {
         other.pimpl_ = nullptr;
     }
+
     core& core::operator=(core&& other) noexcept {
         assert(this != &other);
         //temp is created to call destructor (deallocate) if last ref.
@@ -81,9 +86,11 @@ namespace fstlog {
         other.pimpl_ = nullptr;
         return *this;
     }
+
     bool core::operator==(const core& other) const noexcept {
         return pimpl_ == other.pimpl_;
     }
+
     bool core::operator!=(const core& other) const noexcept {
         return !(*this == other);
     }
@@ -94,12 +101,14 @@ namespace fstlog {
         }
         return running();
     }
+
     bool core::stop() noexcept {
         if (good()) {
             pimpl_->stop();
         }
         return !running();
     }
+
     bool core::restart() noexcept {
         bool success{ false };
         if (good()) {
@@ -110,6 +119,7 @@ namespace fstlog {
         }
         return success;
     }
+
     bool core::running() const noexcept {
         if (good()) {
             return pimpl_->running();
@@ -118,6 +128,7 @@ namespace fstlog {
             return false;
         }
     }
+
     std::chrono::milliseconds core::poll_interval(std::chrono::milliseconds poll_interval) noexcept {
         if (good()) {
             return pimpl_->poll_interval(poll_interval);
@@ -126,6 +137,7 @@ namespace fstlog {
             return std::chrono::milliseconds{ 0 };
         }
     }
+
     std::chrono::milliseconds core::poll_interval() const noexcept {
         if (good()) {
             return pimpl_->poll_interval();
@@ -134,6 +146,7 @@ namespace fstlog {
             return std::chrono::milliseconds{ 0 };
         }
     }
+
     bool core::add_sink(sink sink) noexcept {
         if (!good() || !sink.good()) {
             return false;
@@ -142,6 +155,7 @@ namespace fstlog {
             return pimpl_->add_sink(std::move(sink));
         }
     }
+
     bool core::release_sink(sink& sink) noexcept {
         if (good() && sink.good()) {
             return pimpl_->release_sink(sink.pimpl());
@@ -150,6 +164,7 @@ namespace fstlog {
             return false;
         }
     }
+
     void core::flush() const noexcept {
         if (good()) {
             pimpl_->flush();

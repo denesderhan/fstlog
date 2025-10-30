@@ -14,11 +14,7 @@ namespace fstlog {
     class out_stream_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit out_stream_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        out_stream_mixin() noexcept = default;
 
         out_stream_mixin(const out_stream_mixin& other) = delete;
         out_stream_mixin(out_stream_mixin&& other) = delete;

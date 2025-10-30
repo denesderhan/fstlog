@@ -18,7 +18,7 @@ TEST_CASE("log_buffer") {
         uint32_t log_buff_size_set = std::get<0>(extent);
         uint32_t log_buff_size_expected = std::get<1>(extent);
 
-        fstlog::log_buffer_impl test_log_buffer(log_buff_size_set);
+        fstlog::log_buffer_impl test_log_buffer(log_buff_size_set, fstlog::get_default_resource());
 
         CHECK((uintptr_t(test_log_buffer.write_ptr()) % fstlog::constants::cache_ls_nosharing) == 0);
         CHECK((uintptr_t(test_log_buffer.write_ptr()) % fstlog::constants::internal_msg_alignment) == 0);
@@ -28,7 +28,7 @@ TEST_CASE("log_buffer") {
 
     SECTION("wrap_around_update_producer_state") {
         constexpr std::uint32_t buff_size = fstlog::config::max_ringbuffer_size;
-        fstlog::log_buffer_impl test_log_buffer(buff_size);
+        fstlog::log_buffer_impl test_log_buffer(buff_size, fstlog::get_default_resource());
         REQUIRE(test_log_buffer.good());
         REQUIRE(test_log_buffer.size() == buff_size);
         auto begin_pos = test_log_buffer.write_pos();
@@ -83,7 +83,7 @@ TEST_CASE("log_buffer") {
 
     SECTION("wrap_around_advance_write_pos") {
         constexpr std::uint32_t buff_size = fstlog::config::max_ringbuffer_size;
-        fstlog::log_buffer_impl test_log_buffer(buff_size);
+        fstlog::log_buffer_impl test_log_buffer(buff_size, fstlog::get_default_resource());
         REQUIRE(test_log_buffer.good());
         REQUIRE(test_log_buffer.size() == buff_size);
         auto begin_pos = test_log_buffer.write_pos();
@@ -141,7 +141,7 @@ TEST_CASE("log_buffer_random", "[.][random]") {
         uint32_t log_buff_size_expected = fstlog::detail::nearest_pow2(log_buff_size_set);
         if (log_buff_size_set == 0) log_buff_size_expected = fstlog::config::default_ringbuffer_size;
 
-        fstlog::log_buffer_impl test_log_buffer(log_buff_size_set);
+        fstlog::log_buffer_impl test_log_buffer(log_buff_size_set, fstlog::get_default_resource());
         CAPTURE(log_buff_size_set);
         CHECK((uintptr_t(test_log_buffer.write_ptr()) % fstlog::constants::cache_ls_nosharing) == 0);
         CHECK((uintptr_t(test_log_buffer.write_ptr()) % fstlog::constants::internal_msg_alignment) == 0);

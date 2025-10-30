@@ -17,35 +17,32 @@
 #include <fstlog/core.hpp>
 #include <detail/constants_src.hpp>
 #include <fstlog/detail/error_code.hpp>
+#include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/small_string.hpp>
 #include <fstlog/sink/sink.hpp>
 #include <logger/logger_background.hpp>
 
 namespace fstlog {
-    template<class T, class... Args>
+    template<class T>
     auto make_allocated(
-        memory_resource* resource,
-        Args&&... args) noexcept;
+        memory_resource* resource) noexcept;
     
     class buffer_store;
     class log_buffer_impl;
     class log_metadata;
     class alignas(constants::cache_ls_nosharing) core_impl final
     {
-    public:
-        using memory_resource_type = memory_resource;
     private:
         using wrapper_type = core_impl*;
 
-        core_impl() = delete;
-        core_impl(std::string_view name, memory_resource* resource) noexcept;
+        core_impl() noexcept = default;
         core_impl(const core_impl&) = delete;
         core_impl(core_impl&& other) = delete;
         core_impl& operator=(const core_impl&) = delete;
         core_impl& operator=(core_impl&& other) = delete;
         ~core_impl() noexcept;
-        error_code init();
+        error_code init(std::string_view name, memory_resource* resource) noexcept;
     public:    
         void start() noexcept;
         void stop() noexcept;
@@ -75,8 +72,14 @@ namespace fstlog {
             return name_;
         }
 
-        memory_resource_type* get_memory_resource() const noexcept {
-            return bufferstore_.get_memory_resource();
+        void set_memory_resource(memory_resource* resource) noexcept {
+            FSTLOG_ASSERT(resource != nullptr);
+            memory_resource_ = resource;
+        }
+
+        memory_resource* get_memory_resource() const noexcept {
+            FSTLOG_ASSERT(memory_resource_ != nullptr);
+            return memory_resource_;
         }
 
         std::uintmax_t id() const noexcept {
@@ -140,16 +143,17 @@ namespace fstlog {
         // this is the index of this core instance in the tls_buffers_
         int tls_buffer_index_{ -1 };
         
+        memory_resource* memory_resource_{ nullptr };
+        
         // array for thread safe buffers for the core instances, elements: pair<core.id_, log_buffer>
         static inline thread_local std::array<std::pair<std::uintmax_t, log_buffer>, config::core_instance_limit> 
             tls_buffers_{ {{0, log_buffer{}}} };
         static_assert(config::core_instance_limit <= 
             (std::numeric_limits<decltype(tls_buffer_index_)>::max)(), "core_instance_limit too big for type!");
 
-        template<class T, class... Args>
+        template<class T>
         friend auto make_allocated(
-            memory_resource* resource,
-            Args&&... args) noexcept;
+            memory_resource* resource) noexcept;
         friend class core;
         friend class background_thread;
     };

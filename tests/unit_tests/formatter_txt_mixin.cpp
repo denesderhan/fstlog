@@ -60,6 +60,7 @@ namespace fstlog {
         sink_small_impl_type* const pimpl =
             static_cast<sink_small_impl_type*>(out.pimpl());
         if (pimpl == nullptr) return error_code::alloc_fail;
+        pimpl->set_memory_resource(resource);
         auto error = pimpl->set_formatter(std::move(formatter));
         if (error == error_code::none) error = pimpl->set_output(std::move(output));
         if (error != error_code::none) {

@@ -15,29 +15,29 @@ namespace fstlog {
         public L,
         public formatter_interface
     {
-    public:
-        using memory_resource_type = typename L::memory_resource_type;
-
+    
     private:
         using wrapper_type = formatter;
         
-        explicit formatter_interface_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        formatter_interface_mixin() noexcept = default;
 
         formatter_interface_mixin(const formatter_interface_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 formatter_interface_mixin,
                 const formatter_interface_mixin&,
-                memory_resource_type*>)
-            : formatter_interface_mixin(other, other.get_memory_resource()) {}
-        formatter_interface_mixin(const formatter_interface_mixin& other, memory_resource_type* resource) noexcept(
+                memory_resource*>)
+            : formatter_interface_mixin(other, other.get_memory_resource()) {
+        }
+
+        formatter_interface_mixin(const formatter_interface_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
-            : L(static_cast<const L&>(other), resource) {}
+                memory_resource*>)
+            : L(static_cast<const L&>(other), resource) {
+        }
+
         formatter_interface_mixin& operator=(const formatter_interface_mixin&) = delete;
         formatter_interface_mixin(formatter_interface_mixin&&) = delete;
         formatter_interface_mixin& operator=(formatter_interface_mixin&&) = delete;
@@ -53,7 +53,7 @@ namespace fstlog {
 
         // allocates and constructs a new type erased formatter object
         error_code clone(wrapper_type& out) const noexcept final;
-        error_code clone(wrapper_type& out, memory_resource_type* resource) const noexcept final;
+        error_code clone(wrapper_type& out, memory_resource* resource) const noexcept final;
 
         bool use() noexcept final {
             return L::use();
@@ -94,7 +94,7 @@ namespace fstlog {
     template<class L>
     error_code formatter_interface_mixin<L>::clone(
         wrapper_type& out,
-        memory_resource_type* resource) const noexcept {
+        memory_resource* resource) const noexcept {
         out = make_allocated<formatter_interface_mixin<L>>(resource, *this);
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
         else return error_code::none;

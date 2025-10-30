@@ -15,6 +15,7 @@
 #include <fstlog/detail/log_element_type.hpp>
 #include <fstlog/detail/log_policy.hpp>
 #include <fstlog/detail/log_type_metadata.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/small_string.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
 #include <fstlog/detail/types.hpp>
@@ -24,27 +25,24 @@ namespace fstlog {
     template<typename L>
     class arg_parser_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
         using format_type = typename L::format_type;
 
-        explicit arg_parser_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>) 
-            : L(resource) {}
+        arg_parser_mixin() noexcept = default;
 
         arg_parser_mixin(const arg_parser_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 arg_parser_mixin,
                 const arg_parser_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : arg_parser_mixin(other, other.get_memory_resource()) {}
         arg_parser_mixin(
             const arg_parser_mixin& other, 
-            memory_resource_type* resource) noexcept(
+            memory_resource* resource) noexcept(
                 std::is_nothrow_constructible_v<
                     L,
                     const L&,
-                    memory_resource_type*>)
+                    memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
         arg_parser_mixin(arg_parser_mixin&& other) = delete;

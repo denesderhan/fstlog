@@ -41,8 +41,9 @@ namespace fstlog {
     {
         out = make_allocated<output_file_impl_type>(resource);
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
-        const auto error = static_cast<output_file_impl_type*>(out.pimpl())->
-            init_output(file_path, truncate, buffer_size);
+        const auto pimpl = static_cast<output_file_impl_type*>(out.pimpl());
+        pimpl->set_memory_resource(resource);
+        const auto error = pimpl->init_output(resource, file_path, truncate, buffer_size);
         if (error != error_code::none) out = output{};
         return error;
     }

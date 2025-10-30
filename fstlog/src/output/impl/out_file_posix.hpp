@@ -14,14 +14,41 @@
 namespace fstlog {
     class out_file_posix {
     public:
+        out_file_posix() noexcept = default;
         
         explicit out_file_posix(memory_resource* resource) noexcept
-            : memory_resource_{ resource } {}
+            : memory_resource_{ resource } {
+        }
 
         out_file_posix(const out_file_posix& other) = delete;
-        out_file_posix(out_file_posix&& other) = delete;
-        out_file_posix& operator=(const out_file_posix& rhs) = delete;
-        out_file_posix& operator=(out_file_posix&& rhs) = delete;
+
+        out_file_posix(out_file_posix&& other) noexcept {
+            handle_ = other.handle_;
+            buffer_ = other.buffer_;
+            buffer_size_ = other.buffer_size_;
+            memory_resource_ = other.memory_resource_;
+            other.handle_ = nullptr;
+            other.buffer_ = nullptr;
+            other.buffer_size_ = 0;
+            other.memory_resource_ = nullptr;
+        }
+        out_file_posix& operator=(const out_file_posix&) = delete;
+        out_file_posix& operator=(out_file_posix&& other) noexcept {
+            FSTLOG_ASSERT(
+                (handle_ == nullptr || handle_ != other.handle_)
+                && (buffer_ == nullptr || buffer_ != other.buffer_));
+            close();
+            deallocate_buffer();
+            handle_ = other.handle_;
+            buffer_ = other.buffer_;
+            buffer_size_ = other.buffer_size_;
+            memory_resource_ = other.memory_resource_;
+            other.handle_ = nullptr;
+            other.buffer_ = nullptr;
+            other.buffer_size_ = 0;
+            other.memory_resource_ = nullptr;
+            return *this;
+        }
         ~out_file_posix() noexcept {
             close();
             deallocate_buffer();
@@ -176,6 +203,6 @@ namespace fstlog {
         std::FILE* handle_{ nullptr };
         char* buffer_{ nullptr };
         std::size_t buffer_size_{ 0 };
-        memory_resource* const memory_resource_;
+        memory_resource* memory_resource_{ nullptr };
     };
 }

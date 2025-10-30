@@ -10,6 +10,7 @@
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/small_string.hpp>
 
 namespace fstlog {
@@ -17,12 +18,7 @@ namespace fstlog {
     class out_console_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit out_console_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {
-        }
+        out_console_mixin() noexcept = default;
 
         out_console_mixin(const out_console_mixin& other) = delete;
         out_console_mixin(out_console_mixin&& other) = delete;

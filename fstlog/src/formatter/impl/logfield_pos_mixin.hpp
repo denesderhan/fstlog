@@ -6,6 +6,7 @@
 
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/log_metaargs.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 
@@ -14,24 +15,20 @@ namespace fstlog {
     class logfield_pos_mixin : public L
     {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-        
-        explicit logfield_pos_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        logfield_pos_mixin() noexcept = default;
 
         logfield_pos_mixin(const logfield_pos_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 logfield_pos_mixin,
                 const logfield_pos_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : logfield_pos_mixin(other, other.get_memory_resource()) {}
-        logfield_pos_mixin(const logfield_pos_mixin& other, memory_resource_type* resource) noexcept(
+        logfield_pos_mixin(const logfield_pos_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
         logfield_pos_mixin(logfield_pos_mixin&& other) = delete;

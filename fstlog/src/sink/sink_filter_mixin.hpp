@@ -11,11 +11,7 @@ namespace fstlog {
     template<class L>
     class sink_filter_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit sink_filter_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        sink_filter_mixin() noexcept = default;
 
         void set_filter(filter_internal const& filter) noexcept {
             message_filter_ = filter;

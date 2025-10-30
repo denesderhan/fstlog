@@ -13,6 +13,7 @@
 #include <fstlog/detail/internal_msg_header.hpp>
 #include <fstlog/detail/log_element_type.hpp>
 #include <fstlog/detail/log_type.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/padded_size.hpp>
 #include <fstlog/detail/types.hpp>
 
@@ -20,25 +21,21 @@ namespace fstlog {
     template<typename L>
     class decoder_internal_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-
-        explicit decoder_internal_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        decoder_internal_mixin() noexcept = default;
 
         decoder_internal_mixin(const decoder_internal_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 decoder_internal_mixin,
                 const decoder_internal_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : decoder_internal_mixin(other, other.get_memory_resource()) {}
 
-        decoder_internal_mixin(const decoder_internal_mixin& other, memory_resource_type* resource) noexcept(
+        decoder_internal_mixin(const decoder_internal_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
         decoder_internal_mixin(decoder_internal_mixin&& other) = delete;

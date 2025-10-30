@@ -30,6 +30,7 @@ namespace fstlog {
             else error = init(resource);
             handle_error(error);
         }
+
         FSTLOG_API core(
             std::string_view name, 
             memory_resource* resource = fstlog::get_default_resource()) noexcept(
@@ -41,6 +42,7 @@ namespace fstlog {
             else error = init(name, resource);
             handle_error(error);
         }
+
         FSTLOG_API ~core() noexcept;
         FSTLOG_API core(const core& other) noexcept;
         FSTLOG_API core& operator=(const core& other) noexcept;

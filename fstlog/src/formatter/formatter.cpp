@@ -9,18 +9,23 @@
 
 namespace fstlog {
     formatter::formatter() noexcept = default;
+
     formatter::formatter(formatter_interface* pimpl) noexcept 
         : pimpl_{ pimpl } 
     {
         if (pimpl != nullptr) 
             pimpl->add_reference();
     }
+
     formatter::~formatter() noexcept {
         if (pimpl_ != nullptr)
             pimpl_->release_referred();
     }
+
     formatter::formatter(const formatter& other) noexcept 
-        : formatter(other.pimpl_) {}
+        : formatter(other.pimpl_) {
+    }
+
     formatter& formatter::operator=(const formatter& other) noexcept {
         if (pimpl_ != other.pimpl_) {
             if (pimpl_ != nullptr) pimpl_->release_referred();
@@ -29,11 +34,13 @@ namespace fstlog {
         }
         return *this;
     }
+
     formatter::formatter(formatter&& other) noexcept
         :pimpl_{ other.pimpl_}
     {
         other.pimpl_ = nullptr;
     }
+
     formatter& formatter::operator=(formatter&& other) noexcept {
         assert(this != &other);
         if (pimpl_ != nullptr) pimpl_->release_referred();
@@ -41,12 +48,15 @@ namespace fstlog {
         other.pimpl_ = nullptr;
         return *this;
     }
+
     bool formatter::operator==(const formatter& other) const noexcept {
         return pimpl_ == other.pimpl_;
     }
+
     bool formatter::operator!=(const formatter& other) const noexcept {
         return !(*this == other);
     }
+
     error_code formatter::clone(formatter& out) const noexcept {
         if (pimpl_ == nullptr) {
             out = formatter{};
@@ -56,6 +66,7 @@ namespace fstlog {
             return pimpl_->clone(out);
         }
     }
+
     error_code formatter::clone(
         formatter& out,
         memory_resource* resource) const noexcept
@@ -68,6 +79,7 @@ namespace fstlog {
             return pimpl_->clone(out, resource);
         }
     }
+
     bool formatter::good() const noexcept {
         return pimpl_ != nullptr;
     }

@@ -17,6 +17,8 @@ namespace fstlog {
     public:
         using value_type = T;
 
+        dyn_array() noexcept = default;
+
         explicit dyn_array(memory_resource* resource) noexcept
             : memory_resource_{ resource } 
         {
@@ -24,10 +26,9 @@ namespace fstlog {
         }
         
         ~dyn_array() noexcept {
+            if (begin_ == nullptr) return;
             clear();
-            if (begin_ != nullptr) {
-                nothrow_deallocate(begin_, memory_resource_, capacity());
-            }
+            nothrow_deallocate(begin_, memory_resource_, capacity());
             begin_ = nullptr;
             end_ = nullptr;
             cap_end_ = nullptr;
@@ -35,8 +36,34 @@ namespace fstlog {
 
         dyn_array(dyn_array const&) = delete;
         dyn_array& operator=(dyn_array const&) = delete;
-        dyn_array(dyn_array&&) = delete;
-        dyn_array& operator=(dyn_array&&) = delete;
+        
+        dyn_array(dyn_array&& other) noexcept :
+            begin_{ other.begin_ },
+            end_{ other.end_ },
+            cap_end_{ other.cap_end_ },
+            memory_resource_{ other.memory_resource_ }
+        {
+            other.begin_ = nullptr;
+            other.end_ = nullptr;
+            other.cap_end_ = nullptr;
+        }
+
+        dyn_array& operator=(dyn_array&& other) noexcept {
+            if (begin_ != nullptr) {
+                clear();
+                nothrow_deallocate(begin_, memory_resource_, capacity());
+            }
+            
+            begin_ = other.begin_;
+            end_ = other.end_;
+            cap_end_ = other.cap_end_;
+            memory_resource_ = other.memory_resource_;
+
+            other.begin_ = nullptr;
+            other.end_ = nullptr;
+            other.cap_end_ = nullptr;
+            return *this;
+        }
         
         // iterators are invalidated
         template <typename U>
@@ -300,7 +327,7 @@ namespace fstlog {
         T* begin_{ nullptr };
         T* end_{ nullptr };
         T* cap_end_{ nullptr };
-        memory_resource* const memory_resource_;
+        memory_resource* memory_resource_{ nullptr };
     };
 
 }

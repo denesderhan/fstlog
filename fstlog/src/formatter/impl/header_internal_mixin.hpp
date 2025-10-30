@@ -6,30 +6,27 @@
 
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     //useable only with the internal decoder (endianness, alignment issues)
     template<typename L>
     class header_internal_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-        
-        explicit header_internal_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        header_internal_mixin() noexcept = default;
 
         header_internal_mixin(const header_internal_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 header_internal_mixin,
                 const header_internal_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : header_internal_mixin(other, other.get_memory_resource()) {}
-        header_internal_mixin(const header_internal_mixin& other, memory_resource_type* resource) noexcept(
+        header_internal_mixin(const header_internal_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
         header_internal_mixin(header_internal_mixin&& other) = delete;

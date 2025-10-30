@@ -21,6 +21,7 @@
 #include <fstlog/detail/is_char_type.hpp>
 #include <fstlog/detail/is_string_like.hpp>
 #include <fstlog/detail/log_type_metadata.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
 #include <fstlog/detail/types.hpp>
 
@@ -28,25 +29,22 @@ namespace fstlog {
     template<typename L>
     class encoder_charconv_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
         typedef format_setting_txt format_type;
 
-        explicit encoder_charconv_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        encoder_charconv_mixin() noexcept = default;
 
         encoder_charconv_mixin(const encoder_charconv_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 encoder_charconv_mixin,
                 const encoder_charconv_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : encoder_charconv_mixin(other, other.get_memory_resource()) {}
-        encoder_charconv_mixin(const encoder_charconv_mixin& other, memory_resource_type* resource) noexcept(
+        encoder_charconv_mixin(const encoder_charconv_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
         encoder_charconv_mixin(encoder_charconv_mixin&& other) = delete;

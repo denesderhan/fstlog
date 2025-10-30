@@ -9,29 +9,25 @@ namespace fstlog {
     template<typename L>
     class formatter_null_mixin : public L {
     public:
-        using memory_resource_type = typename L::memory_resource_type;
-        
-        explicit formatter_null_mixin(memory_resource_type* resource) noexcept(
-            std::is_nothrow_constructible_v<L, memory_resource_type*>)
-            : L(resource) {}
+        formatter_null_mixin() noexcept = default;
 
         formatter_null_mixin(const formatter_null_mixin& other) noexcept(
             noexcept(other.get_memory_resource())
             && std::is_nothrow_constructible_v<
                 formatter_null_mixin,
                 const formatter_null_mixin&,
-                memory_resource_type*>)
+                memory_resource*>)
             : formatter_null_mixin(other, other.get_memory_resource()) {}
-        formatter_null_mixin(const formatter_null_mixin& other, memory_resource_type* resource) noexcept(
+        formatter_null_mixin(const formatter_null_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
                 const L&,
-                memory_resource_type*>)
+                memory_resource*>)
             : L(static_cast<const L&>(other), resource) {}
 
-        formatter_null_mixin(formatter_null_mixin&& other) = delete;
-        formatter_null_mixin& operator=(const formatter_null_mixin& rhs) = delete;
-        formatter_null_mixin& operator=(formatter_null_mixin&& rhs) = delete;
+        formatter_null_mixin(formatter_null_mixin&&) = delete;
+        formatter_null_mixin& operator=(const formatter_null_mixin&) = delete;
+        formatter_null_mixin& operator=(formatter_null_mixin&&) = delete;
         
         ~formatter_null_mixin() = default;
 

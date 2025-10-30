@@ -12,8 +12,6 @@ namespace fstlog {
     class filter_impl;
     class filter {
     public:
-        using memory_resource_type = memory_resource;
-
         FSTLOG_API filter() noexcept(noexcept(fstlog::get_default_resource())
             && noexcept(handle_error(error_code::none)))
             :filter(fstlog::get_default_resource()) {}
@@ -27,6 +25,7 @@ namespace fstlog {
             else error = init(resource);
             handle_error(error);
         }
+
         FSTLOG_API filter(
             level level,
             channel_type channel,
@@ -39,6 +38,7 @@ namespace fstlog {
             else error = init(level, channel, resource);
             handle_error(error);
         }
+
         FSTLOG_API filter(
             level level,
             channel_type first_channel,
@@ -53,6 +53,7 @@ namespace fstlog {
                 init(level, first_channel, last_channel, resource);
             handle_error(error);
         }
+
         FSTLOG_API filter(const filter& other) noexcept(
             noexcept(handle_error(error_code::none))) 
         {
@@ -62,6 +63,7 @@ namespace fstlog {
             else error = init(other);
             handle_error(error);
         }
+
         FSTLOG_API filter(
             const filter& other, 
             memory_resource* resource) noexcept(
@@ -73,6 +75,7 @@ namespace fstlog {
             else error = init(other, resource);
             handle_error(error);
         }
+
         FSTLOG_API filter& operator=(const filter& other) noexcept;
         FSTLOG_API filter(filter&& other) noexcept;
         FSTLOG_API filter& operator=(filter&& other) noexcept;
@@ -91,6 +94,7 @@ namespace fstlog {
         FSTLOG_API filter(filter_impl* pimpl) noexcept;
         
         FSTLOG_TEST_API filter_impl* pimpl() const noexcept;
+
     private:
         FSTLOG_API error_code init(memory_resource* resource) noexcept;
         FSTLOG_API error_code init(

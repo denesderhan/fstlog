@@ -12,10 +12,11 @@
 #include <fstlog/detail/is_pow2.hpp>
 
 namespace fstlog {
-    log_buffer_impl::log_buffer_impl(std::uint32_t buffer_size, memory_resource_type* resource) noexcept
+    log_buffer_impl::log_buffer_impl(std::uint32_t buffer_size, memory_resource* resource) noexcept
         : max_message_size_{ config::max_internal_log_msg_size },
         memory_resource_{ resource }
     {
+        FSTLOG_ASSERT(resource != nullptr);
         //buffer_size = 0 means use default
         if (buffer_size == 0) buffer_size = config::default_ringbuffer_size;
         buffer_size_ = detail::nearest_pow2<std::uint32_t>(buffer_size);
@@ -55,6 +56,7 @@ namespace fstlog {
                 buffer_size_, 
                 config::buffer_alignment);
         }
+        begin_ = nullptr;
     }
 
 
