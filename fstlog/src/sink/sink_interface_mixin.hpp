@@ -15,8 +15,8 @@ namespace fstlog {
         public L,
         public sink_interface
     {
+    public:        
         typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
-    private:
         using wrapper_type = sink;
 
         sink_interface_mixin() noexcept = default;
@@ -27,7 +27,6 @@ namespace fstlog {
         sink_interface_mixin& operator=(sink_interface_mixin&&) = delete;
         ~sink_interface_mixin() = default;
 
-    public:
         error_code sink_msg_block(const unsigned char* dat_ptr, std::uint32_t dat_size) noexcept final{
             return L::sink_msg_block(dat_ptr, dat_size);
         }

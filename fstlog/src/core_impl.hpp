@@ -24,16 +24,12 @@
 #include <logger/logger_background.hpp>
 
 namespace fstlog {
-    template<class T>
-    auto make_allocated(
-        memory_resource* resource) noexcept;
-    
     class buffer_store;
     class log_buffer_impl;
     class log_metadata;
     class alignas(constants::cache_ls_nosharing) core_impl final
     {
-    private:
+    public:
         using wrapper_type = core_impl*;
 
         core_impl() noexcept = default;
@@ -43,7 +39,7 @@ namespace fstlog {
         core_impl& operator=(core_impl&& other) = delete;
         ~core_impl() noexcept;
         error_code init(std::string_view name, memory_resource* resource) noexcept;
-    public:    
+   
         void start() noexcept;
         void stop() noexcept;
         bool running() const noexcept;
@@ -151,9 +147,6 @@ namespace fstlog {
         static_assert(config::core_instance_limit <= 
             (std::numeric_limits<decltype(tls_buffer_index_)>::max)(), "core_instance_limit too big for type!");
 
-        template<class T>
-        friend auto make_allocated(
-            memory_resource* resource) noexcept;
         friend class core;
         friend class background_thread;
     };

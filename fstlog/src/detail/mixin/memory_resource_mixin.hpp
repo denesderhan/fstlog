@@ -13,7 +13,8 @@ namespace fstlog {
         memory_resource_mixin(
             [[maybe_unused]] const memory_resource_mixin& other, 
             memory_resource* resource) noexcept
-                : resource_{ resource } {}
+                : resource_{ resource } {
+        }
         memory_resource_mixin(memory_resource_mixin&&) noexcept = default;
         memory_resource_mixin& operator=(const memory_resource_mixin&) noexcept = default;
         memory_resource_mixin& operator=(memory_resource_mixin&&) noexcept = default;

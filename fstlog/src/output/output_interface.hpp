@@ -6,7 +6,7 @@
 namespace fstlog {
     class output_interface 
     {
-    protected:
+    public:
         output_interface() noexcept = default;
         output_interface(const output_interface&) = delete;
         output_interface& operator=(const output_interface&) = delete;
@@ -14,7 +14,6 @@ namespace fstlog {
         output_interface& operator=(output_interface&&) = delete;
         virtual ~output_interface() = default;
     
-    public:
         virtual void write_message(byte_span_const msg) noexcept = 0;
         virtual void flush() noexcept = 0;
         virtual bool use() noexcept = 0;

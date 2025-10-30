@@ -10,7 +10,7 @@
 namespace fstlog {
     class formatter_interface
     {
-    protected:
+    public:
         formatter_interface() noexcept = default;
         formatter_interface(const formatter_interface&) noexcept = default;
         formatter_interface& operator=(const formatter_interface&) = delete;
@@ -18,7 +18,6 @@ namespace fstlog {
         formatter_interface& operator=(formatter_interface&&) = delete;
         virtual ~formatter_interface() = default;
     
-    public:
         virtual byte_span format_message(
             byte_span_const in,
             byte_span out) noexcept = 0;

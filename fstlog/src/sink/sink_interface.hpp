@@ -11,15 +11,14 @@ namespace fstlog {
     {
         typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
     
-    protected:
+    public:
         sink_interface() noexcept = default;
         sink_interface(const sink_interface&) = delete;
         sink_interface& operator=(const sink_interface&) = delete;
         sink_interface(sink_interface&&) = delete;
         sink_interface& operator=(sink_interface&&) = delete;
         virtual ~sink_interface() = default;
-    
-    public:    
+      
         virtual error_code sink_msg_block(const unsigned char* dat_ptr, std::uint32_t dat_size) noexcept = 0;
         virtual bool needs_immediate_flush() const noexcept = 0;
         virtual steady_msec next_flush_time() const noexcept = 0;

@@ -16,7 +16,7 @@ namespace fstlog {
         public formatter_interface
     {
     
-    private:
+    public:
         using wrapper_type = formatter;
         
         formatter_interface_mixin() noexcept = default;
@@ -43,7 +43,6 @@ namespace fstlog {
         formatter_interface_mixin& operator=(formatter_interface_mixin&&) = delete;
         ~formatter_interface_mixin() = default;
 
-    public:
         byte_span format_message(
             byte_span_const in,
             byte_span out) noexcept final

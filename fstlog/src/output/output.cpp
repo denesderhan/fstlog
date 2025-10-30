@@ -8,7 +8,7 @@
 
 namespace fstlog {
     output::output() noexcept = default;
-    // Only useable by the factory methods. (pimpl acts like a token)
+    // Only usable by the factory methods. (pimpl acts like a token)
     output::output(output_interface* pimpl) noexcept 
         : pimpl_{ pimpl } 
     {

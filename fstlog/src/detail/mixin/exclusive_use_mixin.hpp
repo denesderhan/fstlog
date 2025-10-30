@@ -19,7 +19,8 @@ namespace fstlog {
                 exclusive_use_mixin,
                 const exclusive_use_mixin&,
                 memory_resource*>)
-            : exclusive_use_mixin(other, other.get_memory_resource()) {}
+            : exclusive_use_mixin(other, other.get_memory_resource()) {
+        }
         exclusive_use_mixin(const exclusive_use_mixin& other, memory_resource* resource) noexcept(
             std::is_nothrow_constructible_v<
                 L,
