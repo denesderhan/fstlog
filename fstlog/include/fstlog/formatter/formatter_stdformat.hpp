@@ -13,10 +13,12 @@ namespace fstlog {
     FSTLOG_API error_code formatter_stdformat(
         formatter& out, 
         memory_resource* resource) noexcept;
+
     FSTLOG_API error_code formatter_stdformat(
         formatter& out,
         std::string_view format_string,
         memory_resource* resource) noexcept;
+
     inline formatter formatter_stdformat(
         memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(handle_error(error_code::none)))
@@ -29,6 +31,7 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
     inline formatter formatter_stdformat(
         std::string_view format_string,
         memory_resource* resource = fstlog::get_default_resource()) noexcept(
@@ -42,6 +45,7 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
 #ifdef __cpp_char8_t
     inline formatter formatter_stdformat(
         std::u8string_view format_string,

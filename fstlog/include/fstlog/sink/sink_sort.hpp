@@ -18,12 +18,14 @@ namespace fstlog {
         formatter formatter,
         output output,
         memory_resource* resource) noexcept;
+
     FSTLOG_API error_code sink_sort(
         sink& out,
         formatter formatter,
         output output,
         filter filter,
         memory_resource* resource) noexcept;
+
     FSTLOG_API error_code sink_sort(
         sink& out,
         formatter formatter,
@@ -31,6 +33,7 @@ namespace fstlog {
         filter filter,
         std::chrono::milliseconds flush_interval,
         memory_resource* resource) noexcept;
+
     FSTLOG_API error_code sink_sort(
         sink& out,
         formatter formatter,
@@ -54,6 +57,7 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
     inline sink sink_sort(
         formatter formatter,
         output output,
@@ -69,6 +73,7 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
     inline sink sink_sort(
         formatter formatter,
         output output,
@@ -85,6 +90,7 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
     inline sink sink_sort(
         formatter formatter,
         output output,

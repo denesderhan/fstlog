@@ -11,6 +11,7 @@ namespace fstlog {
     FSTLOG_API error_code sink_null(
         sink& out,
         memory_resource* resource) noexcept;
+
     inline sink sink_null(
         memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(handle_error(error_code::none)))

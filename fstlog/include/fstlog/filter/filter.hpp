@@ -14,7 +14,8 @@ namespace fstlog {
     public:
         FSTLOG_API filter() noexcept(noexcept(fstlog::get_default_resource())
             && noexcept(handle_error(error_code::none)))
-            :filter(fstlog::get_default_resource()) {}
+            :filter(fstlog::get_default_resource()) {
+        }
 
         explicit FSTLOG_API filter(memory_resource* resource) noexcept(
             noexcept(handle_error(error_code::none)))

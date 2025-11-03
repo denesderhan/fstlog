@@ -17,6 +17,7 @@ namespace fstlog {
         FSTLOG_API formatter& operator=(formatter&& other) noexcept;
         FSTLOG_API bool operator==(const formatter& other) const noexcept;
         FSTLOG_API bool operator!=(const formatter& other) const noexcept;
+        
         FSTLOG_API formatter clone() const noexcept(
             noexcept(handle_error(error_code::none)))
         {
@@ -25,6 +26,7 @@ namespace fstlog {
             handle_error(error);
             return out;
         }
+        
         FSTLOG_API formatter clone(
             memory_resource* resource) const noexcept(
                 noexcept(handle_error(error_code::none)))

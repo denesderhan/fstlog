@@ -11,12 +11,13 @@
 #include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
-    // non thread safe, ofstream must be opened in binary mode
+    // non thread safe
     FSTLOG_API error_code output_stream(
         output& out,
         std::shared_ptr<std::ostream> stream, 
         memory_resource* resource) noexcept;
-    // non thread safe, ofstream must be opened in binary mode
+
+    // non thread safe
     inline output output_stream(
         std::shared_ptr<std::ostream> stream,
         memory_resource* resource = fstlog::get_default_resource()) noexcept(

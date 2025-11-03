@@ -14,6 +14,7 @@ namespace fstlog {
         output& out,
         const char* file_path,
         memory_resource* resource) noexcept;
+
     inline output output_file(
         const char* file_path,
         memory_resource* resource = fstlog::get_default_resource()) noexcept(
@@ -33,6 +34,7 @@ namespace fstlog {
         const char* file_path,
         bool truncate,
         memory_resource* resource) noexcept;
+
     inline output output_file(
         const char* file_path,
         bool truncate,
@@ -47,12 +49,14 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
     FSTLOG_API error_code output_file(
         output& out,
         const char* file_path,
         bool truncate,
         std::uint32_t buffer_size,
         memory_resource* resource) noexcept;
+
     inline output output_file(
         const char* file_path,
         bool truncate,

@@ -10,14 +10,13 @@
 #include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
-    // non thread safe, opening/closing FILE* is callers responsibility
-    // FILE* must be opened in binary mode
+    // non thread safe, opening/closing FILE* is caller's responsibility
     FSTLOG_API error_code output_cstream(
         output& out,
         FILE* file, 
         memory_resource* resource) noexcept;
-    // non thread safe, opening/closing FILE* is callers responsibility
-    // FILE* must be opened in binary mode
+
+    // non thread safe, opening/closing FILE* is caller's responsibility
     inline output output_cstream(
         FILE* file,
         memory_resource* resource = fstlog::get_default_resource()) noexcept(

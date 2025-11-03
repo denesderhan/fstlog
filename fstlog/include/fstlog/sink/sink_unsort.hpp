@@ -18,12 +18,14 @@ namespace fstlog {
         formatter formatter, 
         output output, 
         memory_resource* resource) noexcept;
+
     FSTLOG_API error_code sink_unsort(
         sink& out,
         formatter formatter, 
         output output,
         filter filter,
         memory_resource* resource) noexcept;
+
     FSTLOG_API error_code sink_unsort(
         sink& out,
         formatter formatter, 
@@ -46,6 +48,7 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
     inline sink sink_unsort(
         formatter formatter,
         output output,
@@ -61,6 +64,7 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
     inline sink sink_unsort(
         formatter formatter,
         output output,

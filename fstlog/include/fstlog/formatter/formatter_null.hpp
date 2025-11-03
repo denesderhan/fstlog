@@ -11,6 +11,7 @@ namespace fstlog {
     FSTLOG_API error_code formatter_null(
         formatter& out,
         memory_resource* resource) noexcept;
+
     inline formatter formatter_null(
         memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(handle_error(error_code::none)))

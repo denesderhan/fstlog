@@ -11,12 +11,15 @@ namespace fstlog {
     FSTLOG_API error_code output_cout(
         output& out,
         memory_resource* resource) noexcept;
+
     FSTLOG_API error_code output_cerr(
         output& out,
         memory_resource* resource) noexcept;
+
     FSTLOG_API error_code output_clog(
         output& out,
         memory_resource* resource) noexcept;
+
     inline output output_cout(
         memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(handle_error(error_code::none)))
@@ -29,6 +32,7 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
     inline output output_cerr(
         memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(handle_error(error_code::none)))
@@ -41,6 +45,7 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
     inline output output_clog(
         memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(handle_error(error_code::none)))
@@ -53,6 +58,7 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
+
     inline output output_console(
         memory_resource* resource = fstlog::get_default_resource()) noexcept(
             noexcept(output_cout(resource)))
