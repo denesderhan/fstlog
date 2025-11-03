@@ -13,6 +13,7 @@ namespace fstlog {
     class filter_internal {
     public:
         filter_internal() noexcept = default;
+
         filter_internal(
             level lowest,
             channel_type channel) noexcept
@@ -20,6 +21,7 @@ namespace fstlog {
             add_level(level::Fatal, lowest);
             add_channel(channel);
         }
+
         filter_internal(
             level lowest,
             channel_type first_channel,
@@ -28,10 +30,12 @@ namespace fstlog {
             add_level(level::Fatal, lowest);
             add_channel(first_channel, last_channel);
         }
+
         bool operator==(const filter_internal& other) const noexcept {
             return level_data_ == other.level_data_
                 && channel_data_ == other.channel_data_;
         }
+
         bool operator!=(const filter_internal& other) const noexcept {
             return !(*this == other);
         }
@@ -40,6 +44,7 @@ namespace fstlog {
             FSTLOG_ASSERT(level <= fstlog::level::All);
             level_data_ = level_data_ | (std::uint32_t{ 1 } << ut_cast(level));
         }
+
         void add_level(level first, level last) noexcept {
             auto lvl = first < last ? first : last;
             const auto last_lvl = last > first ? last : first;
@@ -49,11 +54,13 @@ namespace fstlog {
                 lvl = level(ut_cast(lvl) + 1);
             }
         }
+
         void add_channel(channel_type channel) noexcept {
             const auto index{ channel / 32 };
             const auto bit_pos{ channel & 31 };
             channel_data_[index] |= (std::uint32_t{ 1 } << bit_pos);
         }
+
         void add_channel(channel_type first, channel_type last) noexcept {
             auto ch = first < last ? first : last;
             const auto last_ch = last > first ? last : first;
@@ -63,6 +70,7 @@ namespace fstlog {
                 ch++;
             }
         }
+
         bool filter_msg(level level, channel_type channel) const noexcept {
             if ((std::uint32_t{ 1 } << ut_cast(level)) & level_data_) {
                 const auto index{ channel / 32 };

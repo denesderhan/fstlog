@@ -15,6 +15,7 @@ namespace fstlog {
         pimpl_->set_memory_resource(resource);
         return error_code::none;
     }
+
     error_code filter::init(
         level level,
         channel_type channel,
@@ -30,6 +31,7 @@ namespace fstlog {
         }
         return error;
     }
+
     error_code filter::init(
         level level,
         channel_type first_channel,
@@ -46,20 +48,21 @@ namespace fstlog {
         }
         return error;
     }
+    
     error_code filter::init(const filter& other) noexcept {
         if (pimpl_ != nullptr) return error_code::double_init;
         if (other.pimpl_ == nullptr) return error_code::none;
-        return init(other, other.pimpl_->get_memory_resource());
-    }
-    error_code filter::init(const filter& other, memory_resource* resource) noexcept {
-        if (pimpl_ != nullptr) return error_code::double_init;
-        if (other.pimpl_ == nullptr) return error_code::none;
+        const auto resource = other.pimpl_->get_memory_resource();
         pimpl_ = make_allocated<filter_impl>(resource, *other.pimpl_);
         if (pimpl_ == nullptr) return error_code::alloc_fail;
         pimpl_->set_memory_resource(resource);
         return error_code::none;
     }
+
     filter& filter::operator=(const filter& other) noexcept {
+        assert(pimpl_ != nullptr
+            && other.pimpl_ != nullptr
+            && "filter was null!");
         if (this != &other 
             && pimpl_ != nullptr
             && other.pimpl_ != nullptr)
@@ -114,18 +117,22 @@ namespace fstlog {
         if (good())
             pimpl_->message_filter_.add_level(level);
     }
+
     void filter::add_level(level first, level last) noexcept {
         if (good())
             pimpl_->message_filter_.add_level(first, last);
     }
+
     void filter::add_channel(channel_type channel) noexcept {
         if (good())
             pimpl_->message_filter_.add_channel(channel);
     }
+
     void filter::add_channel(channel_type first, channel_type last) noexcept {
         if (good())
             pimpl_->message_filter_.add_channel(first, last);
     }
+
     bool filter::filter_msg(level level, channel_type channel) const noexcept {
         if (good())
             return pimpl_->filter_msg(level, channel);

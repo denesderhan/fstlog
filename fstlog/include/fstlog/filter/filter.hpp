@@ -64,18 +64,6 @@ namespace fstlog {
             handle_error(error);
         }
 
-        FSTLOG_API filter(
-            const filter& other, 
-            memory_resource* resource) noexcept(
-                noexcept(handle_error(error_code::none))) 
-        {
-            error_code error{ error_code::none };
-            if (!compatible()) error = error_code::incomp_api;
-            else if (!memory_resource_identical()) error = error_code::mem_res_bad;
-            else error = init(other, resource);
-            handle_error(error);
-        }
-
         FSTLOG_API filter& operator=(const filter& other) noexcept;
         FSTLOG_API filter(filter&& other) noexcept;
         FSTLOG_API filter& operator=(filter&& other) noexcept;
@@ -107,8 +95,7 @@ namespace fstlog {
             channel_type last_channel,
             memory_resource* resource) noexcept;
         FSTLOG_API error_code init(const filter& other) noexcept;
-        FSTLOG_API error_code init(const filter& other, memory_resource* resource) noexcept;
-
+        
         filter_impl* pimpl_{ nullptr };
     };
 }

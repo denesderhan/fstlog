@@ -12,11 +12,7 @@ namespace fstlog {
         filter_impl() noexcept = default;
 
         filter_impl(const filter_impl& other) noexcept
-            : filter_impl(other, other.get_memory_resource()) {
-        }
-
-        filter_impl(const filter_impl& other, memory_resource* resource) noexcept
-            : resource_{ resource },
+            : resource_{ other.resource_ },
             message_filter_{ other.message_filter_ } {
         }
         
