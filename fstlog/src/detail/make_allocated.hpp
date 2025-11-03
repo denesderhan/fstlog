@@ -9,7 +9,7 @@
 
 namespace fstlog {
     template<class T>
-    auto make_allocated(
+    T* make_allocated(
         memory_resource* resource) noexcept
     {
         T* obj_ptr = nothrow_allocate<T>(resource);
@@ -28,11 +28,11 @@ namespace fstlog {
             }
 #endif
         }
-        return typename T::wrapper_type{ obj_ptr };
+        return obj_ptr;
     }
 
     template<class T, class... Args>
-    auto make_allocated(
+    T* make_allocated(
         memory_resource* resource, 
         Args&&... args) noexcept
     {
@@ -55,6 +55,6 @@ namespace fstlog {
             }
 #endif
         }
-        return typename T::wrapper_type{ obj_ptr };
+        return obj_ptr;
     }
 }

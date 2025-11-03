@@ -17,8 +17,6 @@ namespace fstlog {
     {
     
     public:
-        using wrapper_type = formatter;
-        
         formatter_interface_mixin() noexcept = default;
 
         formatter_interface_mixin(const formatter_interface_mixin& other) noexcept(
@@ -51,8 +49,8 @@ namespace fstlog {
         }
 
         // allocates and constructs a new type erased formatter object
-        error_code clone(wrapper_type& out) const noexcept final;
-        error_code clone(wrapper_type& out, memory_resource* resource) const noexcept final;
+        error_code clone(formatter& out) const noexcept final;
+        error_code clone(formatter& out, memory_resource* resource) const noexcept final;
 
         bool use() noexcept final {
             return L::use();
@@ -76,26 +74,27 @@ namespace fstlog {
         }
 
         template<class T>
-        friend auto make_allocated(
+        friend T* make_allocated(
             memory_resource* resource) noexcept;
         template<class T, class... Args>
-        friend auto make_allocated(
+        friend T* make_allocated(
             memory_resource* resource,
             Args&&... args) noexcept;
-        friend wrapper_type;
+        friend formatter;
     };
 
     template<class L>
-    error_code formatter_interface_mixin<L>::clone(wrapper_type& out) const noexcept {
+    error_code formatter_interface_mixin<L>::clone(formatter& out) const noexcept {
         return clone(out, L::get_memory_resource());
     }
 
     template<class L>
     error_code formatter_interface_mixin<L>::clone(
-        wrapper_type& out,
-        memory_resource* resource) const noexcept {
-        out = make_allocated<formatter_interface_mixin<L>>(resource, *this);
+        formatter& out,
+        memory_resource* resource) const noexcept 
+    {
+        out = formatter{ make_allocated<formatter_interface_mixin<L>>(resource, *this) };
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
-        else return error_code::none;
+        return error_code::none;
     }
 }

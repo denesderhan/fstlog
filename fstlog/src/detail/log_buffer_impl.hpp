@@ -20,8 +20,6 @@ namespace fstlog {
     struct log_buffer_unread_data;
     class alignas(constants::cache_ls_nosharing) log_buffer_impl {
     public:
-        using wrapper_type = log_buffer;
-
         FSTLOG_TEST_API log_buffer_impl(std::uint32_t buffer_size, memory_resource* resource) noexcept;
         FSTLOG_TEST_API log_buffer_impl(const log_buffer_impl&) = delete;
         FSTLOG_TEST_API log_buffer_impl(log_buffer_impl&&) = delete;

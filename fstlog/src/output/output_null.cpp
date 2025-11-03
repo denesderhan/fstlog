@@ -21,7 +21,7 @@ namespace fstlog {
         output& out, 
         memory_resource* resource) noexcept 
     {
-        out = make_allocated<output_null_impl_type>(resource);
+        out = output{ make_allocated<output_null_impl_type>(resource) };
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
         const auto pimpl = static_cast<output_null_impl_type*>(out.pimpl());
         pimpl->set_memory_resource(resource);

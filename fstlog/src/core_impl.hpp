@@ -30,8 +30,6 @@ namespace fstlog {
     class alignas(constants::cache_ls_nosharing) core_impl final
     {
     public:
-        using wrapper_type = core_impl*;
-
         core_impl() noexcept = default;
         core_impl(const core_impl&) = delete;
         core_impl(core_impl&& other) = delete;

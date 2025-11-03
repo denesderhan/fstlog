@@ -40,7 +40,7 @@ namespace fstlog {
         std::chrono::milliseconds flush_interval,
         memory_resource* resource) noexcept
     {
-        out = make_allocated<sink_unsort_impl_type>(resource);
+        out = sink{ make_allocated<sink_unsort_impl_type>(resource) };
         sink_unsort_impl_type* const pimpl = 
             static_cast<sink_unsort_impl_type*>(out.pimpl());
         if (pimpl == nullptr) return error_code::alloc_fail;

@@ -9,9 +9,9 @@
 
 namespace fstlog {
     template<class T>
-    auto make_allocated(memory_resource* resource) noexcept;
+    T* make_allocated(memory_resource* resource) noexcept;
     template<class T, class... Args>
-    auto make_allocated(memory_resource* resource,
+    T* make_allocated(memory_resource* resource,
         Args&&... args) noexcept;
     
     class output;
@@ -21,8 +21,6 @@ namespace fstlog {
         public output_interface
     {
     public:        
-        using wrapper_type = output;
-
         output_interface_mixin() noexcept = default;
 
         output_interface_mixin(const output_interface_mixin&) = delete;
@@ -57,12 +55,12 @@ namespace fstlog {
         }
 
         template<class T>
-        friend auto make_allocated(
+        friend T* make_allocated(
             memory_resource* resource) noexcept;
         template<class T, class... Args>
-        friend auto make_allocated(
+        friend T* make_allocated(
             memory_resource* resource,
             Args&&... args) noexcept;
-        friend wrapper_type;
+        friend output;
     };
 }

@@ -17,7 +17,6 @@ namespace fstlog {
     {
     public:        
         typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
-        using wrapper_type = sink;
 
         sink_interface_mixin() noexcept = default;
 
@@ -60,12 +59,12 @@ namespace fstlog {
         }
 
         template<class T>
-        friend auto make_allocated(
+        friend T* make_allocated(
             memory_resource* resource) noexcept;
         template<class T, class... Args>
-        friend auto make_allocated(
+        friend T* make_allocated(
             memory_resource* resource,
             Args&&... args) noexcept;
-        friend wrapper_type;
+        friend sink;
     };
 }

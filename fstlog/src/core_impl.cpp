@@ -289,7 +289,7 @@ namespace fstlog {
 
     log_buffer core_impl::get_buffer(std::uint32_t buffer_size) noexcept {
         const auto resource = get_memory_resource();
-        auto out{ make_allocated<log_buffer_impl>(resource, buffer_size, resource) };
+        log_buffer out{ make_allocated<log_buffer_impl>(resource, buffer_size, resource) };
         if (out.good()) {
             std::lock_guard<std::mutex> bs_guard(bufferstore_mutex_);
             if (bufferstore_.try_push_back(out)) {

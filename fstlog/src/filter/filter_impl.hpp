@@ -7,8 +7,6 @@
 namespace fstlog {
     class filter_impl {
     public:
-        using wrapper_type = filter_impl*;
-
         filter_impl() noexcept = default;
 
         filter_impl(const filter_impl& other) noexcept
