@@ -2,7 +2,6 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <chrono>
-#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 
@@ -13,10 +12,10 @@ namespace fstlog {
     public:
         sink_unsort_mixin() noexcept = default;
 
-        sink_unsort_mixin(const sink_unsort_mixin& other) = delete;
-        sink_unsort_mixin(sink_unsort_mixin&& other) = delete;
-        sink_unsort_mixin& operator=(const sink_unsort_mixin& rhs) = delete;
-        sink_unsort_mixin& operator=(sink_unsort_mixin&& rhs) = delete;
+        sink_unsort_mixin(const sink_unsort_mixin&) = delete;
+        sink_unsort_mixin& operator=(const sink_unsort_mixin&) = delete;
+        sink_unsort_mixin(sink_unsort_mixin&&) = delete;
+        sink_unsort_mixin& operator=(sink_unsort_mixin&&) = delete;
 
         ~sink_unsort_mixin() = default;
         

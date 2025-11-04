@@ -12,7 +12,7 @@ namespace fstlog {
     {
     public:
         formatter_interface() noexcept = default;
-        formatter_interface(const formatter_interface&) noexcept = default;
+        formatter_interface(const formatter_interface&) = delete;
         formatter_interface& operator=(const formatter_interface&) = delete;
         formatter_interface(formatter_interface&&) = delete;
         formatter_interface& operator=(formatter_interface&&) = delete;
@@ -21,10 +21,7 @@ namespace fstlog {
         virtual byte_span format_message(
             byte_span_const in,
             byte_span out) noexcept = 0;
-        virtual error_code clone(formatter& out) const noexcept = 0;
-        virtual error_code clone(
-            formatter& out,
-            memory_resource* resource) const noexcept = 0;
+        
         virtual bool use() noexcept = 0;
         virtual void release() noexcept = 0;
     

@@ -57,29 +57,6 @@ namespace fstlog {
         return !(*this == other);
     }
 
-    error_code formatter::clone(formatter& out) const noexcept {
-        if (pimpl_ == nullptr) {
-            out = formatter{};
-            return error_code::none;
-        }
-        else {
-            return pimpl_->clone(out);
-        }
-    }
-
-    error_code formatter::clone(
-        formatter& out,
-        memory_resource* resource) const noexcept
-    {
-        if (pimpl_ == nullptr) {
-            out = formatter{};
-            return error_code::none;
-        }
-        else {
-            return pimpl_->clone(out, resource);
-        }
-    }
-
     bool formatter::good() const noexcept {
         return pimpl_ != nullptr;
     }

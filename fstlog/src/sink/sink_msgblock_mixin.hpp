@@ -2,7 +2,6 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstring>
-#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
@@ -16,15 +15,6 @@ namespace fstlog {
     template<class L>
     class sink_msgblock_mixin : public L {
     public:
-        sink_msgblock_mixin() noexcept = default;
-
-        sink_msgblock_mixin(const sink_msgblock_mixin& other) = delete;
-        sink_msgblock_mixin(sink_msgblock_mixin&& other) = delete;
-        sink_msgblock_mixin& operator=(const sink_msgblock_mixin& rhs) = delete;
-        sink_msgblock_mixin& operator=(sink_msgblock_mixin&& rhs) = delete;
-
-        ~sink_msgblock_mixin() = default;
-    
         error_code sink_msg_block(const unsigned char* begin, std::uint32_t block_size) noexcept {
             FSTLOG_ASSERT(begin != nullptr);
             std::uint32_t remaining_data = block_size;

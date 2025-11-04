@@ -3,38 +3,12 @@
 #pragma once
 #include <atomic>
 #include <cstdint>
-#include <type_traits>
-
-#include <fstlog/detail/memory_resource.hpp> 
 
 namespace fstlog {
     template<class L>
     class reference_counter_mixin : public L
     {
     public:
-        reference_counter_mixin() noexcept = default;
-
-        reference_counter_mixin(const reference_counter_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                reference_counter_mixin,
-                const reference_counter_mixin&,
-                memory_resource*>)
-            : reference_counter_mixin(other, other.get_memory_resource()) {}
-
-        reference_counter_mixin(const reference_counter_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}    //ref count is not copied
-
-        reference_counter_mixin(reference_counter_mixin&& other) = delete;
-        reference_counter_mixin& operator=(const reference_counter_mixin& rhs) = delete;
-        reference_counter_mixin& operator=(reference_counter_mixin&& rhs) = delete;
-
-        ~reference_counter_mixin() = default;
-
         void add_reference() noexcept {
             // std::uintptr_t can not overflow if add_reference() is called from a new object only once,
             // a new object is at least std::uintptr_t size 

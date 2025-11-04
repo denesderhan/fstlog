@@ -4,11 +4,9 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
-#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/small_string.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
@@ -23,28 +21,7 @@ namespace fstlog {
 
         logfield_formspec_fmt_mixin() noexcept {
             field_formattings_.fill(get_default_format()); //noexcept
-        }
-
-        logfield_formspec_fmt_mixin(const logfield_formspec_fmt_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                logfield_formspec_fmt_mixin,
-                const logfield_formspec_fmt_mixin&,
-                memory_resource*>)
-            : logfield_formspec_fmt_mixin(other, other.get_memory_resource()) {}
-        logfield_formspec_fmt_mixin(const logfield_formspec_fmt_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource),
-            field_formattings_{ other.field_formattings_ } {} //noexcept
-        
-        logfield_formspec_fmt_mixin(logfield_formspec_fmt_mixin&& other) = delete;
-        logfield_formspec_fmt_mixin& operator=(const logfield_formspec_fmt_mixin& rhs) = delete;
-        logfield_formspec_fmt_mixin& operator=(logfield_formspec_fmt_mixin&& rhs) = delete;
-        
-        ~logfield_formspec_fmt_mixin() = default;
+        }  
         
     public:
         //form_spec is without curly brackets and ":", ({name:form_spec})

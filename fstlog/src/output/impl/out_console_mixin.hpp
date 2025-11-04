@@ -4,13 +4,11 @@
 #include <array>
 #include <cstdlib>
 #include <iostream>
-#include <type_traits>
 
 #include <detail/safe_reinterpret_cast.hpp>
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/small_string.hpp>
 
 namespace fstlog {
@@ -20,10 +18,10 @@ namespace fstlog {
     public:
         out_console_mixin() noexcept = default;
 
-        out_console_mixin(const out_console_mixin& other) = delete;
-        out_console_mixin(out_console_mixin&& other) = delete;
-        out_console_mixin& operator=(const out_console_mixin& rhs) = delete;
-        out_console_mixin& operator=(out_console_mixin&& rhs) = delete;
+        out_console_mixin(const out_console_mixin&) = delete;
+        out_console_mixin& operator=(const out_console_mixin&) = delete;
+        out_console_mixin(out_console_mixin&&) = delete;
+        out_console_mixin& operator=(out_console_mixin&&) = delete;
 
         ~out_console_mixin() noexcept {
             flush();

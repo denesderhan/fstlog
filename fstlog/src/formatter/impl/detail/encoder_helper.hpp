@@ -3,7 +3,6 @@
 #pragma once
 #include <cstdint>
 #include <cstring>
-#include <limits>
 #include <type_traits>
 
 #include <fstlog/detail/constants.hpp>

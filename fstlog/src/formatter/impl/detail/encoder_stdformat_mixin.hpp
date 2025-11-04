@@ -1,10 +1,10 @@
 //Copyright © 2023, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <cstddef>
+#include <array>
+#include <cstdint>
 #include <cstring>
 #include <format>
-#include <limits>
 #include <string_view>
 #include <type_traits>
 
@@ -20,7 +20,6 @@
 #include <fstlog/detail/is_char_type.hpp>
 #include <fstlog/detail/is_string_like.hpp>
 #include <fstlog/detail/log_type_metadata.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/types.hpp>
 #include <fstlog/detail/noexceptions.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
@@ -34,28 +33,6 @@ namespace fstlog {
     class encoder_stdformat_mixin : public L {
     public:
         typedef std::string_view format_type;
-        
-        encoder_stdformat_mixin() noexcept = default;
-
-        encoder_stdformat_mixin(const encoder_stdformat_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                encoder_stdformat_mixin,
-                const encoder_stdformat_mixin&,
-                memory_resource*>)
-            : encoder_stdformat_mixin(other, other.get_memory_resource()) {}
-        encoder_stdformat_mixin(const encoder_stdformat_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}
-
-        encoder_stdformat_mixin(encoder_stdformat_mixin&& other) = delete;
-        encoder_stdformat_mixin& operator=(const encoder_stdformat_mixin& rhs) = delete;
-        encoder_stdformat_mixin& operator=(encoder_stdformat_mixin&& rhs) = delete;
-        
-        ~encoder_stdformat_mixin() = default;
         
         //bool, void*, integral, float
         template<typename T, std::enable_if_t<

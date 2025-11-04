@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
-#include <type_traits>
 
 #include <detail/dyn_array.hpp>
 #include <detail/unaligned_span.hpp>
@@ -28,8 +27,8 @@ namespace fstlog {
         sink_sort_mixin() noexcept = default;
 
         sink_sort_mixin(const sink_sort_mixin&) = delete;
-        sink_sort_mixin(sink_sort_mixin&&) = delete;
         sink_sort_mixin& operator=(const sink_sort_mixin&) = delete;
+        sink_sort_mixin(sink_sort_mixin&&) = delete;
         sink_sort_mixin& operator=(sink_sort_mixin&&) = delete;
 
         ~sink_sort_mixin() noexcept {
@@ -306,7 +305,7 @@ namespace fstlog {
             }
         }
 
-        // function signature for qsort does not contain noexcept, but function does not throw
+        // function C signature for qsort can not contain noexcept, but function does not throw
         static int qsort_compare(const void* a, const void* b) {
             const auto stamp_a = static_cast<message_locator const*>(a)->timestamp;
             const auto stamp_b = static_cast<message_locator const*>(b)->timestamp;

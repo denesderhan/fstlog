@@ -3,9 +3,8 @@
 #pragma once
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
-#include <string_view>
-#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 #include <detail/error.hpp>
@@ -19,7 +18,6 @@
 #include <detail/constants_src.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
-#include <fstlog/detail/memory_resource.hpp> 
 #include <fstlog/detail/padded_size.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 
@@ -28,33 +26,6 @@ namespace fstlog {
     class formatter_txt_mixin : public L
     {
     public:
-        formatter_txt_mixin() noexcept = default;
-
-        formatter_txt_mixin(const formatter_txt_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                formatter_txt_mixin,
-                const formatter_txt_mixin&,
-                memory_resource*>)
-            : formatter_txt_mixin(other, other.get_memory_resource()) {}
-        formatter_txt_mixin(const formatter_txt_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource),
-            formatting_buffer_ { other.formatting_buffer_ }, //noexcept
-            log_fmt_str_len_{ other.log_fmt_str_len_ }, //noexcept
-            msg_fmt_str_start_{ other.msg_fmt_str_start_ }, //noexcept
-            msg_fmt_str_cap_{ other.msg_fmt_str_cap_ } { //noexcept
-        }
-
-        formatter_txt_mixin(formatter_txt_mixin&& other) = delete;
-        formatter_txt_mixin& operator=(const formatter_txt_mixin& rhs) = delete;
-        formatter_txt_mixin& operator=(formatter_txt_mixin&& rhs) = delete;
-        
-        ~formatter_txt_mixin() = default;
-
         error_code formatter_init(byte_span_const format_string) noexcept {
             if (format_string.empty()) {
                 format_string = byte_span_const {
@@ -151,7 +122,7 @@ namespace fstlog {
                     this->get_format(logfield::Severity));
             }
             else if (field_id == logfield::Timestamp) {
-                this->encode_timestamp(    this->timestamp());
+                this->encode_timestamp(this->timestamp());
             }
             else if (field_id == logfield::Channel) {
                 this->encode(
@@ -239,7 +210,9 @@ namespace fstlog {
         }
 
         void write_message_text(byte_span_const& input) noexcept {
-            byte_span output(this->output_ptr(), static_cast<std::size_t>(this->output_end() - this->output_ptr()));
+            byte_span output(
+                this->output_ptr(), 
+                static_cast<std::size_t>(this->output_end() - this->output_ptr()));
             auto error = parse_fmt_text(input, output);
             this->set_output_ptr_unchecked(output.data_bytes());
             if (error != error_code::none) {

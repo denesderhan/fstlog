@@ -2,22 +2,12 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <chrono>
-#include <type_traits>
 
 namespace fstlog {
     template<class L>
     class sink_flush_time_mixin : public L {
         typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
     public:
-        sink_flush_time_mixin() noexcept = default;
-
-        sink_flush_time_mixin(const sink_flush_time_mixin& other) = delete;
-        sink_flush_time_mixin(sink_flush_time_mixin&& other) = delete;
-        sink_flush_time_mixin& operator=(const sink_flush_time_mixin& rhs) = delete;
-        sink_flush_time_mixin& operator=(sink_flush_time_mixin&& rhs) = delete;
-
-        ~sink_flush_time_mixin() = default;
-
         steady_msec next_flush_time() const noexcept {
             return next_flush_time_;
         }

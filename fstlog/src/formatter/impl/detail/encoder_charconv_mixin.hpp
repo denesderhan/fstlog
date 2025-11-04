@@ -1,10 +1,9 @@
 //Copyright © 2023, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <array>
 #include <charconv>
 #include <cstddef>
-#include <limits>
+#include <cstdint>
 #include <string_view>
 #include <type_traits>
 
@@ -21,7 +20,6 @@
 #include <fstlog/detail/is_char_type.hpp>
 #include <fstlog/detail/is_string_like.hpp>
 #include <fstlog/detail/log_type_metadata.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
 #include <fstlog/detail/types.hpp>
 
@@ -30,28 +28,6 @@ namespace fstlog {
     class encoder_charconv_mixin : public L {
     public:
         typedef format_setting_txt format_type;
-
-        encoder_charconv_mixin() noexcept = default;
-
-        encoder_charconv_mixin(const encoder_charconv_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                encoder_charconv_mixin,
-                const encoder_charconv_mixin&,
-                memory_resource*>)
-            : encoder_charconv_mixin(other, other.get_memory_resource()) {}
-        encoder_charconv_mixin(const encoder_charconv_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}
-
-        encoder_charconv_mixin(encoder_charconv_mixin&& other) = delete;
-        encoder_charconv_mixin& operator=(const encoder_charconv_mixin& rhs) = delete;
-        encoder_charconv_mixin& operator=(encoder_charconv_mixin&& rhs) = delete;
-
-        ~encoder_charconv_mixin() = default;
         
         // integral
         template<typename T, std::enable_if_t<

@@ -1,8 +1,6 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <type_traits>
-
 #include <sink/sink_interface.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/memory_resource.hpp>
@@ -18,29 +16,26 @@ namespace fstlog {
     public:        
         typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
 
-        sink_interface_mixin() noexcept = default;
-
-        sink_interface_mixin(const sink_interface_mixin&) = delete;
-        sink_interface_mixin& operator=(const sink_interface_mixin&) = delete;
-        sink_interface_mixin(sink_interface_mixin&&) = delete;
-        sink_interface_mixin& operator=(sink_interface_mixin&&) = delete;
-        ~sink_interface_mixin() = default;
-
         error_code sink_msg_block(const unsigned char* dat_ptr, std::uint32_t dat_size) noexcept final{
             return L::sink_msg_block(dat_ptr, dat_size);
         }
+
         bool needs_immediate_flush() const noexcept final{
             return L::needs_immediate_flush();
         }
+
         steady_msec next_flush_time() const noexcept final{
             return L::next_flush_time();
         }
+
         void flush(steady_msec current_time) noexcept final{
             L::flush(current_time);
-        }        
+        }
+
         bool use() noexcept final{
             return L::use();
         }
+
         void release() noexcept final{
             L::release();
         }

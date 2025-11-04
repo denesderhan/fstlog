@@ -15,8 +15,8 @@ namespace fstlog {
         out_cstream_mixin() noexcept = default;
 
         out_cstream_mixin(const out_cstream_mixin&) = delete;
-        out_cstream_mixin(out_cstream_mixin&&) = delete;
         out_cstream_mixin& operator=(const out_cstream_mixin&) = delete;
+        out_cstream_mixin(out_cstream_mixin&&) = delete;
         out_cstream_mixin& operator=(out_cstream_mixin&&) = delete;
 
         ~out_cstream_mixin() noexcept {

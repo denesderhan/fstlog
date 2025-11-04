@@ -2,11 +2,9 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
-#include <type_traits>
 
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/types.hpp>
 #include <detail/unaligned_span.hpp>
 
@@ -16,24 +14,10 @@ namespace fstlog {
     public:
         input_span_mixin() noexcept = default;
 
-        input_span_mixin(const input_span_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                input_span_mixin,
-                const input_span_mixin&,
-                memory_resource*>)
-            : input_span_mixin(other, other.get_memory_resource()) {}
-
-        input_span_mixin(const input_span_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}
-
-        input_span_mixin(input_span_mixin&& other) = delete;
-        input_span_mixin& operator=(const input_span_mixin& rhs) = delete;
-        input_span_mixin& operator=(input_span_mixin&& rhs) = delete;
+        input_span_mixin(const input_span_mixin&) = delete;
+        input_span_mixin& operator=(const input_span_mixin&) = delete;
+        input_span_mixin(input_span_mixin&&) = delete;
+        input_span_mixin& operator=(input_span_mixin&&) = delete;
 
         ~input_span_mixin() = default;
 

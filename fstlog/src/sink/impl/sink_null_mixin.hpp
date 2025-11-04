@@ -2,9 +2,8 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <chrono>
-#include <type_traits>
+#include <cstdint>
 
-#include <fstlog/detail/types.hpp>
 #include <fstlog/detail/error_code.hpp>
 
 namespace fstlog {
@@ -12,15 +11,6 @@ namespace fstlog {
     class sink_null_mixin : public L {
         typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
     public:
-        sink_null_mixin() noexcept = default;
-
-        sink_null_mixin(const sink_null_mixin&) = delete;
-        sink_null_mixin(sink_null_mixin&&) = delete;
-        sink_null_mixin& operator=(const sink_null_mixin&) = delete;
-        sink_null_mixin& operator=(sink_null_mixin&&) = delete;
-
-        ~sink_null_mixin() = default;
-
         error_code sink_msg_block(
             [[maybe_unused]] const unsigned char* begin, 
             [[maybe_unused]] std::uint32_t block_size) noexcept 

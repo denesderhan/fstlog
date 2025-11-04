@@ -1,37 +1,12 @@
 //Copyright © 2023, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <type_traits>
-
 #include <detail/error.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     template<typename L>
     class error_state_mixin : public L {
     public:
-        error_state_mixin() noexcept = default;
-
-        error_state_mixin(const error_state_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                error_state_mixin,
-                const error_state_mixin&,
-                memory_resource*>)
-            : error_state_mixin(other, other.get_memory_resource()) {}
-        error_state_mixin(const error_state_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}
-
-        error_state_mixin(error_state_mixin&& other) = delete;
-        error_state_mixin& operator=(const error_state_mixin& rhs) = delete;
-        error_state_mixin& operator=(error_state_mixin&& rhs) = delete;
-
-        ~error_state_mixin() = default;
-
         bool has_error() const noexcept {
             return error_.code() != error_code::none;
         }

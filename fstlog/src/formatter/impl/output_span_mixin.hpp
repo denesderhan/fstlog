@@ -2,11 +2,9 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
-#include <type_traits>
 
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <detail/unaligned_span.hpp>
 
 namespace fstlog {
@@ -16,26 +14,13 @@ namespace fstlog {
     public:
         output_span_mixin() noexcept = default;
 
-        output_span_mixin(const output_span_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                output_span_mixin,
-                const output_span_mixin&,
-                memory_resource*>)
-            : output_span_mixin(other, other.get_memory_resource()) {}
-        output_span_mixin(const output_span_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}
+        output_span_mixin(const output_span_mixin&) = delete;
+        output_span_mixin& operator=(const output_span_mixin&) = delete;
+        output_span_mixin(output_span_mixin&&) = delete;
+        output_span_mixin& operator=(output_span_mixin&&) = delete;
 
-        output_span_mixin(output_span_mixin&& other) = delete;
-        output_span_mixin& operator=(const output_span_mixin& rhs) = delete;
-        output_span_mixin& operator=(output_span_mixin&& rhs) = delete;
-        
         ~output_span_mixin() = default;
-       
+
         void output_span_init(byte_span out) noexcept {
             FSTLOG_ASSERT(out.data_bytes() != nullptr);
             output_begin_ = out.data_bytes();
@@ -77,7 +62,7 @@ namespace fstlog {
         void advance_output_unchecked(std::size_t bytes) noexcept {
             FSTLOG_ASSERT(output_end_ != nullptr && output_ptr_ != nullptr
                 && output_end_ >= output_ptr_);
-            FSTLOG_ASSERT(bytes <= static_cast<std::uintptr_t>(output_end_ - output_ptr_));
+            FSTLOG_ASSERT(bytes <= static_cast<std::size_t>(output_end_ - output_ptr_));
             output_ptr_ += bytes;
         }
 

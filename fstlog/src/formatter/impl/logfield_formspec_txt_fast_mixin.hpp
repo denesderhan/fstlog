@@ -1,11 +1,8 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <type_traits>
-
 #include <detail/unaligned_span.hpp>
 #include <formatter/impl/detail/logfield.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <formatter/impl/detail/format_setting_txt_fast.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
 
@@ -15,32 +12,11 @@ namespace fstlog {
     {
     public:
         typedef format_setting_txt_fast format_type;
-    
-        logfield_formspec_txt_fast_mixin() noexcept = default;
-
-        logfield_formspec_txt_fast_mixin(const logfield_formspec_txt_fast_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                logfield_formspec_txt_fast_mixin,
-                const logfield_formspec_txt_fast_mixin&,
-                memory_resource*>)
-            : logfield_formspec_txt_fast_mixin(other, other.get_memory_resource()) {}
-        logfield_formspec_txt_fast_mixin(const logfield_formspec_txt_fast_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}
-        
-        logfield_formspec_txt_fast_mixin(logfield_formspec_txt_fast_mixin&& other) = delete;
-        logfield_formspec_txt_fast_mixin& operator=(const logfield_formspec_txt_fast_mixin& rhs) = delete;
-        logfield_formspec_txt_fast_mixin& operator=(logfield_formspec_txt_fast_mixin&& rhs) = delete;
-        
-        ~logfield_formspec_txt_fast_mixin() = default;
 
         static void set_format( 
             [[maybe_unused]] logfield field, 
-            [[maybe_unused]] byte_span_const form_spec) noexcept {}
+            [[maybe_unused]] byte_span_const form_spec) noexcept {
+        }
 
         static constexpr format_type get_format(
             [[maybe_unused]] logfield field) noexcept 

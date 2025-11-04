@@ -1,9 +1,9 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
-#include <limits>
-#include <type_traits>
 
 #include <fstlog/detail/error_code.hpp>
 #include <detail/unaligned_span.hpp>
@@ -13,7 +13,6 @@
 #include <fstlog/detail/internal_msg_header.hpp>
 #include <fstlog/detail/log_element_type.hpp>
 #include <fstlog/detail/log_type.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/padded_size.hpp>
 #include <fstlog/detail/types.hpp>
 
@@ -21,29 +20,6 @@ namespace fstlog {
     template<typename L>
     class decoder_internal_mixin : public L {
     public:
-        decoder_internal_mixin() noexcept = default;
-
-        decoder_internal_mixin(const decoder_internal_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                decoder_internal_mixin,
-                const decoder_internal_mixin&,
-                memory_resource*>)
-            : decoder_internal_mixin(other, other.get_memory_resource()) {}
-
-        decoder_internal_mixin(const decoder_internal_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}
-
-        decoder_internal_mixin(decoder_internal_mixin&& other) = delete;
-        decoder_internal_mixin& operator=(const decoder_internal_mixin& rhs) = delete;
-        decoder_internal_mixin& operator=(decoder_internal_mixin&& rhs) = delete;
-        
-        ~decoder_internal_mixin() = default;
-
         void decoder_set_input(byte_span_const msg) noexcept {
             this->input_span_init(msg);
             this->advance_input(internal_msg_header::padded_data_size);

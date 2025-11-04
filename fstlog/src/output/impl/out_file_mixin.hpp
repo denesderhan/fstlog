@@ -19,8 +19,8 @@ namespace fstlog {
         out_file_mixin() noexcept = default;
 
         out_file_mixin(const out_file_mixin&) = delete;
-        out_file_mixin(out_file_mixin&&) = delete;
         out_file_mixin& operator=(const out_file_mixin&) = delete;
+        out_file_mixin(out_file_mixin&&) = delete;
         out_file_mixin& operator=(out_file_mixin&&) = delete;
         
         ~out_file_mixin() = default;

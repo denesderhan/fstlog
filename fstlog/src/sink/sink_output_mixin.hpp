@@ -1,13 +1,11 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <type_traits>
-
-#include <output/output_interface.hpp>
-
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
+#include <fstlog/output/output.hpp>
+#include <output/output_interface.hpp>
 
 namespace fstlog {
     template<class L>
@@ -16,8 +14,8 @@ namespace fstlog {
         sink_output_mixin() noexcept = default;
 
         sink_output_mixin(const sink_output_mixin&) = delete;
-        sink_output_mixin(sink_output_mixin&&) = delete;
         sink_output_mixin& operator=(const sink_output_mixin&) = delete;
+        sink_output_mixin(sink_output_mixin&&) = delete;
         sink_output_mixin& operator=(sink_output_mixin&&) = delete;
 
         ~sink_output_mixin() noexcept {

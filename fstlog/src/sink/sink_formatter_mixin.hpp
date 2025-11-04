@@ -3,7 +3,6 @@
 #pragma once
 #include <array>
 #include <cstddef>
-#include <type_traits>
 
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
@@ -17,10 +16,10 @@ namespace fstlog {
     public:
         sink_formatter_mixin() noexcept = default;
 
-        sink_formatter_mixin(const sink_formatter_mixin& other) = delete;
-        sink_formatter_mixin(sink_formatter_mixin&& other) = delete;
-        sink_formatter_mixin& operator=(const sink_formatter_mixin& rhs) = delete;
-        sink_formatter_mixin& operator=(sink_formatter_mixin&& rhs) = delete;
+        sink_formatter_mixin(const sink_formatter_mixin&) = delete;
+        sink_formatter_mixin& operator=(const sink_formatter_mixin&) = delete;
+        sink_formatter_mixin(sink_formatter_mixin&&) = delete;
+        sink_formatter_mixin& operator=(sink_formatter_mixin&&) = delete;
 
         ~sink_formatter_mixin() noexcept {
             if (formatter_.pimpl() != nullptr) {

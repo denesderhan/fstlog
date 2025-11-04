@@ -18,28 +18,7 @@ namespace fstlog {
         FSTLOG_API bool operator==(const formatter& other) const noexcept;
         FSTLOG_API bool operator!=(const formatter& other) const noexcept;
         
-        FSTLOG_API formatter clone() const noexcept(
-            noexcept(handle_error(error_code::none)))
-        {
-            formatter out{};
-            const auto error = clone(out);
-            handle_error(error);
-            return out;
-        }
-        
-        FSTLOG_API formatter clone(
-            memory_resource* resource) const noexcept(
-                noexcept(handle_error(error_code::none)))
-        {
-            formatter out{};
-            const auto error = clone(out, resource);
-            handle_error(error);
-            return out;
-        }
-        
         FSTLOG_API bool good() const noexcept;
-        FSTLOG_API error_code clone(formatter& out) const noexcept;
-        FSTLOG_API error_code clone(formatter& out, memory_resource* resource) const noexcept;
         
         FSTLOG_TEST_API explicit formatter(formatter_interface* pimpl) noexcept;
         FSTLOG_TEST_API formatter_interface* pimpl() const noexcept;

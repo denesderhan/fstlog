@@ -1,8 +1,6 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <type_traits>
-
 #include <detail/nothrow_allocate.hpp>
 #include <fstlog/detail/memory_resource.hpp>
 #include <output/output_interface.hpp>
@@ -21,23 +19,18 @@ namespace fstlog {
         public output_interface
     {
     public:        
-        output_interface_mixin() noexcept = default;
-
-        output_interface_mixin(const output_interface_mixin&) = delete;
-        output_interface_mixin& operator=(const output_interface_mixin&) = delete;
-        output_interface_mixin(output_interface_mixin&&) = delete;
-        output_interface_mixin& operator=(output_interface_mixin&&) = delete;
-        ~output_interface_mixin() = default;
-
         void write_message(byte_span_const msg) noexcept final {
             L::write_message(msg);
         }
+
         void flush() noexcept final {
             L::flush();
         }
+
         bool use() noexcept final {
             return L::use();
         }
+
         void release() noexcept final {
             L::release();
         }

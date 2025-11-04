@@ -1,8 +1,8 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <memory>
 #include <mutex>
-#include <type_traits>
 
 #include <fstlog/detail/fstlog_assert.hpp>
 
@@ -13,11 +13,10 @@ namespace fstlog {
     public:
         mutex_external_mixin() noexcept = default;
 
-        //No copy constructor! copy would use the same mutex!
-        mutex_external_mixin(const mutex_external_mixin& other) = delete;
-        mutex_external_mixin(mutex_external_mixin&& other) = delete;
-        mutex_external_mixin& operator=(const mutex_external_mixin& rhs) = delete;
-        mutex_external_mixin& operator=(mutex_external_mixin&& rhs) = delete;
+        mutex_external_mixin(const mutex_external_mixin&) = delete;
+        mutex_external_mixin& operator=(const mutex_external_mixin&) = delete;
+        mutex_external_mixin(mutex_external_mixin&&) = delete;
+        mutex_external_mixin& operator=(mutex_external_mixin&&) = delete;
        
         ~mutex_external_mixin() = default;
 

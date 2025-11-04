@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <limits>
 #include <time.h>
 #include <type_traits>
 
@@ -16,7 +15,6 @@
 #include <formatter/impl/detail/format_setting_txt.hpp>
 #include <formatter/impl/detail/format_str_helper.hpp>
 #include <formatter/impl/detail/local_utc_offset.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <formatter/impl/detail/shift_fill.hpp>
 #include <formatter/impl/detail/time_string_cache.hpp>
 #include <formatter/impl/detail/tz_format.hpp>
@@ -30,33 +28,6 @@ namespace fstlog {
     template<bool use_fill_align, typename L>
     class encoder_timestamp_mixin : public L {
     public:
-        encoder_timestamp_mixin() noexcept = default;
-
-        encoder_timestamp_mixin(const encoder_timestamp_mixin& other) noexcept(
-            std::is_nothrow_constructible_v<
-                encoder_timestamp_mixin,
-                const encoder_timestamp_mixin&,
-                memory_resource*>)
-            : encoder_timestamp_mixin(other, other.get_memory_resource()) {}
-        encoder_timestamp_mixin(const encoder_timestamp_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource),
-            time_string_cache_{ other.time_string_cache_ },
-            time_format_{ other.time_format_ },
-            tzone_{ other.tzone_ },
-            formatted_length_{ other.formatted_length_ },
-            second_precision_{ other.second_precision_ },
-            second_pos_{ other.second_pos_ } {}
-
-        encoder_timestamp_mixin(encoder_timestamp_mixin&& other) = delete;
-        encoder_timestamp_mixin& operator=(const encoder_timestamp_mixin& rhs) = delete;
-        encoder_timestamp_mixin& operator=(encoder_timestamp_mixin&& rhs) = delete;
-
-        ~encoder_timestamp_mixin() = default;
-
         /**
          * @brief Initializes the timestamp encoder with the specified format string.
          *

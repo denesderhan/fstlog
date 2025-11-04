@@ -9,6 +9,7 @@
 #include <detail/constants_src.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
+#include <fstlog/detail/memory_resource.hpp>
 #include <detail/utf_conv.hpp>
 
 namespace fstlog {
@@ -20,8 +21,9 @@ namespace fstlog {
             : memory_resource_{ resource } {
         }
 
-        out_file_posix(const out_file_posix& other) = delete;
-
+        out_file_posix(const out_file_posix&) = delete;
+        out_file_posix& operator=(const out_file_posix&) = delete;
+        
         out_file_posix(out_file_posix&& other) noexcept {
             handle_ = other.handle_;
             buffer_ = other.buffer_;
@@ -32,7 +34,7 @@ namespace fstlog {
             other.buffer_size_ = 0;
             other.memory_resource_ = nullptr;
         }
-        out_file_posix& operator=(const out_file_posix&) = delete;
+
         out_file_posix& operator=(out_file_posix&& other) noexcept {
             FSTLOG_ASSERT(
                 (handle_ == nullptr || handle_ != other.handle_)
@@ -49,6 +51,7 @@ namespace fstlog {
             other.memory_resource_ = nullptr;
             return *this;
         }
+
         ~out_file_posix() noexcept {
             close();
             deallocate_buffer();

@@ -1,40 +1,15 @@
 //Copyright © 2023, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <type_traits>
-
 #include <fstlog/detail/aggregate_type.hpp>
 #include <fstlog/detail/types.hpp>
 #include <fstlog/detail/error_code.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 
 namespace fstlog {
     template<typename L>
     class encoder_aggregate_separator_txt_mixin : public L
     {
     public:
-        encoder_aggregate_separator_txt_mixin() noexcept = default;
-
-        encoder_aggregate_separator_txt_mixin(const encoder_aggregate_separator_txt_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                encoder_aggregate_separator_txt_mixin,
-                const encoder_aggregate_separator_txt_mixin&,
-                memory_resource*>)
-            : encoder_aggregate_separator_txt_mixin(other, other.get_memory_resource()) {}
-        encoder_aggregate_separator_txt_mixin(const encoder_aggregate_separator_txt_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}
-
-        encoder_aggregate_separator_txt_mixin(encoder_aggregate_separator_txt_mixin&& other) = delete;
-        encoder_aggregate_separator_txt_mixin& operator=(const encoder_aggregate_separator_txt_mixin& rhs) = delete;
-        encoder_aggregate_separator_txt_mixin& operator=(encoder_aggregate_separator_txt_mixin&& rhs) = delete;
-
-        ~encoder_aggregate_separator_txt_mixin() = default;
-        
         void encode_aggregate_start(
             [[maybe_unused]] aggregate_type type, 
             [[maybe_unused]] msg_counter element_number) noexcept 
@@ -47,6 +22,7 @@ namespace fstlog {
                 this->set_error(__FILE__, __LINE__, error_code::buff_full);
             }
         }
+
         void encode_aggregate_element_separator() noexcept {
             if (this->output_has_space(2)) {
                 const auto o_ptr{ this->output_ptr() };
@@ -58,6 +34,7 @@ namespace fstlog {
                 this->set_error(__FILE__, __LINE__, error_code::buff_full);
             }
         }
+
         void encode_aggregate_stop() noexcept {
             if (this->output_has_space()) {
                 *this->output_ptr() = ']';

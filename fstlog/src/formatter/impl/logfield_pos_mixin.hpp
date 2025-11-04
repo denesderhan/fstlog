@@ -2,11 +2,9 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
-#include <type_traits>
 
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/log_metaargs.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 #include <formatter/impl/detail/logfield.hpp>
 
@@ -17,27 +15,14 @@ namespace fstlog {
     public:
         logfield_pos_mixin() noexcept = default;
 
-        logfield_pos_mixin(const logfield_pos_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                logfield_pos_mixin,
-                const logfield_pos_mixin&,
-                memory_resource*>)
-            : logfield_pos_mixin(other, other.get_memory_resource()) {}
-        logfield_pos_mixin(const logfield_pos_mixin& other, memory_resource* resource) noexcept(
-            std::is_nothrow_constructible_v<
-                L,
-                const L&,
-                memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}
-
-        logfield_pos_mixin(logfield_pos_mixin&& other) = delete;
-        logfield_pos_mixin& operator=(const logfield_pos_mixin& rhs) = delete;
-        logfield_pos_mixin& operator=(logfield_pos_mixin&& rhs) = delete;
+        logfield_pos_mixin(const logfield_pos_mixin&) = delete;
+        logfield_pos_mixin& operator=(const logfield_pos_mixin&) = delete;
+        logfield_pos_mixin(logfield_pos_mixin&&) = delete;
+        logfield_pos_mixin& operator=(logfield_pos_mixin&&) = delete;
         
         ~logfield_pos_mixin() = default;
         
-        //Call this when input_ptr is at the end of header
+        // Call this when input_ptr is at the end of header!
         void init_logfields() noexcept {
             field_pos_.fill(nullptr);
             

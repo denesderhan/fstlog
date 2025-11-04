@@ -2,7 +2,6 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
-#include <type_traits>
 
 #include <config_parser.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
@@ -15,7 +14,6 @@
 #include <fstlog/detail/log_element_type.hpp>
 #include <fstlog/detail/log_policy.hpp>
 #include <fstlog/detail/log_type_metadata.hpp>
-#include <fstlog/detail/memory_resource.hpp>
 #include <fstlog/detail/small_string.hpp>
 #include <fstlog/detail/str_hash_fnv.hpp>
 #include <fstlog/detail/types.hpp>
@@ -26,30 +24,6 @@ namespace fstlog {
     class arg_parser_mixin : public L {
     public:
         using format_type = typename L::format_type;
-
-        arg_parser_mixin() noexcept = default;
-
-        arg_parser_mixin(const arg_parser_mixin& other) noexcept(
-            noexcept(other.get_memory_resource())
-            && std::is_nothrow_constructible_v<
-                arg_parser_mixin,
-                const arg_parser_mixin&,
-                memory_resource*>)
-            : arg_parser_mixin(other, other.get_memory_resource()) {}
-        arg_parser_mixin(
-            const arg_parser_mixin& other, 
-            memory_resource* resource) noexcept(
-                std::is_nothrow_constructible_v<
-                    L,
-                    const L&,
-                    memory_resource*>)
-            : L(static_cast<const L&>(other), resource) {}
-
-        arg_parser_mixin(arg_parser_mixin&& other) = delete;
-        arg_parser_mixin& operator=(const arg_parser_mixin& rhs) = delete;
-        arg_parser_mixin& operator=(arg_parser_mixin&& rhs) = delete;
-        
-        ~arg_parser_mixin() = default;
         
         void process_char(log_element_ut meta, format_type format) noexcept {
             if (meta == ut_cast(char_type::Char)
