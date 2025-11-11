@@ -320,8 +320,8 @@ namespace fstlog {
                 }
                 else {
                     LOG_LL_ERROR(logger_,
-                        "Core: {}, failed reading from buffer {:p}, error: {}, ({:4} Kb) {:6} bytes. ptr: {} (to sink: {})",
-                        name(), &buffer, ut_cast(err1),    buffer.size() / 1024, 
+                        "Core: {}, failed reading from buffer {:p}, {}, ({:4} Kb) {:6} bytes. ptr: {} (to sink: {})",
+                        name(), &buffer, error_message(err1), buffer.size() / 1024, 
                         to_read.size1, to_read.pos1, s.pimpl());
                 }
             }
@@ -337,8 +337,8 @@ namespace fstlog {
                     }
                     else {
                         LOG_LL_ERROR(logger_,
-                            "Core: {}, failed reading from buffer {:p}, error: {}, ({:4} Kb) {:6} bytes. ptr: {} (to sink: {})",
-                            name(), &buffer, ut_cast(err2), buffer.size() / 1024,
+                            "Core: {}, failed reading from buffer {:p}, {}, ({:4} Kb) {:6} bytes. ptr: {} (to sink: {})",
+                            name(), &buffer, error_message(err2), buffer.size() / 1024,
                             to_read.size2, to_read.pos2, s.pimpl());
                     }
                 }

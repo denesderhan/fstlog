@@ -200,7 +200,7 @@ TEST_CASE("formatter_txt_mixin") {
         out_str->str("");
         LOG_INFO(logger, "This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer {}", 1111111111111LL );
         core.flush();
-        CHECK(out_str->str() == "This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer Err:002\n");
+        CHECK(out_str->str() == "This will not fit in the sinks formatting buffer of size 128 bytes! This will not fit in the sinks formatting buffer ERR:002\n");
         out_str->str("");
         LOG_INFO(logger, "This will not fit in the sinks formatting buffer of size 128 bytes! {}", "This will not fit in the sinks formatting buffer of size 128 bytes!");
         core.flush();

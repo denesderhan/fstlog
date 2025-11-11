@@ -106,7 +106,7 @@ namespace fstlog {
                 msg_end = this->get_error().write_to(msg_end, this->output_end());
             }
 
-            FSTLOG_ASSERT(msg_end < msg_begin + out.size_bytes());
+            FSTLOG_ASSERT(msg_end >= msg_begin && msg_end - msg_begin < out.size_bytes());
             *msg_end++ = '\n';
             return { msg_begin,
                 static_cast<std::size_t>(msg_end - msg_begin) };

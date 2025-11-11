@@ -2,9 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
-#ifdef FSTLOG_DEBUG
-#include <cstring>
-#endif
+
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -34,11 +32,14 @@ namespace fstlog {
         unsigned char* write_to(unsigned char* begin, const unsigned char* end) const noexcept {
             if (begin == nullptr || end == nullptr || begin >= end) return begin;
             int err_num = ut_cast(code());
-            std::size_t max_len = end - begin;
-            if (max_len < 7) return begin;
+            std::size_t max_len = static_cast<std::size_t>(end - begin);
+            if (max_len < 3) return begin;
+            if (max_len < 7) {
+                begin = write_cstring("ERR", begin);
+            }
             //  7 <= buff < 20
-            if (max_len < 20) {
-                begin = write_cstring("Err:", begin);
+            else if (max_len < 20) {
+                begin = write_cstring("ERR:", begin);
                 begin = write_num(err_num, begin);
             }
             //  20 <= buff < 100
@@ -48,14 +49,16 @@ namespace fstlog {
             }
             //  100 <= buff
             else {
-                const char* text = "... Message truncated, ";
+                max_len = end - begin;
+                begin = write_cstring("... Message truncated, ", begin);
+                max_len = end - begin;
                 FSTLOG_ASSERT(message() != nullptr);
-                FSTLOG_ASSERT(std::strlen(text) + std::strlen(message()) <= 100 );
-                begin = write_cstring(text, begin);
-                begin = write_cstring(message(), begin);
+                if (max_len >= cstr_len(message())) {
+                    begin = write_cstring(message(), begin);
+                }
 #ifdef FSTLOG_DEBUG
                 max_len = end - begin;
-                if (max_len >= 1 + std::strlen(file()) + 1 + 3) {
+                if (max_len >= 1 + cstr_len(file()) + 1 + 3) {
                     *begin++ = ' ';
                     begin = write_cstring(file(), begin);
                     *begin++ = ':';
@@ -72,7 +75,7 @@ namespace fstlog {
             return pos;
         }
 
-        unsigned char* write_num(int num, unsigned char*& begin) const noexcept {
+        unsigned char* write_num(int num, unsigned char* begin) const noexcept {
             if (num < 0 || num > 999) {
                 *begin++ = '?';
                 return begin;
@@ -86,8 +89,14 @@ namespace fstlog {
             return begin;
         }
 
+        static constexpr std::size_t cstr_len(const char* s) noexcept {
+            std::size_t len = 0;
+            while (s[len]) ++len;
+            return len;
+        }
+
         const char* file_{ nullptr };
         int line_{ -1 };
-        error_code ec_{ error_code::none};
+        error_code ec_{ error_code::none };
     };
 }
