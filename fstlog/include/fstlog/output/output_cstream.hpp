@@ -3,7 +3,7 @@
 #pragma once
 #include <fstlog/output/output.hpp>
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <fstlog/compatible.hpp>
 #include <fstlog/detail/error_handling.hpp>

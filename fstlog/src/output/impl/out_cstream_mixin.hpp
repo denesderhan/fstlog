@@ -1,7 +1,7 @@
 //Copyright © 2022, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <stdio.h>
+#include <cstdio>
 #include <type_traits>
 
 #include <detail/unaligned_span.hpp>

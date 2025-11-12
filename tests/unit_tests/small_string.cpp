@@ -4,7 +4,8 @@
  
 #include <fstlog/detail/small_string.hpp>
 
-#include <string.h>
+#include <cstring>
+#include <string_view>
 
 #include <fstlog/detail/log_type.hpp>
 
@@ -32,9 +33,9 @@ TEST_CASE("small_string") {
         CHECK(sizeof(fstlog::small_string<16>) == 16);
         fstlog::small_string<16> sstr0 = "Hello World!";
         CHECK(sstr0 == std::string_view{ "Hello World!" });
-        CHECK(strcmp("Hello World!", sstr0.data()) == 0);
+        CHECK(std::strcmp("Hello World!", sstr0.data()) == 0);
         CHECK(fstlog::small_string<16>{""} == std::string_view{ "" });
-        CHECK(strcmp("", fstlog::small_string<16>{""}.data()) == 0);
+        CHECK(std::strcmp("", fstlog::small_string<16>{""}.data()) == 0);
         CHECK(fstlog::small_string<128>().size() == 0);
         CHECK(fstlog::small_string<64>().empty());
         
@@ -42,22 +43,22 @@ TEST_CASE("small_string") {
         CHECK(!sstr1.empty());
         CHECK(sstr1.size() == 15);
         CHECK(sstr1 == "15 chr long str");
-        CHECK(strcmp("15 chr long str", sstr1.data()) == 0);
+        CHECK(std::strcmp("15 chr long str", sstr1.data()) == 0);
 
         fstlog::small_string<16> sstr2 = "16 char long str";
         CHECK(!sstr2.empty());
         CHECK(sstr2.size() == 15);
         CHECK(sstr2 == std::string_view{ "16 char long st" });
-        CHECK(strcmp("16 char long st", sstr2.data()) == 0);
+        CHECK(std::strcmp("16 char long st", sstr2.data()) == 0);
         CHECK(sstr1 != sstr2);
         
         sstr2 = "Short";
         CHECK(sstr2 == std::string_view{ "Short" });
-        CHECK(strcmp("Short", sstr2.data()) == 0);
+        CHECK(std::strcmp("Short", sstr2.data()) == 0);
 
         const char* text = "Hello World!";
         fstlog::small_string<16> sstr3(text);
-        CHECK(strcmp("Hello World!", sstr3.data()) == 0);
+        CHECK(std::strcmp("Hello World!", sstr3.data()) == 0);
 
         CHECK(sstr1 == fstlog::small_string<16>{ "15 chr long str this will be cut off" });
         CHECK(fstlog::small_string<16>{ "15 chr long str" } == fstlog::small_string<16>{ "15 chr long str this will be cut off" });

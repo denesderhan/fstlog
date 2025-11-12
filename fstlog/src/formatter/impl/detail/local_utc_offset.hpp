@@ -4,7 +4,7 @@
 #include <array>
 #include <ctime>
 #ifndef _WIN32
-#include <time.h>
+#include <ctime>
 #endif
 
 namespace fstlog::detail {

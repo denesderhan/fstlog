@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <time.h>
+#include <ctime>
 #include <type_traits>
 
 #include <detail/unaligned_span.hpp>
