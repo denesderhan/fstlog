@@ -136,7 +136,7 @@ namespace fstlog {
                     sorted_block_sizes_[new_block_ind++] = merged_size;
                 }
                 // add last block if block_num was odd
-                if (block_num & 1) {
+                if ((block_num & 1) == 1) {
                     sorted_block_sizes_[new_block_ind++] = sorted_block_sizes_[block_num - 1];
                 }
                 block_num = new_block_ind;

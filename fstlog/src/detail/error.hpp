@@ -91,7 +91,7 @@ namespace fstlog {
 
         static constexpr std::size_t cstr_len(const char* s) noexcept {
             std::size_t len = 0;
-            while (s[len]) ++len;
+            while (s[len] != 0) ++len;
             return len;
         }
 

@@ -76,7 +76,7 @@ namespace fstlog {
             write_tuple(buff_ind, var, std::make_index_sequence<std::tuple_size_v<rm_cvref_t<T>>>{});
         }
         else {
-            static_assert(!sizeof(T), "fstlog: write_var() Can not log Aggregate!");
+            static_assert(sizeof(T) == 0, "fstlog: write_var() Can not log Aggregate!");
         }
     }
 

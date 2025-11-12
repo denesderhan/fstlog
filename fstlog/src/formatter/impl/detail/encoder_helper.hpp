@@ -60,7 +60,7 @@ namespace fstlog {
                     (1ULL << ('x' - 64)) | (1ULL << ('X' - 64))
                     | (1ULL << ('b' - 64)) | (1ULL << ('B' - 64))
                     | (1ULL << ('d' - 64)) | (1ULL << ('o' - 64));
-                if ((lut >> (type_char - 64)) & 1) return type_char;
+                if (((lut >> (type_char - 64)) & 1) == 1) return type_char;
             }
             return 0;
         }
@@ -72,7 +72,7 @@ namespace fstlog {
                     | (1ULL << ('e' - 64)) | (1ULL << ('E' - 64))
                     | (1ULL << ('f' - 64)) | (1ULL << ('F' - 64))
                     | (1ULL << ('g' - 64)) | (1ULL << ('G' - 64));
-                if ((lut >> (type_char - 64)) & 1) return type_char;
+                if (((lut >> (type_char - 64)) & 1) == 1) return type_char;
             }
             return 0;
         }

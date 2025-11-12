@@ -28,7 +28,7 @@ namespace fstlog {
 
         std::mutex& get_mutex() noexcept {
             FSTLOG_ASSERT(sync_mutex_ != nullptr);
-            return *sync_mutex_.get();
+            return *sync_mutex_;
         }
 
     private:

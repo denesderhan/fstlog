@@ -16,7 +16,7 @@ namespace fstlog {
 
     template <typename T, typename = void>
     struct log_type_metadata {
-        static_assert(!sizeof(T), "Error, no log_type_metadata defined!");
+        static_assert(sizeof(T) == 0, "Error, no log_type_metadata defined!");
         static constexpr log_element_ut value{};
     };
 

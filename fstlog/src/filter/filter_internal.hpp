@@ -72,12 +72,12 @@ namespace fstlog {
         }
 
         bool filter_msg(level level, channel_type channel) const noexcept {
-            if ((std::uint32_t{ 1 } << ut_cast(level)) & level_data_) {
-                const auto index{ channel / 32 };
-                const auto bit_pos{ channel & 31 };
-                return channel_data_[index] & (std::uint32_t{ 1 } << bit_pos);
+            if (((std::uint32_t{ 1 } << ut_cast(level)) & level_data_) == 0) {
+                return false;
             }
-            else return false;
+            const auto index{ channel / 32 };
+            const auto bit_pos{ channel & 31 };
+            return (channel_data_[index] & (std::uint32_t{ 1 } << bit_pos)) != 0;
         }
 
     private:

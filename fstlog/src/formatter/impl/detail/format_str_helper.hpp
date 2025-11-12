@@ -315,7 +315,7 @@ namespace fstlog {
             const auto bit_pos = type_spec - 'A';
 
             // shift the LUT bit to the least significant place and check if it is set.
-            return (valid_type_spec_lut >> bit_pos) & 1;
+            return ((valid_type_spec_lut >> bit_pos) & 1) == 1;
         }
 
         inline bool valid_format_spec(byte_span_const format_spec) noexcept {

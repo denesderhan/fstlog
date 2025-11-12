@@ -55,7 +55,7 @@ namespace fstlog {
             return tuple_payload_size<rm_cvref_t<T>>(std::make_index_sequence<std::tuple_size_v<rm_cvref_t<T>>>{});
         }
         else {
-            static_assert(!sizeof(T), "fstlog: Can not compute log element payload size!");
+            static_assert(sizeof(T) == 0, "fstlog: Can not compute log element payload size!");
             return 0;
         }
     }
@@ -100,7 +100,7 @@ namespace fstlog {
             return tuple_payload_size(element, std::make_index_sequence<std::tuple_size_v<rm_cvref_t<T>>>{});
         }
         else {
-            static_assert(!sizeof(T), "fstlog: Can not compute log element payload size!");
+            static_assert(sizeof(T) == 0, "fstlog: Can not compute log element payload size!");
             return 0;
         }
     }

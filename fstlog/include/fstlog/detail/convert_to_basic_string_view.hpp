@@ -36,7 +36,7 @@ namespace fstlog {
             return out;
         }
         else {
-            static_assert(!sizeof(T), "Can not convert to basic_string_view!");
+            static_assert(sizeof(T) == 0, "Can not convert to basic_string_view!");
             return 0;
         }
     }

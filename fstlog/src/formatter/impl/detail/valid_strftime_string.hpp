@@ -34,7 +34,7 @@ namespace fstlog {
             const auto bit_pos = spec - 64;
 
             // shift the LUT bit to the least significant place and check if it is set.
-            return (valid_conv_spec_lut >> bit_pos) & 1;
+            return ((valid_conv_spec_lut >> bit_pos) & 1) == 1;
         }
 
         /**

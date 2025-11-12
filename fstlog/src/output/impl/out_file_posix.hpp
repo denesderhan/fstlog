@@ -122,7 +122,7 @@ namespace fstlog {
             if (handle_ == nullptr) return error_code::path_bad;
             
             const auto buffer_mode = buffer_size_ == 0 ? _IONBF : _IOFBF;
-            if (std::setvbuf(handle_, buffer_, buffer_mode, buffer_size_)) {
+            if (std::setvbuf(handle_, buffer_, buffer_mode, buffer_size_) != 0) {
                 close();
                 return error_code::extern_err;
             }
@@ -159,7 +159,7 @@ namespace fstlog {
 
             const auto buffer_mode = buffer_size_ == 0 ? _IONBF : _IOFBF;
             //trying to set buffer_
-            if (std::setvbuf(temp, buffer_, buffer_mode, buffer_size_)) {
+            if (std::setvbuf(temp, buffer_, buffer_mode, buffer_size_) != 0) {
                 deallocate_buffer();
                 //if fails trying to set unbuffered mode
                 //if fails buffering will be system default 

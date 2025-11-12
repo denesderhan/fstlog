@@ -35,7 +35,7 @@ namespace fstlog {
         }
         else {
             // All other use of reinterpret_cast<>() is forbidden to prevent undefined behaviour.
-            static_assert(!sizeof(T), "Error, forbidden use of reinterpret_cast!");
+            static_assert(sizeof(T) == 0, "Error, forbidden use of reinterpret_cast!");
             return T{};
         }
     }

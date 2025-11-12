@@ -15,7 +15,7 @@ namespace fstlog {
                 else if constexpr (sizeof(T) == 8) return 3;
                 else if constexpr (sizeof(T) == 16) return 4;
                 else {
-                    static_assert(!sizeof(T), "Unsupported type!");
+                    static_assert(sizeof(T) == 0, "Unsupported type!");
                     return 0;
                 }
             }());

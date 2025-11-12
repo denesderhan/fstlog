@@ -67,7 +67,7 @@ namespace fstlog {
             overhead += tuple_counter_overhead(element, std::make_index_sequence<std::tuple_size_v<rm_cvref_t<T>>>{});
         }
         else {
-            static_assert(!sizeof(T), "fstlog: Can not compute element counter overhead!");
+            static_assert(sizeof(T) == 0, "fstlog: Can not compute element counter overhead!");
         }
         return overhead;
     }
@@ -96,7 +96,7 @@ namespace fstlog {
             overhead += tuple_counter_overhead<T>(std::make_index_sequence<std::tuple_size_v<rm_cvref_t<T>>>{});
         }
         else {
-            static_assert(!sizeof(T), "fstlog: Can not compute element counter overhead!");
+            static_assert(sizeof(T) == 0, "fstlog: Can not compute element counter overhead!");
         }
         return overhead;
     }

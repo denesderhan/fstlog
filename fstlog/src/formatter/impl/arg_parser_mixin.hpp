@@ -125,8 +125,8 @@ namespace fstlog {
         }
         
         void process_integral(log_element_ut meta, format_type format) noexcept {
-            bool const int_signed = meta & 0b1000;
-            std::size_t const int_size = 
+            const bool int_signed = (meta & 0b1000) != 0;
+            const std::size_t int_size = 
                 std::size_t{ 1 } << (meta & 0b111);
             if (int_size == sizeof(int)) {
                 if (int_signed) {
