@@ -18,7 +18,7 @@ namespace fstlog {
     template <typename T, std::size_t padding>
     struct padded_t_paddnonzero
     {
-        typedef T value_type;
+        using value_type = T;
         T value;
         unsigned char padding_bytes[padding]{0};
         static constexpr std::size_t padded_data_size = sizeof(T) + padding;
@@ -27,7 +27,7 @@ namespace fstlog {
     template<typename T>
     struct padded_t_paddzero
     {
-        typedef T value_type;
+        using value_type = T;
         T value;
         static constexpr std::size_t padded_data_size = sizeof(T);
     };

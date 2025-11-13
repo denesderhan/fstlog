@@ -16,7 +16,7 @@ namespace fstlog {
     class logfield_formspec_txt_mixin : public L
     {
     public:
-        typedef format_setting_txt format_type;
+        using format_type = format_setting_txt;
 
         //form_spec is without curly brackets and ":", ({name:form_spec})
         void set_format(

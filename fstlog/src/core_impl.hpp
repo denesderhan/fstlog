@@ -89,7 +89,7 @@ namespace fstlog {
         bool remove_reference() noexcept;
                 
 
-        typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
+        using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
         void run() noexcept;
         void read_buffer(log_buffer_impl& buffer, bool& sink_flush_needed) noexcept;
         void read_buffers(bool& flush_all_buffers, bool& sink_flush_needed) noexcept;

@@ -9,7 +9,7 @@
 namespace fstlog {
     template<class L>
     class sink_null_mixin : public L {
-        typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
+        using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
     public:
         error_code sink_msg_block(
             [[maybe_unused]] const unsigned char* begin, 

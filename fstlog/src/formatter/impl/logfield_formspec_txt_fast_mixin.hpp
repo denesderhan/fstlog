@@ -11,7 +11,7 @@ namespace fstlog {
     class logfield_formspec_txt_fast_mixin : public L
     {
     public:
-        typedef format_setting_txt_fast format_type;
+        using format_type = format_setting_txt_fast;
 
         static void set_format( 
             [[maybe_unused]] logfield field, 

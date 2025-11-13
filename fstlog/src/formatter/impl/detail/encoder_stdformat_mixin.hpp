@@ -32,7 +32,7 @@ namespace fstlog {
     template<typename L>
     class encoder_stdformat_mixin : public L {
     public:
-        typedef std::string_view format_type;
+        using format_type = std::string_view;
         
         //bool, void*, integral, float
         template<typename T, std::enable_if_t<

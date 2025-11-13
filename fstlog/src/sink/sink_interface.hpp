@@ -9,7 +9,7 @@
 namespace fstlog {
     class sink_interface
     {
-        typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
+        using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
     
     public:
         sink_interface() noexcept = default;

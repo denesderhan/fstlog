@@ -67,7 +67,7 @@ namespace fstlog {
         //string
         if constexpr (log_type_v<T> == log_element_type::String) {
             const auto str_v = convert_to_basic_string_view(element);
-            typedef typename decltype(str_v)::value_type value_type ;
+            using value_type = typename decltype(str_v)::value_type;
             return padded_size<constants::internal_msg_data_alignment>(
                 static_cast<std::uintmax_t>(str_v.size()) * sizeof(value_type));
         }

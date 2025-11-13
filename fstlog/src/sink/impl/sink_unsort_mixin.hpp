@@ -8,7 +8,7 @@
 namespace fstlog {
     template<class L>
     class sink_unsort_mixin : public L {
-        typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
+        using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
     public:
         sink_unsort_mixin() noexcept = default;
 

@@ -6,7 +6,7 @@
 namespace fstlog {
     template<class L>
     class sink_flush_time_mixin : public L {
-        typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
+        using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
     public:
         steady_msec next_flush_time() const noexcept {
             return next_flush_time_;

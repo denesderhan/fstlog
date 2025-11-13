@@ -17,7 +17,7 @@ namespace fstlog {
     class logfield_formspec_fmt_mixin : public L
     {
     public:
-        typedef small_string<24> format_type;
+        using format_type = small_string<24>;
 
         logfield_formspec_fmt_mixin() noexcept {
             field_formattings_.fill(get_default_format()); //noexcept

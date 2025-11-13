@@ -10,8 +10,8 @@ namespace fstlog {
     template<class L>
     class logger_msgsize_thread_local_mixin : public L {
     public:
-        typedef std::uint32_t msg_size_type;
-        typedef std::uint32_t arg_num_type;
+        using msg_size_type = std::uint32_t;
+        using arg_num_type = std::uint32_t;
 #ifdef FSTLOG_DEBUG
         static_assert((std::numeric_limits<msg_size_type>::max)() >=
             (std::numeric_limits<msg_counter>::max)());

@@ -60,7 +60,7 @@ TEST_CASE("internal_arg_header") {
     };
     
     SECTION("long_type") {
-        typedef std::pair<std::vector<std::tuple<int, unsigned long long int, std::string>>, int> long_type;
+        using long_type = std::pair<std::vector<std::tuple<int, unsigned long long int, std::string>>, int>;
 
         constexpr auto t = fstlog::internal_arg_header<long_type>{0xabcd};
 

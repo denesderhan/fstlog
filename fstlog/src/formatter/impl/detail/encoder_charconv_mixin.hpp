@@ -27,7 +27,7 @@ namespace fstlog {
     template<typename L>
     class encoder_charconv_mixin : public L {
     public:
-        typedef format_setting_txt format_type;
+        using format_type = format_setting_txt;
         
         // integral
         template<typename T, std::enable_if_t<

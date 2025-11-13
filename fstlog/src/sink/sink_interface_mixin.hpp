@@ -14,7 +14,7 @@ namespace fstlog {
         public sink_interface
     {
     public:        
-        typedef std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> steady_msec;
+        using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
 
         error_code sink_msg_block(const unsigned char* dat_ptr, std::uint32_t dat_size) noexcept final{
             return L::sink_msg_block(dat_ptr, dat_size);
