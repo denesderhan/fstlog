@@ -44,7 +44,7 @@ namespace fstlog {
         memory_resource* resource) noexcept
     {
         out = sink{ make_allocated<sink_sort_impl_type>(resource) };
-        const auto pimpl = static_cast<sink_sort_impl_type*>(out.pimpl());
+        auto* const pimpl = static_cast<sink_sort_impl_type*>(out.pimpl());
         if (pimpl == nullptr) {
             return error_code::alloc_fail;
         }

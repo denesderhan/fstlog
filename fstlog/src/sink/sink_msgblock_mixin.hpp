@@ -18,7 +18,7 @@ namespace fstlog {
         error_code sink_msg_block(const unsigned char* begin, std::uint32_t block_size) noexcept {
             FSTLOG_ASSERT(begin != nullptr);
             std::uint32_t remaining_data = block_size;
-            auto dat_ptr = begin;
+            auto* dat_ptr = begin;
             error_code errc{ error_code::none };
             bool has_sinked{ false };
             while(true) {

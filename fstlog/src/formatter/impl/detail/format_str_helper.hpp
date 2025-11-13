@@ -102,10 +102,10 @@ namespace fstlog {
                 && input.template get<0>() == '{');
             input.template drop_front<1>();
             bool name_set = false;
-            const auto name_begin = input.data_bytes();
-            auto name_end = name_begin;
-            auto spec_begin = name_begin;
-            auto spec_end = spec_begin;
+            const auto* const name_begin = input.data_bytes();
+            const auto* name_end = name_begin;
+            const auto* spec_begin = name_begin;
+            const auto* spec_end = spec_begin;
             error_code error = error_code::fmt_bad;
             while (!input.empty()) {
                 if (input.template get<0>() == '}') {

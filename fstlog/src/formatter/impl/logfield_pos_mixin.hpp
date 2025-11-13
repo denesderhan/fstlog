@@ -52,7 +52,7 @@ namespace fstlog {
 
         bool seek_field(logfield field) noexcept {
             FSTLOG_ASSERT(field <= logfield_last);
-            auto pos = field_pos_[ut_cast(field)];
+            const auto* pos = field_pos_[ut_cast(field)];
             if (pos != nullptr) {
                 this->set_input_ptr_unchecked(pos);
                 return true;

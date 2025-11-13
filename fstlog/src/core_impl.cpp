@@ -169,7 +169,7 @@ namespace fstlog {
     }
 
     bool core_impl::add_sink(sink new_sink) noexcept {
-        const auto sink_ptr = new_sink.pimpl();
+        auto* const sink_ptr = new_sink.pimpl();
         if (sink_ptr == nullptr) return false;
         steady_msec sink_flush_time{};
         {

@@ -37,11 +37,11 @@ namespace fstlog {
                 if (form_spec[0] >= 'A') form.type = form_spec[0];
                 return form;
             }
-            const auto begin = form_spec.data_bytes();
-            const auto end = begin + form_spec.size_bytes();
-            auto pos = end - 1;
+            const auto* const begin = form_spec.data_bytes();
+            const auto* const end = begin + form_spec.size_bytes();
+            const auto* pos = end - 1;
             if(*pos >= 'A') form.type = *pos--;
-            auto num_end = pos + 1;
+            const auto* const num_end = pos + 1;
             while (*pos >= '0' && *pos <= '9' && pos > begin) pos--; // precision is second last in format str
             if (*pos != '.') return form; // no precision
             pos++;

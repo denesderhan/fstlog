@@ -24,7 +24,7 @@ namespace fstlog {
     {
         out = formatter{ make_allocated<formatter_null_type>(resource) };
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
-        const auto pimpl = static_cast<formatter_null_type*>(out.pimpl());
+        auto* const pimpl = static_cast<formatter_null_type*>(out.pimpl());
         pimpl->set_memory_resource(resource);
         return error_code::none;
     }

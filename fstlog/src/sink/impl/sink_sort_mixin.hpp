@@ -53,7 +53,7 @@ namespace fstlog {
             FSTLOG_ASSERT(message.size_bytes() <= (std::numeric_limits<std::uint32_t>::max)());
             
             const auto msg_size = message.size_bytes();
-            const auto msg_ptr = message.data_bytes();
+            auto* const msg_ptr = message.data_bytes();
             stamp_type timestamp;
             std::memcpy(
                 &timestamp,

@@ -65,7 +65,7 @@ namespace fstlog {
                 std::array<int, 6> comp_pos{ 0 };
                 while (in_pos < bytes) {
                     for (int i = 0; i < comp_pos.size(); i++) {
-                        auto& severity = severities_[i];
+                        const auto& severity = severities_[i];
                         auto& severity_pos = comp_pos[i];
                         if (data[in_pos] == severity[severity_pos]) {
                             severity_pos++;

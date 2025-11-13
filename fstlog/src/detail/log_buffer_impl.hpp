@@ -101,7 +101,7 @@ namespace fstlog {
                     // write_p cant be at end of buffer because end of buffer is the beginning of buffer 
                     // always will be a free byte at write_p (size_until_end >0 --> all_free > 0) 
                     // free space always begins at write_p
-                    const auto end_marker_ptr{ begin_ + (write_p & buffer_mask_) };
+                    auto* const end_marker_ptr{ begin_ + (write_p & buffer_mask_) };
                     FSTLOG_ASSERT(end_marker_ptr > begin_ && end_marker_ptr < begin_ + buffer_size_);
                     *end_marker_ptr = ut_cast(log_msg_type::Invalid);
                     write_pos_.fetch_add(size_until_end, std::memory_order_release);

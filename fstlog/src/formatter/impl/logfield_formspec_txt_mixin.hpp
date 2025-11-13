@@ -44,7 +44,7 @@ namespace fstlog {
             // fill align
             auto align_pos = form_spec.data_bytes();
             form_spec = skip_fill_align(form_spec);
-            auto align_end = form_spec.data_bytes();
+            const auto* align_end = form_spec.data_bytes();
             // sign
             if (form_spec.empty()) return out;
             auto fmt_c = form_spec.template get<0>();

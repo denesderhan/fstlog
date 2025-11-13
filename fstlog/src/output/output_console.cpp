@@ -25,7 +25,7 @@ namespace fstlog {
     {
         out = output{ make_allocated<output_stream_impl_type>(resource) };
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
-        const auto pimpl = static_cast<output_stream_impl_type*>(out.pimpl());
+        auto* const pimpl = static_cast<output_stream_impl_type*>(out.pimpl());
         pimpl->set_memory_resource(resource);
         const auto error = pimpl->set_stream(&std::cout);
         if (error != error_code::none) out = output{};
@@ -38,7 +38,7 @@ namespace fstlog {
     {
         out = output{ make_allocated<output_stream_impl_type>(resource) };
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
-        const auto pimpl = static_cast<output_stream_impl_type*>(out.pimpl());
+        auto* const pimpl = static_cast<output_stream_impl_type*>(out.pimpl());
         pimpl->set_memory_resource(resource);
         const auto error = pimpl->set_stream(&std::cerr);
         if (error != error_code::none) out = output{};
@@ -51,7 +51,7 @@ namespace fstlog {
     {
         out = output{ make_allocated<output_stream_impl_type>(resource) };
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
-        const auto pimpl = static_cast<output_stream_impl_type*>(out.pimpl());
+        auto* const pimpl = static_cast<output_stream_impl_type*>(out.pimpl());
         pimpl->set_memory_resource(resource); 
         const auto error = pimpl->set_stream(&std::clog);
         if (error != error_code::none) out = output{};

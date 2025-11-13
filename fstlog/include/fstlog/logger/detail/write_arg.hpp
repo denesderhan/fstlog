@@ -31,7 +31,7 @@ namespace fstlog {
             write_var(buff_ind, arg);
         }
         else {
-            auto begin_ptr = buff_ind;
+            auto* const begin_ptr = buff_ind;
             buff_ind += internal_arg_header<T>::data_size;
             write_var(buff_ind, arg);
             // log message size was calculated (log_compute_msgsize_mixin) 

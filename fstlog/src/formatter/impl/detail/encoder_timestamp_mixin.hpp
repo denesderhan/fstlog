@@ -529,7 +529,7 @@ namespace fstlog {
                 }
                 // %a (day abbreviated)
                 else if (c1 == 'a' && time.tm_wday >= 0 && time.tm_wday <= 6) {
-                    const auto days = "SunMonTueWedThuFriSat";
+                    const char* days = "SunMonTueWedThuFriSat";
                     std::memcpy(&buff[pos], days + (time.tm_wday * 3), 3);
                     pos += 3;
                 }
@@ -602,8 +602,8 @@ namespace fstlog {
                 "4041424344454647484950515253545556575859"
                 "6061626364656667686970717273747576777879"
                 "8081828384858687888990919293949596979899" };
-            const auto second_begin = timestring_begin + second_pos_;
-            unsigned char* pos = second_precision_ == 0 ? 
+            auto* const second_begin = timestring_begin + second_pos_;
+            auto* pos = second_precision_ == 0 ? 
                 second_begin + 2
                 : second_begin + 3 + second_precision_;
             // converting digits, two at a time

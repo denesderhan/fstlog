@@ -17,8 +17,8 @@ namespace fstlog {
             "type not supported!");
         //64bit max value can have maximum 16 hexadecimal digits + "0x" 18 chars
         char buffer[18]{};
-        const auto buff_end = &buffer[0] + sizeof(buffer);
-        auto c_ptr{ buff_end };
+        auto* c_ptr{ &buffer[0] + sizeof(buffer) };
+        const auto* const buff_end{ c_ptr };
         constexpr char digits[]{ 
             '0','1','2','3','4','5','6','7','8','9',
             'a','b','c','d','e','f' };
@@ -40,8 +40,8 @@ namespace fstlog {
             "type not supported!");
         //64bit max value can have maximum 20 decimal digits
         char buffer[20]{};
-        const auto buff_end = &buffer[0] + sizeof(buffer);
-        auto c_ptr{ buff_end };
+        auto* c_ptr{ &buffer[0] + sizeof(buffer) };
+        const auto* const buff_end{ c_ptr };
         constexpr char digits2[]{
             "0001020304050607080910111213141516171819"
             "2021222324252627282930313233343536373839"
