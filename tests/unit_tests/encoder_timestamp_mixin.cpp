@@ -56,8 +56,7 @@ static bool encode_timestamp(
         buff_size,
         format_str,
         &time);
-    if (str_size == 0) return false;
-    else return true;
+    return str_size != 0;
 }
 
 TEST_CASE("encoder_timestamp_mixin") {

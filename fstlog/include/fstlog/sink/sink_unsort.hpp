@@ -44,7 +44,11 @@ namespace fstlog {
         error_code error{ error_code::none };
         if (!compatible()) error = error_code::incomp_api;
         else if (!memory_resource_identical()) error = error_code::mem_res_bad;
-        else error = sink_unsort(out, formatter, output, resource);
+        else error = sink_unsort(
+            out, 
+            std::move(formatter), 
+            std::move(output),
+            resource);
         handle_error(error);
         return out;
     }
@@ -60,7 +64,12 @@ namespace fstlog {
         error_code error{ error_code::none };
         if (!compatible()) error = error_code::incomp_api;
         else if (!memory_resource_identical()) error = error_code::mem_res_bad;
-        else error = sink_unsort(out, formatter, output, filter, resource);
+        else error = sink_unsort(
+            out, 
+            std::move(formatter),
+            std::move(output),
+            std::move(filter),
+            resource);
         handle_error(error);
         return out;
     }
@@ -77,7 +86,13 @@ namespace fstlog {
         error_code error{ error_code::none };
         if (!compatible()) error = error_code::incomp_api;
         else if (!memory_resource_identical()) error = error_code::mem_res_bad;
-        else error = sink_unsort(out, formatter, output, filter, flush_interval, resource);
+        else error = sink_unsort(
+            out, 
+            std::move(formatter),
+            std::move(output),
+            std::move(filter),
+            flush_interval,
+            resource);
         handle_error(error);
         return out;
     }

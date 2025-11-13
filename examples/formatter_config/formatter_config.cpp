@@ -79,7 +79,7 @@ int main()
 void log_with_formatter(fstlog::logger & logger, fstlog::formatter formatter) {
     // create sink with the supplied formatter
     fstlog::sink my_sink = fstlog::sink_sort(
-        formatter,
+        std::move(formatter),
         fstlog::output_console());
     // retrieve the core that the logger is linked to
     auto core{ logger.get_core() };

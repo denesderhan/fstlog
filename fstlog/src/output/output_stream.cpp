@@ -26,7 +26,7 @@ namespace fstlog {
         if (out.pimpl() == nullptr) return error_code::alloc_fail;
         auto* const pimpl = static_cast<output_stream_impl_type*>(out.pimpl());
         pimpl->set_memory_resource(resource);
-        const auto error = pimpl->set_stream(stream);
+        const auto error = pimpl->set_stream(std::move(stream));
         if (error != error_code::none) out = output{};
         return error;
     }

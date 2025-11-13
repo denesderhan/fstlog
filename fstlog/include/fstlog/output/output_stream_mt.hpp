@@ -30,7 +30,11 @@ namespace fstlog {
         error_code error{ error_code::none };
         if (!compatible()) error = error_code::incomp_api;
         else if (!memory_resource_identical()) error = error_code::mem_res_bad;
-        else error = output_stream_mt(out, stream, mutex, resource);
+        else error = output_stream_mt(
+            out, 
+            std::move(stream),
+            std::move(mutex),
+            resource);
         handle_error(error);
         return out;
     }

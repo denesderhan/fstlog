@@ -33,7 +33,7 @@ namespace fstlog {
        pimpl->set_memory_resource(resource);
        auto error = pimpl->set_mutex(std::move(mutex));
        if (error == error_code::none) {
-           error = pimpl->set_stream(stream);
+           error = pimpl->set_stream(std::move(stream));
        }
        if (error != error_code::none) {
            out = output{};
