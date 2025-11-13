@@ -44,7 +44,7 @@ namespace fstlog {
 #endif
         str_hash_fnv operator"" _hs(const char* str, std::size_t n) noexcept
         {
-            return str_hash_fnv(str, n);
+            return { str, n };
         }
 
 #ifdef __cpp_char8_t
@@ -55,7 +55,7 @@ namespace fstlog {
 #endif
         str_hash_fnv operator"" _hs(const char8_t* str, std::size_t n) noexcept
         {
-            return str_hash_fnv(str, n);
+            return { str, n };
         }
 #endif
     }

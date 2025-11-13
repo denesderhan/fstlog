@@ -423,12 +423,12 @@ namespace fstlog {
             errno_t error{};
             if (tzone_ == tz_format::UTC) error = gmtime_s(&time, &t);
             else error = localtime_s(&time, &t);
-            if (error != 0) return small_string<64>{};
+            if (error != 0) return {};
         #else        
             tm* error{};
             if (tzone_ == tz_format::UTC) error = gmtime_r(&t, &time);
             else error = localtime_r(&t, &time);
-            if (error == nullptr) return small_string<64>{};
+            if (error == nullptr) return {};
         #endif
             return format_time(time);
         }
@@ -457,7 +457,7 @@ namespace fstlog {
          * @see std::tm
          */
         small_string<64> format_time(std::tm const& time) {
-            if (time_format_.empty()) return small_string<64>();
+            if (time_format_.empty()) return {};
             std::array<char, 160> buff{ 0 };
             // proving that the length can not grow out of the buffer
             static_assert(
@@ -554,10 +554,10 @@ namespace fstlog {
             FSTLOG_ASSERT(pos < buff.size());
             // if not enough space in small_string<64>
             if (pos > small_string<64>::capacity()) {
-                return small_string<64>{};
+                return {};
             }
             else {
-                return small_string<64>(buff.data(), pos);
+                return { buff.data(), pos };
             }
         }
 
