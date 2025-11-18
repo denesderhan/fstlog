@@ -198,7 +198,7 @@ namespace fstlog {
             // Sink is not used by any core (use() succeeded).
             // next_flush_time() call protected by sink_mutex and sinkstore_mutex
             sink_flush_time = sink_ptr->next_flush_time();
-            if (!sinkstore_.try_push_back(new_sink)) {
+            if (!sinkstore_.try_push_back(std::move(new_sink))) {
                 sink_ptr->release();
                 return false;
             }

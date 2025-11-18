@@ -26,7 +26,7 @@ namespace fstlog {
             }
         }
 
-        inline void num_to_upper_case(char* begin, char* end) noexcept {
+        inline void num_to_upper_case(char* begin, const char* end) noexcept {
             while (begin < end) {
                 if (*begin >= 'a') *begin -= ('a' - 'A');
                 begin++;
