@@ -70,6 +70,7 @@ set(include_fstlog_logger
     "include/fstlog/logger/log_policy_guaranteed.hpp"
     "include/fstlog/logger/log_policy_lowlatency.hpp"
     "include/fstlog/logger/log_policy_nonguaranteed.hpp"
+    "include/fstlog/logger/log_sloc.hpp"
     "include/fstlog/logger/logger.hpp"
     "include/fstlog/logger/logger_mt.hpp"
     "include/fstlog/logger/logger_st.hpp"
