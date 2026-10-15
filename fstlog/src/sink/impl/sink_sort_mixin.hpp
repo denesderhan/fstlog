@@ -41,9 +41,11 @@ namespace fstlog {
             message_buffer_ = std::move(dyn_array<unsigned char>{resource});
             message_locators_ = std::move(dyn_array<message_locator>{resource});
             merge_buffer_ = std::move(dyn_array<message_locator>{resource});
+            sorted_block_sizes_ = std::move(dyn_array<std::size_t>{resource});
             if (!message_buffer_.grow(max_data_size_)) return error_code::alloc_fail;
             if (!message_locators_.grow(max_data_size_ / 64)) return error_code::alloc_fail;
             if (!merge_buffer_.grow(max_data_size_ / 64)) return error_code::alloc_fail;
+            if (!sorted_block_sizes_.grow(64)) return error_code::alloc_fail;
             return error_code::none;
         }
 
