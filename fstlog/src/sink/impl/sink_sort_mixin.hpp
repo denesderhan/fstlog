@@ -123,12 +123,27 @@ namespace fstlog {
     private:
         void flush_impl() noexcept
         {
+            merge_sort();
+            // sink messages in sorted order
+            for (const auto& msg_loc : message_locators_) {
+                byte_span_const message{ 
+                    message_buffer_.data() + msg_loc.msg_pos,
+                    msg_loc.msg_size };
+                L::sink_msg(message);
+            }
+            message_locators_.clear();
+            message_buffer_.clear();
+            sorted_block_sizes_.clear();
+            last_timestamp_ = (std::numeric_limits<stamp_type>::max)();
+        }
+
+        void merge_sort() noexcept {
             std::size_t block_num = sorted_block_sizes_.size();
             while (block_num > 1) {
                 std::size_t begin = 0;
                 std::size_t new_block_ind = 0;
                 const std::size_t pairs = block_num / 2;
-                for(std::size_t i = 0; i < pairs; i++) {
+                for (std::size_t i = 0; i < pairs; i++) {
                     const std::size_t block_l_size = sorted_block_sizes_[i * 2];
                     const std::size_t block_r_size = sorted_block_sizes_[i * 2 + 1];
                     FSTLOG_ASSERT(begin + block_l_size + block_r_size <= message_locators_.size());
@@ -143,18 +158,6 @@ namespace fstlog {
                 }
                 block_num = new_block_ind;
             }
-
-            // sink messages in sorted order
-            for (const auto& msg_loc : message_locators_) {
-                byte_span_const message{ 
-                    message_buffer_.data() + msg_loc.msg_pos,
-                    msg_loc.msg_size };
-                L::sink_msg(message);
-            }
-            message_locators_.clear();
-            message_buffer_.clear();
-            sorted_block_sizes_.clear();
-            last_timestamp_ = (std::numeric_limits<stamp_type>::max)();
         }
 
         void inplace_merge(std::size_t start, std::size_t block_l_size, std::size_t block_r_size) noexcept {

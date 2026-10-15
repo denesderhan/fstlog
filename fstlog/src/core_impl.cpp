@@ -282,7 +282,7 @@ namespace fstlog {
         LOG_LL_TRACE(logger_, "Flushing core, next buffer poll: {}, next sink_flush: {} in milliseconds.",
             std::chrono::duration_cast<std::chrono::milliseconds>(new_buffer_poll - current_time).count(),
             std::chrono::duration_cast<std::chrono::milliseconds>(new_flush_time - current_time).count());
-        // Calling flush() can only schedule core wakup to a later time, 
+        // Calling flush() can only schedule core wakeup to a later time, 
         // (buffer_poll_interval and sink_flush_intervals are not changed) 
         // core can wake up before newly scheduled time and go back to sleep
     }

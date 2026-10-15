@@ -52,7 +52,7 @@ jobs:
             
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@master
       
     - name: Install dependencies
       run: |
@@ -107,7 +107,7 @@ jobs:
       run: ./sink_outputd
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@master
       with:
           name: sanitized-build-${{ matrix.label }}
           path: |
