@@ -225,7 +225,7 @@ namespace fstlog {
                         std::chrono::steady_clock::now())
                     ).count());
         }
-        LOG_LL_TRACE(logger_, "Core: {} added sink: {:p}.", name(), sink_ptr);
+        LOG_LL_DEBUG(logger_, "Core: {} added sink: {:p}.", name(), sink_ptr);
         return true;
     }
 
@@ -254,7 +254,7 @@ namespace fstlog {
                     (std::chrono::steady_clock::now());
                 sink_to_release.pimpl()->flush(current_time);
                 sink_to_release.pimpl()->release();
-                LOG_LL_TRACE(logger_, "Core: {}, released sink {:p}.", name(), sink_ptr);
+                LOG_LL_DEBUG(logger_, "Core: {}, released sink {:p}.", name(), sink_ptr);
                 return true;
             }
             else {
@@ -279,7 +279,7 @@ namespace fstlog {
                 next_buffer_poll_ = current_time + buffer_poll_interval_;
             new_buffer_poll = next_buffer_poll_;
         }
-        LOG_LL_TRACE(logger_, "Flushing core, next buffer poll: {}, next sink_flush: {} in milliseconds.",
+        LOG_LL_DEBUG(logger_, "Flushing core, next buffer poll: {}, next sink_flush: {} in milliseconds.",
             std::chrono::duration_cast<std::chrono::milliseconds>(new_buffer_poll - current_time).count(),
             std::chrono::duration_cast<std::chrono::milliseconds>(new_flush_time - current_time).count());
         // Calling flush() can only schedule core wakeup to a later time, 
@@ -376,7 +376,7 @@ namespace fstlog {
                 if (flush_requested) buffer.wake_producer();
                 //deleting unused buffer
                 if (buffer_unused && buffer.empty()) {
-                    LOG_LL_TRACE(logger_, "Core: {}, removed buffer: {:p} ({} Kb).",
+                    LOG_LL_DEBUG(logger_, "Core: {}, removed buffer: {:p} ({} Kb).",
                         name(),
                         &buffer,
                         buffer.size() / 1024);
