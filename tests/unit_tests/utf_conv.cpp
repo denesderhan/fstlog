@@ -404,6 +404,18 @@ TEST_CASE("utfX_to_utfY") {
         CHECK(res == 0);
     };
 
+    SECTION("utf8_to_utf16") {
+        std::vector<char16_t> out_buff(2048, 0);
+        fstlog::unaligned_span<char16_t> output(out_buff.data(), out_buff.size());
+        fstlog::byte_span_const input(&u8_text[0], sizeof(u8_text) - 1);
+        const auto result = fstlog::detail::utf::safe_utf8_to_utf16(
+            input,
+            output);
+        CHECK(result.ec == fstlog::error_code::none);
+        auto res = std::memcmp(out_buff.data(), &u16_text[0], u16_text.size() * sizeof(u16_text[0]));
+        CHECK(res == 0);
+    }
+
     SECTION("utf32_to_utf8_irregular") {
         auto test_data = GENERATE(
             std::make_tuple(std::vector<char32_t>{'S', 'u', 'r', 'r', 'o', 'g', 'a', 't', 'e', ':', 0xD800, 0xDA00, 0xDFFF}, "Surrogate:\\uFFFD\\uFFFD\\uFFFD"),
@@ -735,17 +747,17 @@ TEST_CASE("safe_utf8_to_utf16") {
         CHECK(std::basic_string_view<char16_t>(buffer.data(), 8) == u"Invalid:");
     }
 
-    SECTION("unsafe_string") {
+    SECTION("surrogate_pair") {
         buffer.fill('!');
-        std::array<unsigned char, 15> str{ 'U', 'n', 's', 'a', 'f', 'e',':', 0xf0, 0x9f, 0x98, 0x80, 'c', 'h', 'a', 'r' };
+        std::array<unsigned char, 15> str{ 'S', 'u', 'r', 'r', 'o', 'g','a','t','e','s',':', 0xf0, 0x9f, 0x98, 0x80 };
         fstlog::byte_span_const input(str);
         fstlog::unaligned_span output(buffer);
 
         auto result = fstlog::detail::utf::safe_utf8_to_utf16(input, output);
-        CHECK(result.ec == fstlog::error_code::input_bad);
-        CHECK(input.size() == 4);
-        CHECK(buffer.size() - output.size() == 7);
-        CHECK(std::basic_string_view<char16_t>(buffer.data(), 7) == u"Unsafe:");
+        CHECK(result.ec == fstlog::error_code::none);
+        CHECK(input.size() == 0);
+        CHECK(buffer.size() - output.size() == 13);
+        CHECK(std::basic_string_view<char16_t>(buffer.data(), 13) == u"Surrogates:😀");
     }
 
     SECTION("safe_string") {

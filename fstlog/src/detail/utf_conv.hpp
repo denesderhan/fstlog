@@ -601,21 +601,52 @@ namespace fstlog::detail::utf {
     {
         FSTLOG_ASSERT(input.data_bytes() != nullptr);
         conversion_result result{ 0, error_code::none };
+
         while (!input.empty()) {
             if (output.empty()) {
                 result.ec = error_code::buff_full;
                 break;
             }
-            std::uint32_t code_point = decode_utf8_char(input);
-            // only safe non surrogate pair codepoints are allowed
-            if (code_point > 0xFFFF || !safe_utf_code_point(code_point)) {
+
+            // Decode on a copy first so that we do not consume input unless
+            // the whole codepoint can be written to output.
+            auto next_input = input;
+            std::uint32_t code_point = decode_utf8_char(next_input);
+
+            // Reject invalid Unicode scalar values, including surrogates.
+            if (code_point > utf::constants::max_code_p ||
+                (code_point >= utf::constants::surrogate_start 
+                    && code_point <= utf::constants::surrogate_end) ||
+                !safe_utf_code_point(code_point)) 
+            {
+                input = next_input; // consume the bad codepoint, but do not write it
                 result.ec = error_code::input_bad;
-                // we exit here consuming but not writing the "bad" code_point
                 break;
             }
-            // write the codepoint (non surrogate pair)
-            output.template set<0>(static_cast<O>(code_point));
-            output.template drop_front<1>();
+
+            if (code_point > 0xFFFF) {
+                // Supplementary code point: needs a UTF-16 surrogate pair.
+                if (output.size() < 2) {
+                    result.ec = error_code::buff_full;
+                    break;
+                }
+
+                const std::uint32_t v = code_point - 0x10000;
+                const O high_surrogate =
+                    static_cast<O>(utf::constants::surrogate_start + (v >> 10));
+                const O low_surrogate =
+                    static_cast<O>(0xDC00 + (v & 0x3FF));
+
+                output.template set<0>(high_surrogate);
+                output.template set<1>(low_surrogate);
+                output.template drop_front<2>();
+            }
+            else {
+                // BMP code point: single UTF-16 code unit.
+                output.template set<0>(static_cast<O>(code_point));
+                output.template drop_front<1>();
+            }
+            input = next_input;
             result.codepoints_written++;
         }
         return result;
