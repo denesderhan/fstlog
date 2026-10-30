@@ -155,12 +155,12 @@ namespace fstlog {
         bool remove_reference() noexcept;
 
         //producer/consumer read (static data, initialized at buffer creation)
-        unsigned char* begin_;
-        std::uint32_t max_message_size_;
-        std::uint32_t buffer_size_;
-        std::uint32_t buffer_mask_;
-        std::uint32_t half_buffer_mask_;
-        std::uint32_t quarter_buffer_mask_;
+        unsigned char* begin_{ nullptr };
+        std::uint32_t max_message_size_{ 0 };
+        std::uint32_t buffer_size_{ 0 };
+        std::uint32_t buffer_mask_{ 0 };
+        std::uint32_t half_buffer_mask_{ 0 };
+        std::uint32_t quarter_buffer_mask_{ 0 };
             
         //producer/consumer read /write
         alignas(constants::cache_ls_nosharing) mutable std::mutex buffer_mutex_;
@@ -180,9 +180,9 @@ namespace fstlog {
         static_assert(decltype(write_pos_)::is_always_lock_free, "Type not lock_free!");
 #endif
         //producer read/write
-        std::uint32_t writeable_size_;
+        std::uint32_t writeable_size_{ 0 };
         
-        memory_resource* memory_resource_;
+        memory_resource* memory_resource_{ nullptr };
 
         std::atomic<std::uintptr_t> reference_counter_{ 0 };
 
