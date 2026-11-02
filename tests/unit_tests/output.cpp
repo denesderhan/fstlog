@@ -32,7 +32,7 @@ TEST_CASE("output") {
             CHECK(!out.good());
             CHECK(out.pimpl() == nullptr);
             error = fstlog::output_file(out, "//////", fstlog::get_default_resource());
-            CHECK(error == fstlog::error_code::path_bad);
+            CHECK(error == fstlog::error_code::file_create_fail);
             CHECK(!out.good());
             CHECK(out.pimpl() == nullptr);
             error = fstlog::output_stream(out, std::shared_ptr<std::stringstream>{}, fstlog::get_default_resource());
@@ -135,7 +135,7 @@ TEST_CASE("output") {
             CHECK(!out.good());
             CHECK(out.pimpl() == nullptr);
             error = fstlog::output_file(out, "//////", res_ptr);
-            CHECK(error == fstlog::error_code::path_bad);
+            CHECK(error == fstlog::error_code::file_create_fail);
             CHECK(!out.good());
             CHECK(out.pimpl() == nullptr);
             error = fstlog::output_stream(out, std::shared_ptr<std::stringstream>{},res_ptr);

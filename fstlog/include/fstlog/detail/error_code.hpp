@@ -23,7 +23,11 @@ namespace fstlog {
         core_limit,
         obj_limit,
         incomp_api,
-        mem_res_bad
+        mem_res_bad,
+        mem_res_null,
+        file_create_fail,
+        utf_invalid,
+        obj_bad
     };
 
     inline const char* error_message(error_code code) noexcept {
@@ -49,6 +53,10 @@ namespace fstlog {
             case error_code::obj_limit: return "fstlog error: Object creation limit reached (unique id exhaustion)!";
             case error_code::incomp_api: return "fstlog error: Header and library binary API-s are incompatible!";
             case error_code::mem_res_bad: return "fstlog error: Memory resource in header and library binary does not match!";
+            case error_code::mem_res_null: return "fstlog error: Memory resource is null!";
+            case error_code::file_create_fail: return "fstlog error: File creation failed!";
+            case error_code::utf_invalid: return "fstlog error: Invalid or unsafe utf character!";
+            case error_code::obj_bad: return "fstlog error: Object is unusable!";
             default : return "fstlog error: Unknown error!";
         };
     };
