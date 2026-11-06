@@ -13,7 +13,7 @@
 #include <fstlog/detail/error_code.hpp>
 
 namespace fstlog::detail::utf {
-    namespace constants {
+    namespace detail {
         inline constexpr std::uint32_t replacement_char = 0xFFFD;
         inline constexpr std::uint32_t max_code_p = 0x10FFFF;
         inline constexpr std::uint32_t surrogate_start = 0xD800;
@@ -27,6 +27,37 @@ namespace fstlog::detail::utf {
         inline constexpr std::uint32_t cont_prefix_mask = 0b1100'0000;
         inline constexpr std::uint32_t cont_prefix = 0b1000'0000;
         inline constexpr std::uint32_t cont_data_mask = 0b0011'1111;
+    
+        // The array contains range boundaries between
+        // unsafe/safe ranges at even indexes [0,2,4...] (first safe codepoint)
+        // and safe/unsafe ranges at odd indexes [1,3,5...] (first unsafe codepoint).
+        // Values have to be in increasing order.
+        inline constexpr std::array<std::uint16_t, 18> safe_cp_lut_a{
+                0x0020, 0x007F, // Printable ASCII
+                0x00A1, 0x02B0, // Latin-1 Supplement, extended, IPA
+                0x0370, 0x0700, // Greek, Cyrillic, Armenian, Hebrew, Arabic
+                0x0900, 0x0980, // Devanagari
+                0x20A0, 0x20C0, // Currency
+                0x3001, 0x303E, // Hiragana, Katakana
+                0x3041, 0x3100, // Hiragana, Katakana
+                0x3300, 0xA4C7, // CJK, YI
+                0xAC00, 0xD7A4  // Hangul Syllables 
+        };
+        // The gap between the two arrays is a range! The two array can not be modified independently, 
+        // they must be modified together to maintain the correct range boundaries and flipping.
+        // Array with the same structure as above but for larger 4 byte codepoints.
+        inline constexpr std::array<std::uint32_t, 4>  safe_cp_lut_b{
+                0x1F300, 0x1F3FB, // Miscellaneous symbols
+                0x1F400, 0x1F6D8  // Miscellaneous symbols, Emoticons 
+        };
+
+        template<class T, std::size_t N>
+        constexpr bool strictly_increasing(const std::array<T, N>& a) noexcept {
+            for (std::size_t i = 1; i < N; ++i) if (a[i - 1] >= a[i]) return false;
+            return true;
+        }
+        static_assert(strictly_increasing(safe_cp_lut_a) && strictly_increasing(safe_cp_lut_b));
+    
     }
 
     struct conversion_result {
@@ -58,47 +89,25 @@ namespace fstlog::detail::utf {
     
     // Semantic check for surrogates, and out-of-range values.
     constexpr bool valid_utf_code_point(std::uint32_t code_point) noexcept {
-        return ( code_point < utf::constants::surrogate_start  // under surrogate range
-                || (code_point > utf::constants::surrogate_end // between surrogate end and max
-                    && code_point <= utf::constants::max_code_p));
+        return ( code_point < utf::detail::surrogate_start  // under surrogate range
+                || (code_point > utf::detail::surrogate_end // between surrogate end and max
+                    && code_point <= utf::detail::max_code_p));
     }
-
+    
     // Determines if a valid utf code point is in the safe whitelist,
     // exludes invalid out of range and surrogate values.
     constexpr bool safe_utf_code_point(std::uint32_t code_point) noexcept {
-        // The array contains range boundaries between
-        // unsafe/safe ranges at even indexes [0,2,4...] (first safe codepoint)
-        // and safe/unsafe ranges at odd indexes [1,3,5...] (first unsafe codepoint).
-        // Values have to be in increasing order.
-        alignas(fstlog::constants::cache_ls_nosharing) constexpr std::array<std::uint16_t, 18> sparse_lut{
-            0x0020, 0x007F, // Printable ASCII
-            0x00A1, 0x02B0, // Latin-1 Supplement, extended, IPA
-            0x0370, 0x0700, // Greek, Cyrillic, Armenian, Hebrew, Arabic
-            0x0900, 0x0980, // Devanagari
-            0x20A0, 0x20C0, // Currency
-            0x3001, 0x303E, // Hiragana, Katakana
-            0x3041, 0x3100, // Hiragana, Katakana
-            0x3300, 0xA4C7, // CJK, YI
-            0xAC00, 0xD7A4  // Hangul Syllables
-        };
-        
         // Why not binary search? 
         // 1. Short array makes linear search faster (data in one cache line).
         // 2. Majority of characters used in logging is ASCII and western language (early exit). 
-
+        
         bool is_safe = false; // we start with an unsafe range [0, 0x0020) 
-        for (auto boundary : sparse_lut) {
+        for (auto boundary : detail::safe_cp_lut_a) {
             if (code_point < boundary) return is_safe; // we found the range that the code_point is in
             is_safe = !is_safe; // boundary marks always a change, we flip is_safe when stepping over 
         }
-
-        // Array with the same structure as above but for larger 4 byte codepoints.
-        alignas(fstlog::constants::cache_ls_nosharing) constexpr std::array<std::uint32_t, 4> sparse_lut_b{
-            0x1F300, 0x1F3FB, // Miscellaneous symbols
-            0x1F400, 0x1F6D8  // Miscellaneous symbols, Emoticons
-        };
-
-        for (auto boundary : sparse_lut_b) {
+        
+        for (auto boundary : detail::safe_cp_lut_b) {
             if (code_point < boundary) return is_safe;
             is_safe = !is_safe;
         }
@@ -106,7 +115,7 @@ namespace fstlog::detail::utf {
         return false;
     }
 
-    static_assert(!safe_utf_code_point(utf::constants::replacement_char), "Replacement char must be unsafe!");
+    static_assert(!safe_utf_code_point(utf::detail::replacement_char), "Replacement char must be unsafe!");
 
     // encodes the code_point escaped \uXXXX or \UYYYYYYYY
     // returns the length of the escape sequence
@@ -119,7 +128,7 @@ namespace fstlog::detail::utf {
         static_assert(std::is_integral_v<T> && (std::numeric_limits<T>::max)() >= 127,
             "Invalid type!");
         FSTLOG_ASSERT(output.data_bytes() != nullptr);
-        FSTLOG_ASSERT(code_point <= utf::constants::max_code_p);
+        FSTLOG_ASSERT(code_point <= utf::detail::max_code_p);
         FSTLOG_ASSERT(output.size() >= 10);
         std::size_t str_length = code_point <= 0xffff ? 6 : 10;
         
@@ -167,7 +176,7 @@ namespace fstlog::detail::utf {
         const T first_b = input.template get<0>();
         if (!valid_utf_char<8>(first_b)) {
             input.template drop_front<1>();
-            return utf::constants::replacement_char;
+            return utf::detail::replacement_char;
         }
         const std::uint32_t b1 = static_cast<std::uint32_t>(first_b);
 
@@ -184,31 +193,31 @@ namespace fstlog::detail::utf {
             // Structural Check 1: missing 2. byte?
             if (input.size() < 2) {
                 input.template drop_front<1>(); // Not enough data, consume lead T only.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Load the second T.
             const T second_b = input.template get<1>();
             if (!valid_utf_char<8>(second_b)) {
                 input.template drop_front<2>(); // second T was invalid, consume all 2.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
             const std::uint32_t b2 = static_cast<std::uint32_t>(second_b);
 
             // Structural Check 2: Continuation byte validity
-            if ((b2 & utf::constants::cont_prefix_mask) != utf::constants::cont_prefix) {
+            if ((b2 & utf::detail::cont_prefix_mask) != utf::detail::cont_prefix) {
                 input.template drop_front<1>(); // Invalid continuation byte, consume first only.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Decode
             std::uint32_t cp = ((b1 & 0b0001'1111) << 6) 
-                | (b2 & utf::constants::cont_data_mask);
+                | (b2 & utf::detail::cont_data_mask);
 
             // Semantic Check: Overlong encoding (must be >= U+0080)
-            if (cp < utf::constants::min_2_byte_code_p) {
+            if (cp < utf::detail::min_2_byte_code_p) {
                 input.template drop_front<2>(); // Structurally valid but semantically wrong, consume all 2.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Success
@@ -222,48 +231,48 @@ namespace fstlog::detail::utf {
             // Structural Check 1: missing continuation bytes?
             if (input.size() < 3) {
                 input.template drop_front<1>(); // Not enough data, consume lead only.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Load the second T.
             const T second_b = input.template get<1>();
             if (!valid_utf_char<8>(second_b)) {
                 input.template drop_front<2>(); // second T was invalid, consume 2.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
             const std::uint32_t b2 = static_cast<std::uint32_t>(second_b);
             // Structural Check 2: Continuation byte 1 (Minimal consumption rule)
-            if ((b2 & utf::constants::cont_prefix_mask) != utf::constants::cont_prefix) {
+            if ((b2 & utf::detail::cont_prefix_mask) != utf::detail::cont_prefix) {
                 input.template drop_front<1>(); // b2 non continuation byte, consume b1
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Load the third T.
             const T third_b = input.template get<2>();
             if (!valid_utf_char<8>(third_b)) {
                 input.template drop_front<3>(); // third T was invalid, consume all 3.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
             const std::uint32_t b3 = static_cast<std::uint32_t>(third_b);
             // Structural Check 3: Continuation byte 2 (Minimal consumption rule)
-            if ((b3 & utf::constants::cont_prefix_mask) != utf::constants::cont_prefix) {
+            if ((b3 & utf::detail::cont_prefix_mask) != utf::detail::cont_prefix) {
                 input.template drop_front<2>(); // b3 non continuation byte, consume b1 and valid b2
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Decode
             std::uint32_t cp = ((b1 & 0b0000'1111) << 12)
-                | ((b2 & utf::constants::cont_data_mask) << 6)
-                | (b3 & utf::constants::cont_data_mask);
+                | ((b2 & utf::detail::cont_data_mask) << 6)
+                | (b3 & utf::detail::cont_data_mask);
 
             // Semantic Checks:
             // 1. Overlong encoding (must be >= U+0800)
             // 2. Surrogates (U+D800 to U+DFFF are invalid)
-            if (cp < utf::constants::min_3_byte_code_p 
-                || (cp >= utf::constants::surrogate_start && cp <= utf::constants::surrogate_end))
+            if (cp < utf::detail::min_3_byte_code_p 
+                || (cp >= utf::detail::surrogate_start && cp <= utf::detail::surrogate_end))
             {
                 input.template drop_front<3>(); // Structurally valid but semantically wrong, consume all.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Success
@@ -277,60 +286,60 @@ namespace fstlog::detail::utf {
             // Structural Check 1: missing continuation bytes?
             if (input.size() < 4) {
                 input.template drop_front<1>(); // Not enough data, consume lead only
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Load the second T.
             const T second_b = input.template get<1>();
             if (!valid_utf_char<8>(second_b)) {
                 input.template drop_front<2>(); // second T was invalid, consume 2.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
             const std::uint32_t b2 = static_cast<std::uint32_t>(second_b);
             // Structural Check 2: Continuation byte 1 (Minimal consumption rule)
-            if ((b2 & utf::constants::cont_prefix_mask) != utf::constants::cont_prefix) {
+            if ((b2 & utf::detail::cont_prefix_mask) != utf::detail::cont_prefix) {
                 input.template drop_front<1>(); // b2 non continuation byte, consume b1
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Load the third T.
             const T third_b = input.template get<2>();
             if (!valid_utf_char<8>(third_b)) {
                 input.template drop_front<3>(); // third T was invalid, consume 3.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
             const std::uint32_t b3 = static_cast<std::uint32_t>(third_b);
             // Structural Check 3: Continuation byte 2 (Minimal consumption rule)
-            if ((b3 & utf::constants::cont_prefix_mask) != utf::constants::cont_prefix) {
+            if ((b3 & utf::detail::cont_prefix_mask) != utf::detail::cont_prefix) {
                 input.template drop_front<2>(); // b3 non continuation byte, consume b1, b2
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Load the fourth T.
             const T fourth_b = input.template get<3>();
             if (!valid_utf_char<8>(fourth_b)) {
                 input.template drop_front<4>(); // fourth T was invalid, consume all 4.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
             const std::uint32_t b4 = static_cast<std::uint32_t>(fourth_b);
             // Structural Check 4: Continuation byte 3 (Minimal consumption rule)
-            if ((b4 & utf::constants::cont_prefix_mask) != utf::constants::cont_prefix) {
+            if ((b4 & utf::detail::cont_prefix_mask) != utf::detail::cont_prefix) {
                 input.template drop_front<3>(); // b4 non continuation byte, consume b1, b2, b3
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Decode
             std::uint32_t cp = ((b1 & 0b0000'0111) << 18)
-                | ((b2 & utf::constants::cont_data_mask) << 12)
-                | ((b3 & utf::constants::cont_data_mask) << 6)
-                | (b4 & utf::constants::cont_data_mask);
+                | ((b2 & utf::detail::cont_data_mask) << 12)
+                | ((b3 & utf::detail::cont_data_mask) << 6)
+                | (b4 & utf::detail::cont_data_mask);
 
             // Semantic Checks:
             // 1. Overlong encoding (must be >= U+10000)
             // 2. Exceeding Unicode maximum (must be <= U+10FFFF)
-            if (cp < utf::constants::min_4_byte_code_p || cp > utf::constants::max_code_p) {
+            if (cp < utf::detail::min_4_byte_code_p || cp > utf::detail::max_code_p) {
                 input.template drop_front<4>(); // Structurally valid but semantically wrong, consume all.
-                return utf::constants::replacement_char;
+                return utf::detail::replacement_char;
             }
 
             // Success
@@ -343,7 +352,7 @@ namespace fstlog::detail::utf {
         // or 11111xxx (invalid sequences).
         else {
             input.template drop_front<1>(); // Consume the single invalid T.
-            return utf::constants::replacement_char;
+            return utf::detail::replacement_char;
         }
     }
 
@@ -375,21 +384,21 @@ namespace fstlog::detail::utf {
             output.template drop_front<1>();
         }
         // 2 byte sequence (110xxxxx 10xxxxxx)
-        else if (code_point < utf::constants::min_3_byte_code_p) {
+        else if (code_point < utf::detail::min_3_byte_code_p) {
             output.template set<0>(static_cast<T>(
                 (code_point >> 6) | std::uint32_t{ 0b1100'0000 }));
             output.template set<1>(static_cast<T>(
-                (code_point & utf::constants::cont_data_mask) | utf::constants::cont_prefix));
+                (code_point & utf::detail::cont_data_mask) | utf::detail::cont_prefix));
             output.template drop_front<2>();
         }
         // 3 byte sequence (1110xxxx 10xxxxxx 10xxxxxx)
-        else if (code_point < utf::constants::min_4_byte_code_p) {
+        else if (code_point < utf::detail::min_4_byte_code_p) {
             output.template set<0>(static_cast<T>(
                 (code_point >> 12) | std::uint32_t{ 0b1110'0000 }));
             output.template set<1>(static_cast<T>(
-                ((code_point >> 6) & utf::constants::cont_data_mask) | utf::constants::cont_prefix));
+                ((code_point >> 6) & utf::detail::cont_data_mask) | utf::detail::cont_prefix));
             output.template set<2>(static_cast<T>(
-                (code_point & utf::constants::cont_data_mask) | utf::constants::cont_prefix));
+                (code_point & utf::detail::cont_data_mask) | utf::detail::cont_prefix));
             output.template drop_front<3>();
         }
         // 4 byte sequence (11110xxx 10xxxxxx 10xxxxxx 10xxxxxx)
@@ -397,11 +406,11 @@ namespace fstlog::detail::utf {
             output.template set<0>(static_cast<T>(
                 (code_point >> 18) | std::uint32_t{ 0b1111'0000 }));
             output.template set<1>(static_cast<T>(
-                ((code_point >> 12) & utf::constants::cont_data_mask) | utf::constants::cont_prefix));
+                ((code_point >> 12) & utf::detail::cont_data_mask) | utf::detail::cont_prefix));
             output.template set<2>(static_cast<T>(
-                ((code_point >> 6) & utf::constants::cont_data_mask) | utf::constants::cont_prefix));
+                ((code_point >> 6) & utf::detail::cont_data_mask) | utf::detail::cont_prefix));
             output.template set<3>(static_cast<T>(
-                (code_point & utf::constants::cont_data_mask) | utf::constants::cont_prefix));
+                (code_point & utf::detail::cont_data_mask) | utf::detail::cont_prefix));
             output.template drop_front<4>();
         }
         return 1;
@@ -416,12 +425,12 @@ namespace fstlog::detail::utf {
         T utf16_char{ input.template get<0>() };
         if (!valid_utf_char<16>(utf16_char)) {
             input.template drop_front<1>();
-            return utf::constants::replacement_char;
+            return utf::detail::replacement_char;
         }
 
         // non surrogate range
-        if (utf16_char < constants::surrogate_start 
-            || utf16_char > constants::surrogate_end)
+        if (utf16_char < detail::surrogate_start 
+            || utf16_char > detail::surrogate_end)
         {
             input.template drop_front<1>();
             return static_cast<std::uint32_t>(utf16_char);
@@ -432,14 +441,14 @@ namespace fstlog::detail::utf {
         // missing surrogate
         if (input.size() < 2) {
             input.template drop_front<1>();
-            return utf::constants::replacement_char;
+            return utf::detail::replacement_char;
         }
         T utf16_char_surr_low{ input.template get<1>()}; // validity check is not needed see range check below.
 
         // if surrogtes are valid
-        if (utf16_char <= constants::max_high_surrogate 
-            && utf16_char_surr_low > constants::max_high_surrogate 
-            && utf16_char_surr_low <= constants::surrogate_end)
+        if (utf16_char <= detail::max_high_surrogate 
+            && utf16_char_surr_low > detail::max_high_surrogate 
+            && utf16_char_surr_low <= detail::surrogate_end)
         {
             const std::uint32_t surrogate_high = static_cast<std::uint32_t>(utf16_char);
             const std::uint32_t surrogate_low = static_cast<std::uint32_t>(utf16_char_surr_low);
@@ -451,7 +460,7 @@ namespace fstlog::detail::utf {
                     
         // invalid surrogates or second is non surrogate (can be valid)
         input.template drop_front<1>();
-        return utf::constants::replacement_char;
+        return utf::detail::replacement_char;
     }
 
     template <typename I, typename O>
@@ -473,8 +482,8 @@ namespace fstlog::detail::utf {
             I char_utf32 = input.template get<0>();
             input.template drop_front<1>();
             std::uint32_t code_point = static_cast<std::uint32_t>(char_utf32);
-            if (!valid_utf_char<32>(char_utf32)) code_point = utf::constants::replacement_char;
-            if (!valid_utf_code_point(code_point)) code_point = utf::constants::replacement_char;
+            if (!valid_utf_char<32>(char_utf32)) code_point = utf::detail::replacement_char;
+            if (!valid_utf_code_point(code_point)) code_point = utf::detail::replacement_char;
             const auto out_count = encode_safe_utf8_char(code_point, output);
             result.codepoints_written += out_count;
             codepoints_consumed++;
@@ -554,18 +563,18 @@ namespace fstlog::detail::utf {
             std::uint32_t code_point = decode_utf8_char(input);
             if (safe_utf_code_point(code_point)) {
                 // 1 byte sequence (0xxxxxxx)
-                if (code_point < utf::constants::min_2_byte_code_p) {
+                if (code_point < utf::detail::min_2_byte_code_p) {
                     output.template set<0>(static_cast<O>(code_point));
                     output.template drop_front<1>();
                 }
                 // 2 byte sequence (110xxxxx 10xxxxxx)
-                else if (code_point < utf::constants::min_3_byte_code_p) {
+                else if (code_point < utf::detail::min_3_byte_code_p) {
                     output.template set<0>(static_cast<O>(temp.template get<0>()));
                     output.template set<1>(static_cast<O>(temp.template get<1>()));
                     output.template drop_front<2>();
                 }
                 // 3 byte sequence (1110xxxx 10xxxxxx 10xxxxxx)
-                else if (code_point < utf::constants::min_4_byte_code_p) {
+                else if (code_point < utf::detail::min_4_byte_code_p) {
                     output.template set<0>(static_cast<O>(temp.template get<0>()));
                     output.template set<1>(static_cast<O>(temp.template get<1>()));
                     output.template set<2>(static_cast<O>(temp.template get<2>()));
@@ -614,9 +623,9 @@ namespace fstlog::detail::utf {
             std::uint32_t code_point = decode_utf8_char(next_input);
 
             // Reject invalid Unicode scalar values, including surrogates.
-            if (code_point > utf::constants::max_code_p ||
-                (code_point >= utf::constants::surrogate_start 
-                    && code_point <= utf::constants::surrogate_end) ||
+            if (code_point > utf::detail::max_code_p ||
+                (code_point >= utf::detail::surrogate_start 
+                    && code_point <= utf::detail::surrogate_end) ||
                 !safe_utf_code_point(code_point)) 
             {
                 input = next_input; // consume the bad codepoint, but do not write it
@@ -633,7 +642,7 @@ namespace fstlog::detail::utf {
 
                 const std::uint32_t v = code_point - 0x10000;
                 const O high_surrogate =
-                    static_cast<O>(utf::constants::surrogate_start + (v >> 10));
+                    static_cast<O>(utf::detail::surrogate_start + (v >> 10));
                 const O low_surrogate =
                     static_cast<O>(0xDC00 + (v & 0x3FF));
 
