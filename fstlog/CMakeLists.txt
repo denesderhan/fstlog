@@ -157,6 +157,8 @@ set(src_detail
     "src/detail/constants_src.hpp"
     "src/detail/dyn_array.hpp"
     "src/detail/error.hpp"
+    "src/detail/get_env.cpp"
+    "src/detail/get_env.hpp"
     "src/detail/log_buffer.cpp"
     "src/detail/log_buffer_impl.cpp"
     "src/detail/log_buffer_impl.hpp"

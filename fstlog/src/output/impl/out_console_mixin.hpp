@@ -1,10 +1,10 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
-#include <cstdlib>
 #include <iostream>
 
+#include <detail/get_env.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
@@ -112,14 +112,7 @@ namespace fstlog {
         }
     private:
         std::ostream* stream_ptr_{ nullptr };
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4996) // safe to disable, we never dereference the returned pointer
-#endif
-        bool colored_{ std::getenv("NO_COLOR") == nullptr };
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
+        inline static bool colored_{ detail::is_env_set("FORCE_COLOR") || !detail::is_env_set("NO_COLOR")};
         static constexpr std::array<small_string<8>, 6> severities_{
             small_string<8>{"TRACE"},
             small_string<8>{"DEBUG"},
