@@ -7,11 +7,12 @@
 #include <fstlog/detail/noexceptions.hpp>
 
 namespace fstlog {
-    // returns "a pointer to allocated storage with a size of at least bytes and an alignment not less than alignment"
-    // on allocation error, will throw if exceptions are enabled
-    // and return nullptr if exceptions are disabled
+    
     class malloc_resource {
     public:
+        // returns "a pointer to allocated storage with a size of at least bytes and an alignment not less than alignment"
+        // on allocation error, will throw if FSTLOG_NOEXCEPTIONS is not defined
+        // and return nullptr if if FSTLOG_NOEXCEPTIONS is defined
         [[nodiscard]] FSTLOG_API void* allocate(std::size_t bytes, std::size_t alignment)
 #ifdef FSTLOG_NOEXCEPTIONS            
             noexcept

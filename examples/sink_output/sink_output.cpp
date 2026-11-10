@@ -11,7 +11,6 @@
 #include <fstlog/logger/log_macro.hpp>
 #include <fstlog/logger/logger.hpp>
 #include <fstlog/output/output_console.hpp>
-#include <fstlog/output/output_cstream.hpp>
 #include <fstlog/output/output_file.hpp>
 #include <fstlog/output/output_stream.hpp>
 #include <fstlog/output/output_stream_mt.hpp>
@@ -52,7 +51,7 @@ int main()
     //   OUTPUT FILE (UNSORTED SINK)
     // ------------------------------
     // Create an output to a file (with truncation)
-    fstlog::output out_file = fstlog::output_file("file.log", true);
+    fstlog::output out_file = fstlog::output_file("log.txt", true);
     // Create a sink
     fstlog::sink sink_file = fstlog::sink_unsort(
         fstlog::formatter_txt("sink_unsort + output_file: {time} {level} {logger} {message}"),
@@ -89,34 +88,6 @@ int main()
     // output_stream_mt allows concurrent access via a mutex.
     // Always lock the mutex when accessing the stream externally.
 
-    // ---------------------------------
-    //  OUTPUT C STREAM (UNSORTED SINK)
-    // ---------------------------------
-    // output_cstream (output to a C stream)
-    // the stream can not be read/written while it is used for logging
-    // The FILE* must remain valid for the lifetime of the fstlog::output object
-    // and its managed by the user
-        
-    // Open a C file stream
-    FILE* c_stream{ nullptr };
-#ifdef _WIN32
-    fopen_s(&c_stream, "c_file.log", "wb");
-#else
-    c_stream = fopen("c_file.log", "wb");
-#endif
-    assert(c_stream != nullptr && "Opening file: c_file.log failed!");
-            
-    // Create an output from the C stream
-    fstlog::output out_cstream = fstlog::output_cstream(c_stream);
-    // create a sink
-    fstlog::sink sink_cstream = fstlog::sink_unsort(
-        fstlog::formatter_txt("sink_unsort + output_cstream: {time} {level} {logger} {message}"),
-        out_cstream);
-    // Important: The FILE* pointer must remain valid for the lifetime of the output_cstream object.
-    // Do not close it before destroying all copies of the out_cstream object.
-    // Lifetime of c_stream must be managed by the user.
-
-
     // Create a core and logger
     fstlog::core my_core("my_core");
     fstlog::logger my_logger(my_core, "my_logger");
@@ -127,8 +98,7 @@ int main()
     my_core.add_sink(sink_file);
     my_core.add_sink(sink_stream);
     my_core.add_sink(sink_stream_mt);
-    my_core.add_sink(sink_cstream);
-        
+            
     // log with logger
     LOG_INFO(my_logger, "Hello {}!", "World");
         
@@ -143,18 +113,4 @@ int main()
     // Release the sink to safely access stream_1
     my_core.release_sink(sink_stream);
     std::cout << stream_1->str();
-        
-    // -------------------------
-    //  OUTPUT C STREAM CLEANUP
-    // -------------------------
-    // Flush logs
-    my_core.flush();
-    // Release sink
-    my_core.release_sink(sink_cstream);
-    // Destroy all copies of sink_cstream
-    sink_cstream = fstlog::sink{};
-    // Destroy all copies of out_cstream
-    out_cstream = fstlog::output{};
-    // Close the C stream manually
-    fclose(c_stream);
 }

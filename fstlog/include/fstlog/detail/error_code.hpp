@@ -27,7 +27,10 @@ namespace fstlog {
         mem_res_null,
         file_create_fail,
         utf_invalid,
-        obj_bad
+        obj_bad,
+        interrupted,
+        sync_fail,
+        not_supp
     };
 
     inline const char* error_message(error_code code) noexcept {
@@ -57,6 +60,9 @@ namespace fstlog {
             case error_code::file_create_fail: return "fstlog error: File creation failed!";
             case error_code::utf_invalid: return "fstlog error: Invalid or unsafe utf character!";
             case error_code::obj_bad: return "fstlog error: Object is unusable!";
+            case error_code::interrupted: return "fstlog error: Operation was interrupted!";
+            case error_code::sync_fail: return "fstlog error: Data sync to physical device failed!";
+            case error_code::not_supp: return "fstlog error: Operation not supported!";
             default : return "fstlog error: Unknown error!";
         };
     };

@@ -278,12 +278,6 @@ The stream can not be used while a core uses it.
 ```
 The stream can only be used after locking the mutex if a core uses it.
 
-### output_cstream
-```c++
-#include <fstlog/output/output_cstream.hpp>
-```
-The stream can not be used while a core uses it, stream lifetime is not managed.
-
 ### output_null
 ```c++
 #include <fstlog/output/output_null.hpp>

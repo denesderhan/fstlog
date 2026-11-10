@@ -18,10 +18,9 @@ namespace fstlog {
         std::size_t byte_num,
         std::size_t alignment) noexcept
     {
-        FSTLOG_ASSERT(
-            resource != nullptr
-            && is_pow2(alignment)
-            && safe_reinterpret_cast<std::uintptr_t>(obj_ptr) % alignment == 0);
+        FSTLOG_ASSERT(resource != nullptr && is_pow2(alignment));
+        if (obj_ptr == nullptr) return;
+        FSTLOG_ASSERT(safe_reinterpret_cast<std::uintptr_t>(obj_ptr) % alignment == 0);
 #ifdef FSTLOG_NOEXCEPTIONS
         // if allocation fails and the resource uses exceptions
         // process will abort (std::pmr::memory_resource)

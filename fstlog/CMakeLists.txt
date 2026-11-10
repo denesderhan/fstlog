@@ -127,7 +127,6 @@ set(include_fstlog_logger_detail_log
 set(include_fstlog_output
     "include/fstlog/output/output.hpp"
     "include/fstlog/output/output_console.hpp"
-    "include/fstlog/output/output_cstream.hpp"
     "include/fstlog/output/output_file.hpp"
     "include/fstlog/output/output_null.hpp"
     "include/fstlog/output/output_stream.hpp"
@@ -241,7 +240,6 @@ set(src_logger
 set(src_output
     "src/output/output.cpp"
     "src/output/output_console.cpp"
-    "src/output/output_cstream.cpp"
     "src/output/output_file.cpp"
     "src/output/output_interface.hpp"
     "src/output/output_interface_mixin.hpp"
@@ -253,9 +251,11 @@ set(src_output
 
 set(src_output_impl
     "src/output/impl/out_console_mixin.hpp"
-    "src/output/impl/out_cstream_mixin.hpp"
     "src/output/impl/out_file_mixin.hpp"
-    "src/output/impl/out_file_posix.hpp"
+    "src/output/impl/out_file.hpp"
+    "src/output/impl/out_file.cpp"
+    "src/output/impl/out_file_posix.cpp"
+    "src/output/impl/out_file_win.cpp"
     "src/output/impl/out_null_mixin.hpp"
     "src/output/impl/out_stream_mixin.hpp"
 )

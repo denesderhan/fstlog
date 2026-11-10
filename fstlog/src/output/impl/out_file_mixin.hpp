@@ -9,7 +9,7 @@
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/memory_resource.hpp>
-#include <output/impl/out_file_posix.hpp>
+#include <output/impl/out_file.hpp>
 
 namespace fstlog {
     template<class L>
@@ -31,7 +31,7 @@ namespace fstlog {
             bool truncate,
             std::uint32_t buffer_size) noexcept
         {
-            file_ = std::move(out_file_posix{ resource });
+            file_ = std::move(out_file{ resource });
             return file_.open(file_path, truncate, buffer_size);
         }
 
@@ -44,6 +44,6 @@ namespace fstlog {
         }
 
     private:
-        out_file_posix file_;
+        out_file file_;
     };
 }
