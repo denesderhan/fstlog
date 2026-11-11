@@ -12,6 +12,15 @@
 #include <fstlog/detail/small_string.hpp>
 
 namespace fstlog {
+    namespace detail{
+        // to prevent Static Initialization Order Fiasco
+        inline bool is_default_colored() noexcept {
+            static const bool colored =
+                detail::is_env_set("FORCE_COLOR") || !detail::is_env_set("NO_COLOR");
+            return colored;
+        }
+    }
+    
     template<class L>
     class out_console_mixin : public L
     {
@@ -111,14 +120,8 @@ namespace fstlog {
             }
         }
     private:
-        // to prevent Static Initialization Order Fiasco
-        static bool is_default_colored() noexcept {
-            static const bool colored = 
-                detail::is_env_set("FORCE_COLOR") || !detail::is_env_set("NO_COLOR");
-            return colored;
-        }
         std::ostream* stream_ptr_{ nullptr };
-        bool colored_{ is_default_colored() };
+        const bool colored_{ detail::is_default_colored() };
         
         static constexpr std::array<small_string<8>, 6> severities_{
             small_string<8>{"TRACE"},
