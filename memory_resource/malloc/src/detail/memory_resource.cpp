@@ -26,7 +26,7 @@ namespace fstlog {
 #endif
     {
         void* ptr{ nullptr };
-        FSTLOG_ASSERT(is_pow2(alignment));
+        FSTLOG_ASSERT(detail::is_pow2(alignment));
 #ifdef _WIN32
         if (bytes == 0) bytes = 1; // Allocate 1 byte to get unique non-null pointer.
         ptr = _aligned_malloc(bytes, alignment);
