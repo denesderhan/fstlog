@@ -1,4 +1,4 @@
-//Copyright © Dénes Derhán 2022.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <catch2/catch_all.hpp>
 
@@ -11,7 +11,7 @@
 
 TEST_CASE("internal_arg_header") {
     SECTION("signed_char") {
-        fstlog::internal_arg_header<signed char> arg_h;
+        fstlog::detail::internal_arg_header<signed char> arg_h;
         CHECK(arg_h.data_size <= sizeof(arg_h));
         CHECK(arg_h.signature.size() >= arg_h.signature_length);
         CHECK(arg_h.data_size == 4);
@@ -19,7 +19,7 @@ TEST_CASE("internal_arg_header") {
         CHECK(arg_h.signature[0] == 'X');
     };
     SECTION("unsigned_char") {
-        fstlog::internal_arg_header<unsigned char> arg_h;
+        fstlog::detail::internal_arg_header<unsigned char> arg_h;
         CHECK(arg_h.data_size <= sizeof(arg_h));
         CHECK(arg_h.signature.size() >= arg_h.signature_length);
         CHECK(arg_h.data_size == 4);
@@ -27,7 +27,7 @@ TEST_CASE("internal_arg_header") {
         CHECK(arg_h.signature[0] == 'P');
     };
     SECTION("unsigned_int") {
-        fstlog::internal_arg_header<unsigned int> arg_h;
+        fstlog::detail::internal_arg_header<unsigned int> arg_h;
         CHECK(arg_h.data_size <= sizeof(arg_h));
         CHECK(arg_h.signature.size() >= arg_h.signature_length);
         CHECK(arg_h.data_size == 4);
@@ -35,7 +35,7 @@ TEST_CASE("internal_arg_header") {
         CHECK(arg_h.signature[0] == 'R');
     };
     SECTION("vec_pair_char_int") {
-        fstlog::internal_arg_header<std::vector<std::pair<char, int>>> arg_h;
+        fstlog::detail::internal_arg_header<std::vector<std::pair<char, int>>> arg_h;
         CHECK(arg_h.data_size <= sizeof(arg_h));
         CHECK(arg_h.signature.size() >= arg_h.signature_length);
         CHECK(arg_h.data_size == 8);
@@ -62,16 +62,16 @@ TEST_CASE("internal_arg_header") {
     SECTION("long_type") {
         using long_type = std::pair<std::vector<std::tuple<int, unsigned long long int, std::string>>, int>;
 
-        constexpr auto t = fstlog::internal_arg_header<long_type>{0xabcd};
+        constexpr auto t = fstlog::detail::internal_arg_header<long_type>{0xabcd};
 
         std::vector<unsigned char> buff2(t.data_size);
         std::memcpy(&buff2[0], &t, t.data_size);
         uint16_t num;
         std::memcpy(&num, &buff2[0], 2);
         CHECK(num == 0xabcd);
-        CHECK(int(buff2[2]) == fstlog::type_signature<long_type>::value.size());
-        for (size_t i = 0; i < fstlog::type_signature<long_type>::value.size(); i++) {
-            CHECK(buff2[i + 3] == fstlog::type_signature<long_type>::value[i]);
+        CHECK(int(buff2[2]) == fstlog::detail::type_signature<long_type>::value.size());
+        for (size_t i = 0; i < fstlog::detail::type_signature<long_type>::value.size(); i++) {
+            CHECK(buff2[i + 3] == fstlog::detail::type_signature<long_type>::value[i]);
         }
     };
 }

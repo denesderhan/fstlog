@@ -1,4 +1,4 @@
-//Copyright © 2025, Dénes Derhán.
+//Copyright © 2025-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
@@ -13,39 +13,36 @@ namespace fstlog::detail {
         std::array<char, 6> standard{ '+', '0', '0', '0', '0', 0 };
         std::array<char, 6> daylight{ '+', '0', '0', '0', '0', 0 };
     };
-
-    namespace {
-
-        constexpr int compile_year() noexcept {
-            char d[] = __DATE__;
-            static_assert(sizeof(__DATE__) >= 5, "No year in __DATE__?");
-            const auto ind = sizeof(__DATE__) - 5;
-            int year =
-                (d[ind] - '0') * 1000
-                + (d[ind + 1] - '0') * 100
-                + (d[ind + 2] - '0') * 10
-                + (d[ind + 3] - '0');
-            return year;
-        }
-
-        inline void format_utc_offset_string(int offset_minutes, std::array<char, 6> &buffer) noexcept {
-            if (offset_minutes < 0) {
-                buffer[0] = '-';
-                offset_minutes = -offset_minutes;
-            }
-            else{
-                buffer[0] = '+';
-            }
-            
-            buffer[5] = 0;
-            int temp = (offset_minutes / 60) * 100 + offset_minutes % 60;
-            for (int i = 4; i > 0; i--) {
-                buffer[i] = '0' + temp % 10;
-                temp /= 10;
-            }
-        }
+    
+    constexpr int compile_year() noexcept {
+        char d[] = __DATE__;
+        static_assert(sizeof(__DATE__) >= 5, "No year in __DATE__?");
+        const auto ind = sizeof(__DATE__) - 5;
+        int year =
+            (d[ind] - '0') * 1000
+            + (d[ind + 1] - '0') * 100
+            + (d[ind + 2] - '0') * 10
+            + (d[ind + 3] - '0');
+        return year;
     }
 
+    inline void format_utc_offset_string(int offset_minutes, std::array<char, 6> &buffer) noexcept {
+        if (offset_minutes < 0) {
+            buffer[0] = '-';
+            offset_minutes = -offset_minutes;
+        }
+        else{
+            buffer[0] = '+';
+        }
+            
+        buffer[5] = 0;
+        int temp = (offset_minutes / 60) * 100 + offset_minutes % 60;
+        for (int i = 4; i > 0; i--) {
+            buffer[i] = '0' + temp % 10;
+            temp /= 10;
+        }
+    }
+    
     // preformats the "+0000" ISO 8601 UTC offset strings used for timestamp formatting
     // according to the current locale information
     // utc_offset contains one string for DST active and one for inactive case
@@ -142,4 +139,4 @@ namespace fstlog::detail {
         
         return result;
     }
-}
+} // namespace fstlog::detail

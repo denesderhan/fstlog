@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
@@ -12,7 +12,7 @@
 #include <fstlog/detail/log_type_metadata.hpp>
 #include <fstlog/detail/rm_cvref_t.hpp>
 
-namespace fstlog {
+namespace fstlog::detail {
     template <typename T, typename = void>
     struct log_arg_size_compile_time : std::false_type {};
     
@@ -34,12 +34,10 @@ namespace fstlog {
         is_char_type_v<T>
         >> : std::true_type{};
 
-    namespace {
-        template<typename Tuple, std::size_t... Ints>
-        inline constexpr bool tuple_size_compile_time(std::index_sequence<Ints...>) noexcept {
-            return (bool{ true } && ... && 
-                log_arg_size_compile_time<std::tuple_element_t<Ints, Tuple>>::value);
-        }
+    template<typename Tuple, std::size_t... Ints>
+    inline constexpr bool tuple_size_compile_time(std::index_sequence<Ints...>) noexcept {
+        return (bool{ true } && ... && 
+            log_arg_size_compile_time<std::tuple_element_t<Ints, Tuple>>::value);
     }
 
     //tuple
@@ -63,4 +61,4 @@ namespace fstlog {
             else return false;
         }();
     };
-}
+} // namespace fstlog::detail

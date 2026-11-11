@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <limits>
@@ -12,7 +12,7 @@
 #include <fstlog/detail/log2_size.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 
-namespace fstlog {
+namespace fstlog::detail {
 
     template <typename T, typename = void>
     struct log_type_metadata {
@@ -127,4 +127,4 @@ namespace fstlog {
     template <typename T>
     constexpr log_element_ut log_type_metadata_v = log_type_metadata<T>::value;
     inline constexpr log_element_ut log_type_metadata_bitmask = 0x0f;
-}
+}// namespace fstlog::detail

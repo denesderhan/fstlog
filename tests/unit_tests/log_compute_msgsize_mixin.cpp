@@ -1,4 +1,4 @@
-//Copyright © Dénes Derhán 2022.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <catch2/catch_all.hpp>
 
@@ -70,8 +70,8 @@ TEST_CASE("log_compute_msgsize_mixin") {
     SECTION("compile_time_compsize") {
         w_type comp;
         auto extent = GENERATE(table<std::uint32_t, std::uint32_t, std::uint32_t>({
-            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{20}, static_cast<std::uint32_t>(fstlog::internal_msg_header::padded_data_size), std::uint32_t{0}},
-            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{32}, static_cast<std::uint32_t>(fstlog::internal_msg_header::padded_data_size + fstlog::log_arg_size<int>()), std::uint32_t{1} }
+            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{20}, static_cast<std::uint32_t>(fstlog::detail::internal_msg_header::padded_data_size), std::uint32_t{0}},
+            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{32}, static_cast<std::uint32_t>(fstlog::detail::internal_msg_header::padded_data_size + fstlog::detail::log_arg_size<int>()), std::uint32_t{1} }
             }));
 
         std::uint32_t max_size = std::get<0>(extent);
@@ -89,13 +89,13 @@ TEST_CASE("log_compute_msgsize_mixin") {
     SECTION("runtime_compsize") {
         w_type comp;
         std::vector<int> data{ 0,1,2 };
-        CHECK(fstlog::log_arg_size(data) == 24);
+        CHECK(fstlog::detail::log_arg_size(data) == 24);
         auto extent = GENERATE(table<std::uint32_t, std::uint32_t, std::uint32_t>({
-            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{20}, static_cast<std::uint32_t>(fstlog::internal_msg_header::padded_data_size), std::uint32_t{0}},
-            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{32}, static_cast<std::uint32_t>(fstlog::internal_msg_header::padded_data_size + fstlog::log_arg_size<int>()), std::uint32_t{1}},
-            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{40}, static_cast<std::uint32_t>(fstlog::internal_msg_header::padded_data_size + fstlog::log_arg_size<int>()), std::uint32_t{1}},
-            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{56}, static_cast<std::uint32_t>(fstlog::internal_msg_header::padded_data_size + fstlog::log_arg_size<int>() + 24), std::uint32_t{2}},
-            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{200}, static_cast<std::uint32_t>(fstlog::internal_msg_header::padded_data_size + 2 * fstlog::log_arg_size<int>() + 24), std::uint32_t{3}}
+            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{20}, static_cast<std::uint32_t>(fstlog::detail::internal_msg_header::padded_data_size), std::uint32_t{0}},
+            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{32}, static_cast<std::uint32_t>(fstlog::detail::internal_msg_header::padded_data_size + fstlog::detail::log_arg_size<int>()), std::uint32_t{1}},
+            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{40}, static_cast<std::uint32_t>(fstlog::detail::internal_msg_header::padded_data_size + fstlog::detail::log_arg_size<int>()), std::uint32_t{1}},
+            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{56}, static_cast<std::uint32_t>(fstlog::detail::internal_msg_header::padded_data_size + fstlog::detail::log_arg_size<int>() + 24), std::uint32_t{2}},
+            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>{std::uint32_t{200}, static_cast<std::uint32_t>(fstlog::detail::internal_msg_header::padded_data_size + 2 * fstlog::detail::log_arg_size<int>() + 24), std::uint32_t{3}}
         }));
 
         std::uint32_t max_size = std::get<0>(extent);

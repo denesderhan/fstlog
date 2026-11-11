@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
@@ -10,7 +10,7 @@
 
 namespace fstlog {
     template<std::size_t class_size>
-    class alignas(is_pow2(class_size) ? class_size : 4) small_string {
+    class alignas(detail::is_pow2(class_size) ? class_size : 4) small_string {
     public:
         constexpr small_string() noexcept {
             data_[class_size - 1] = static_cast<char>(class_size - 1);
@@ -257,4 +257,4 @@ namespace fstlog {
 
     template<class T>
     inline constexpr bool is_small_string_v = is_small_string<T>::value;
-}
+}// namespace fstlog

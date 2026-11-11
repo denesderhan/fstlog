@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
@@ -245,35 +245,35 @@ namespace fstlog {
         }
 
         void process_simple_type(
-            log_element_type type, 
+            detail::log_element_type type, 
             log_element_ut meta, 
             format_type format) noexcept
         {
-            if (type == log_element_type::Smallstring) {
+            if (type == detail::log_element_type::Smallstring) {
                 process_small_string(meta, format);
             }
-            else if (type == log_element_type::Integral) {
+            else if (type == detail::log_element_type::Integral) {
                 process_integral(meta, format);
             }
-            else if (type == log_element_type::String) {
+            else if (type == detail::log_element_type::String) {
                 process_string(meta, format);
             }
-            else if (type == log_element_type::Float) {
+            else if (type == detail::log_element_type::Float) {
                 process_float(meta, format);
             }
-            else if (type == log_element_type::Pointer) {
+            else if (type == detail::log_element_type::Pointer) {
                 void* to_encode{nullptr};
                 this->get_data(to_encode);
                 if (!this->has_error())
                     this->encode(to_encode, format);
             }
-            else if (type == log_element_type::Hash) {
+            else if (type == detail::log_element_type::Hash) {
                 process_hash(meta, format);
             }
-            else if (type == log_element_type::Char) {
+            else if (type == detail::log_element_type::Char) {
                 process_char(meta, format);
             }
-            else if (type == log_element_type::Bool) {
+            else if (type == detail::log_element_type::Bool) {
                 bool to_encode{false};
                 this->get_data(to_encode);
                 if (!this->has_error())
@@ -297,12 +297,12 @@ namespace fstlog {
                 }
                 const unsigned char data_type = 
                     *(type_signature.data_bytes() + str_ind);
-                const log_element_type current_type = 
-                    static_cast<log_element_type>(data_type & log_element_type_bitmask);
+                const detail::log_element_type current_type = 
+                    static_cast<detail::log_element_type>(data_type & detail::log_element_type_bitmask);
                 const unsigned char meta = 
-                    data_type & log_type_metadata_bitmask;
+                    data_type & detail::log_type_metadata_bitmask;
                 str_ind++;
-                if (current_type == log_element_type::Aggregate) {
+                if (current_type == detail::log_element_type::Aggregate) {
                     if (meta == ut_cast(aggregate_type::List))
                         loop_counter++;
                     else if (meta == ut_cast(aggregate_type::Tuple)) {
@@ -336,7 +336,7 @@ namespace fstlog {
         {
             FSTLOG_ASSERT(!type_signature.empty());
             FSTLOG_ASSERT(*type_signature.data_bytes() ==
-                (ut_cast(log_element_type::Aggregate) 
+                (ut_cast(detail::log_element_type::Aggregate) 
                     | ut_cast(aggregate_type::List)));
             msg_counter list_size{0};
             this->get_data(list_size);
@@ -371,7 +371,7 @@ namespace fstlog {
                 return;
             }
             FSTLOG_ASSERT(    *type_signature.data_bytes() ==
-                (ut_cast(log_element_type::Aggregate) 
+                (ut_cast(detail::log_element_type::Aggregate) 
                     | ut_cast(aggregate_type::Tuple)));
             const unsigned char tuple_size = *(type_signature.data_bytes() + 1);
             type_signature = byte_span_const{
@@ -396,11 +396,11 @@ namespace fstlog {
         {
             if (!type_signature.empty() && !this->has_error()) {
                 auto data_type = *type_signature.data_bytes();
-                log_element_type const current_type =
-                    static_cast<log_element_type>(data_type & log_element_type_bitmask);
-                const unsigned char meta = data_type & log_type_metadata_bitmask;
+                detail::log_element_type const current_type =
+                    static_cast<detail::log_element_type>(data_type & detail::log_element_type_bitmask);
+                const unsigned char meta = data_type & detail::log_type_metadata_bitmask;
 
-                if (current_type != log_element_type::Aggregate) {
+                if (current_type != detail::log_element_type::Aggregate) {
                     process_simple_type(current_type, meta, format);
                     type_signature = byte_span_const{
                         type_signature.data_bytes() + 1,
@@ -431,4 +431,4 @@ namespace fstlog {
                     error_code::input_bad);
         }
     };
-}
+} // namespace fstlog

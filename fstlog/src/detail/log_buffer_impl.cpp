@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <detail/log_buffer_impl.hpp>
 
@@ -37,7 +37,7 @@ namespace fstlog {
         }
         else {
             //For the indexes to work:
-            FSTLOG_ASSERT(is_pow2(buffer_size_));
+            FSTLOG_ASSERT(detail::is_pow2(buffer_size_));
         }
 
         writeable_size_ = buffer_size_;
@@ -132,4 +132,4 @@ namespace fstlog {
     
     //max half can be used
     static_assert(config::max_ringbuffer_size <= (std::numeric_limits<std::uint32_t>::max)() / 2, "Max buffer size wrong!");
-}
+}// namespace fstlog

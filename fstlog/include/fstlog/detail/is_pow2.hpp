@@ -1,9 +1,9 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <type_traits>
 
-namespace fstlog {
+namespace fstlog::detail {
     /**
      * @brief Checks if an unsigned integer is a power of 2
      *
@@ -18,4 +18,4 @@ namespace fstlog {
         static_assert(std::is_unsigned_v<T>, "Only for unsigned!");
         return num && ((num & (num - 1)) == 0);
     }
-}
+}// namespace fstlog::detail

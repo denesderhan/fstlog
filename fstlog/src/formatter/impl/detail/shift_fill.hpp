@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
@@ -11,28 +11,26 @@
 #include <detail/utf8_len.hpp>
 
 namespace fstlog::detail {
-    namespace {
-        inline void fill_with_pattern(
-            byte_span to_fill,
-            std::array<unsigned char, 4> pattern,
-            unsigned char pattern_bytes) noexcept
-        {
-            FSTLOG_ASSERT(to_fill.data_bytes() != nullptr);
-            FSTLOG_ASSERT(pattern_bytes > 0 && pattern_bytes <= 4 
-                && to_fill.size_bytes() % pattern_bytes == 0);
-            
-            if (to_fill.empty()) return;
+    inline void fill_with_pattern(
+        byte_span to_fill,
+        std::array<unsigned char, 4> pattern,
+        unsigned char pattern_bytes) noexcept
+    {
+        FSTLOG_ASSERT(to_fill.data_bytes() != nullptr);
+        FSTLOG_ASSERT(pattern_bytes > 0 && pattern_bytes <= 4
+            && to_fill.size_bytes() % pattern_bytes == 0);
 
-            if (pattern_bytes == 1) {
-                std::memset(to_fill.data_bytes(), pattern[0], to_fill.size_bytes());
-            }
-            else {
-                auto pos = to_fill.data_bytes();
-                auto end = to_fill.data_bytes() + to_fill.size_bytes();
-                while (pos < end) {
-                    std::memcpy(pos, pattern.data(), pattern_bytes);
-                    pos += pattern_bytes;
-                }
+        if (to_fill.empty()) return;
+
+        if (pattern_bytes == 1) {
+            std::memset(to_fill.data_bytes(), pattern[0], to_fill.size_bytes());
+        }
+        else {
+            auto pos = to_fill.data_bytes();
+            auto end = to_fill.data_bytes() + to_fill.size_bytes();
+            while (pos < end) {
+                std::memcpy(pos, pattern.data(), pattern_bytes);
+                pos += pattern_bytes;
             }
         }
     }
@@ -52,19 +50,19 @@ namespace fstlog::detail {
 
         unsigned char fill_char_bytes = 1;
         while (fill_char_bytes < 4 && fmt.fill_char[fill_char_bytes] != 0) fill_char_bytes++;
-        
+
         const std::size_t length_grow_in_chars = static_cast<std::size_t>(fmt.width) - str_len.char_len;
         const std::size_t length_grow_in_bytes = length_grow_in_chars * fill_char_bytes;
-        
+
         // not enough space in buffer
         if (length_grow_in_bytes > buffer.size_bytes() - str_len.byte_len) return str_len;
-        
+
         if (fmt.align == '>') {
-            const auto dest_ptr{ buffer.data_bytes() + length_grow_in_bytes};
+            const auto dest_ptr{ buffer.data_bytes() + length_grow_in_bytes };
             std::memmove(dest_ptr, buffer.data_bytes(), str_len.byte_len);
             fill_with_pattern(
                 { buffer.data_bytes(), length_grow_in_bytes },
-                fmt.fill_char, 
+                fmt.fill_char,
                 fill_char_bytes);
         }
         else if (fmt.align == '^') {
@@ -74,20 +72,20 @@ namespace fstlog::detail {
             std::memmove(shifted_str_begin, buffer.data_bytes(), str_len.byte_len);
             fill_with_pattern(
                 { buffer.data_bytes(), left_fill_bytes },
-                fmt.fill_char, 
+                fmt.fill_char,
                 fill_char_bytes);
             fill_with_pattern(
                 { shifted_str_begin + str_len.byte_len, right_fill_bytes },
-                fmt.fill_char, 
+                fmt.fill_char,
                 fill_char_bytes);
         }
         else {
             //align '<' or any other
             fill_with_pattern(
-                { buffer.data_bytes() + str_len.byte_len, length_grow_in_bytes},
+                { buffer.data_bytes() + str_len.byte_len, length_grow_in_bytes },
                 fmt.fill_char,
                 fill_char_bytes);
         }
-        return {str_len.byte_len + length_grow_in_bytes , fmt.width };
+        return { str_len.byte_len + length_grow_in_bytes , fmt.width };
     }
-}
+} // namespace fstlog::detail

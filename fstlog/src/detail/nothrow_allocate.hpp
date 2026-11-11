@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
@@ -18,7 +18,7 @@ namespace fstlog {
         std::size_t byte_num,
         std::size_t alignment) noexcept
     {
-        FSTLOG_ASSERT(resource != nullptr && is_pow2(alignment));
+        FSTLOG_ASSERT(resource != nullptr && detail::is_pow2(alignment));
         if (obj_ptr == nullptr) return;
         FSTLOG_ASSERT(safe_reinterpret_cast<std::uintptr_t>(obj_ptr) % alignment == 0);
 #ifdef FSTLOG_NOEXCEPTIONS
@@ -49,7 +49,7 @@ namespace fstlog {
     {
         void* out_ptr{ nullptr };
         if (resource == nullptr 
-            || !is_pow2(alignment))
+            || !detail::is_pow2(alignment))
         {
             return out_ptr;
         }
@@ -106,4 +106,4 @@ namespace fstlog {
         FSTLOG_ASSERT(num <= (std::numeric_limits<std::size_t>::max)() / sizeof(T));
         aligned_nothrow_deallocate(obj_ptr, resource, sizeof(T) * num, alignof(T));
     }
-}
+}// namespace fstlog

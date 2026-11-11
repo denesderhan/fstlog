@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <atomic>
@@ -103,7 +103,7 @@ namespace fstlog {
                     // free space always begins at write_p
                     auto* const end_marker_ptr{ begin_ + (write_p & buffer_mask_) };
                     FSTLOG_ASSERT(end_marker_ptr > begin_ && end_marker_ptr < begin_ + buffer_size_);
-                    *end_marker_ptr = ut_cast(log_msg_type::Invalid);
+                    *end_marker_ptr = ut_cast(detail::log_msg_type::Invalid);
                     write_pos_.fetch_add(size_until_end, std::memory_order_release);
                     writeable_size_ = all_free - size_until_end;
                 }
@@ -190,4 +190,4 @@ namespace fstlog {
     };
     
     //if mutex.lock() fails and throws program crashes
-}
+}// namespace fstlog

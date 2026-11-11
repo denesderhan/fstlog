@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
@@ -14,7 +14,7 @@
 #include <fstlog/detail/padded_t.hpp>
 #include <fstlog/detail/types.hpp>
 
-namespace fstlog {
+namespace fstlog::detail {
     template<typename T, typename std::enable_if_t<
             log_type_v<T> != log_element_type::Aggregate
             && log_type_v<T> != log_element_type::String
@@ -51,10 +51,8 @@ namespace fstlog {
         }
     }
 
-    namespace {
-        template<typename Tuple, std::size_t... Ints>
-        void write_tuple(unsigned char*& buff_ind, Tuple const& tuple, std::index_sequence<Ints...>) noexcept;
-    }
+    template<typename Tuple, std::size_t... Ints>
+    void write_tuple(unsigned char*& buff_ind, Tuple const& tuple, std::index_sequence<Ints...>) noexcept;
 
     //aggregate types
     template<typename T, typename std::enable_if_t<
@@ -80,10 +78,8 @@ namespace fstlog {
         }
     }
 
-    namespace {
-        template<typename Tuple, std::size_t... Ints>
-        void write_tuple(unsigned char*& buff_ind, Tuple const& tuple, std::index_sequence<Ints...>) noexcept {
-            (write_var(buff_ind, std::get<Ints>(tuple)), ...);
-        }
+    template<typename Tuple, std::size_t... Ints>
+    void write_tuple(unsigned char*& buff_ind, Tuple const& tuple, std::index_sequence<Ints...>) noexcept {
+        (write_var(buff_ind, std::get<Ints>(tuple)), ...);
     }
-}
+} // namespace fstlog::detail

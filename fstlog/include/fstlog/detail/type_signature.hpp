@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
@@ -15,30 +15,28 @@
 #include <fstlog/detail/types.hpp>
 #include <fstlog/detail/ut_cast.hpp>
 
-namespace fstlog {
-    namespace {
-        template<typename T, typename = void>
-        struct type_signature_head {
-            static constexpr std::array<log_element_ut, 1> value{
-                { ut_cast(log_type_v<T>) | log_type_metadata_v<T> }
-            };
+namespace fstlog::detail {
+    template<typename T, typename = void>
+    struct type_signature_head {
+        static constexpr std::array<log_element_ut, 1> value{
+            { ut_cast(log_type_v<T>) | log_type_metadata_v<T> }
         };
+    };
 
-        template <typename T>
-        struct type_signature_head < T, std::enable_if_t<
-            log_type_v<T> == log_element_type::Aggregate &&
-            log_type_metadata_v<T> == ut_cast(aggregate_type::Tuple)
-            >> {
-            static_assert(std::tuple_size_v<rm_cvref_t<T>> <=
-                (std::numeric_limits<log_element_ut>::max)(), 
-                "Max tuple size exceeded!"
-            );
-            static constexpr std::array<log_element_ut, 2> value{
-                ut_cast(log_element_type::Aggregate) | ut_cast(aggregate_type::Tuple),
-                std::tuple_size_v<rm_cvref_t<T>>
-            };
+    template <typename T>
+    struct type_signature_head < T, std::enable_if_t<
+        log_type_v<T> == log_element_type::Aggregate &&
+        log_type_metadata_v<T> == ut_cast(aggregate_type::Tuple)
+        >> {
+        static_assert(std::tuple_size_v<rm_cvref_t<T>> <=
+            (std::numeric_limits<log_element_ut>::max)(), 
+            "Max tuple size exceeded!"
+        );
+        static constexpr std::array<log_element_ut, 2> value{
+            ut_cast(log_element_type::Aggregate) | ut_cast(aggregate_type::Tuple),
+            std::tuple_size_v<rm_cvref_t<T>>
         };
-    }
+    };
 
     template <typename T, typename = void>
     struct type_signature {
@@ -49,14 +47,12 @@ namespace fstlog {
 
     template <typename T>
     constexpr auto type_signature_v = type_signature<T>::value;
-
-    namespace {
-        template<typename Tuple, std::size_t... Ints>
-        inline constexpr auto tuple_type_signature(std::index_sequence<Ints...>) noexcept {
-            return array_concat(
-                type_signature_head<Tuple>::value, 
-                type_signature_v<std::tuple_element_t<Ints, Tuple>>...);
-        }
+        
+    template<typename Tuple, std::size_t... Ints>
+    inline constexpr auto tuple_type_signature(std::index_sequence<Ints...>) noexcept {
+        return array_concat(
+            type_signature_head<Tuple>::value, 
+            type_signature_v<std::tuple_element_t<Ints, Tuple>>...);
     }
 
     template <typename T>
@@ -83,4 +79,4 @@ namespace fstlog {
             );
         }();
     };
-}
+} // namespace fstlog::detail

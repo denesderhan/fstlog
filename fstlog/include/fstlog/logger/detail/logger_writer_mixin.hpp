@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cassert>
@@ -10,7 +10,6 @@
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>
 #include <fstlog/detail/level.hpp>
-#include <fstlog/detail/log_metaargs.hpp>
 #include <fstlog/detail/padded_size.hpp>
 #include <fstlog/detail/types.hpp>
 #include <fstlog/detail/ut_cast.hpp>
@@ -27,7 +26,7 @@ namespace fstlog {
             && noexcept(std::declval<L&>().msg_size()))
         {
             return L::buffer().writeable_size() >=
-                padded_size<constants::internal_msg_alignment>(L::msg_size());
+                detail::padded_size<constants::internal_msg_alignment>(L::msg_size());
         }
 
         void update_buffer_state() noexcept(
@@ -36,7 +35,7 @@ namespace fstlog {
             && noexcept(std::declval<L&>().buffer().update_producer_state(0)))
         {
             L::buffer().update_producer_state(
-                padded_size<constants::internal_msg_alignment>(L::msg_size()));
+                detail::padded_size<constants::internal_msg_alignment>(L::msg_size()));
         }
 
         void wait_for_buffer_flush() noexcept(
@@ -87,9 +86,9 @@ namespace fstlog {
             std::uint32_t msg_size = L::msg_size();
             constexpr std::size_t orig_argnum{ sizeof...(Args) };
             const auto padded_msg_size = 
-                padded_size<constants::internal_msg_alignment>(msg_size);
-            const internal_msg_header header{
-                log_msg_type::Internal,
+                detail::padded_size<constants::internal_msg_alignment>(msg_size);
+            const detail::internal_msg_header header{
+                detail::log_msg_type::Internal,
                 level,
                 L::channel(),
                 flags,
@@ -102,19 +101,19 @@ namespace fstlog {
             };
             static_assert(orig_argnum <=
                 (std::numeric_limits<decltype(header.argnum)>::max)(), "Too many arguments!");
-            std::memcpy(buff_ptr, &header, internal_msg_header::unpadded_data_size);
-            if constexpr (internal_msg_header::unpadded_data_size != 
-                internal_msg_header::padded_data_size )
+            std::memcpy(buff_ptr, &header, detail::internal_msg_header::unpadded_data_size);
+            if constexpr (detail::internal_msg_header::unpadded_data_size != 
+                detail::internal_msg_header::padded_data_size )
             {
                 std::memset(
-                    buff_ptr + internal_msg_header::unpadded_data_size,
+                    buff_ptr + detail::internal_msg_header::unpadded_data_size,
                     0,
-                    internal_msg_header::padded_data_size - internal_msg_header::unpadded_data_size);
+                    detail::internal_msg_header::padded_data_size - detail::internal_msg_header::unpadded_data_size);
             }
-            buff_ptr += internal_msg_header::padded_data_size;
+            buff_ptr += detail::internal_msg_header::padded_data_size;
             std::uint32_t arg_num = L::arg_num();
             if (arg_num == orig_argnum) {
-                (write_arg(buff_ptr, args), ...);
+                (detail::write_arg(buff_ptr, args), ...);
             }
             else {
                 (log_arg_cropped(arg_num, buff_ptr, args), ...);
@@ -144,9 +143,9 @@ namespace fstlog {
             T const& arg) noexcept 
         {
             if (arg_num != 0) {
-                write_arg(buff_ptr, arg);
+                detail::write_arg(buff_ptr, arg);
                 arg_num--;
             }
         }
     };
-}
+} // namespace fstlog

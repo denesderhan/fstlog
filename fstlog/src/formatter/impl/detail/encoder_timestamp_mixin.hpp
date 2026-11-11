@@ -1,4 +1,4 @@
-//Copyright © 2023, Dénes Derhán.
+//Copyright © 2023-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
@@ -156,7 +156,7 @@ namespace fstlog {
             format_setting_txt& format) noexcept
         {
             auto temp = time_format;
-            time_format = skip_fill_align(time_format);
+            time_format = detail::skip_fill_align(time_format);
             if constexpr (use_fill_align) {
                 auto fill_begin = temp.data_bytes();
                 auto align_end = time_format.data_bytes();
@@ -167,15 +167,15 @@ namespace fstlog {
                 FSTLOG_ASSERT(utf8_seq_len <= format.fill_char.size());
                 std::memcpy(format.fill_char.data(), fill_begin, utf8_seq_len);
             }
-            temp = skip_sign_alt_0(time_format);
+            temp = detail::skip_sign_alt_0(time_format);
             // usage of sign, alt '0' is an error
             if (temp.data_bytes() != time_format.data_bytes()) {
                 return error_code::fmt_bad;
             }
 
-            format.width = get_width(time_format);
+            format.width = detail::get_width(time_format);
             // precision is the precision of seconds (precision 0: "30" precision 2 : "30.44")
-            auto precision = get_precision(time_format);
+            auto precision = detail::get_precision(time_format);
             if (precision > 9) precision = 9;
             second_precision_ = static_cast<unsigned char>(precision);
             return error_code::none;
@@ -204,7 +204,7 @@ namespace fstlog {
         * - The formatted string size is constant; variable length strftime specifiers are not allowed.
         */
         error_code set_time_format(byte_span_const format_string) noexcept {
-            tzone_ = get_zone(format_string);
+            tzone_ = detail::get_zone(format_string);
             
             // no strftime string, set default
             if (format_string.empty()) {
@@ -633,4 +633,4 @@ namespace fstlog {
         unsigned char second_precision_{ 6 };
         unsigned char second_pos_{ 255 };
     };
-}
+}// namespace fstlog

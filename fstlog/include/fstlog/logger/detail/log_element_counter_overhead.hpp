@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
@@ -14,7 +14,7 @@
 #include <fstlog/detail/padded_size.hpp>
 #include <fstlog/detail/type_signature.hpp>
 
-namespace fstlog {
+namespace fstlog::detail {
     inline constexpr std::size_t counter_size_from_type(log_element_ut log_type) noexcept {
         auto type = log_type & log_element_type_bitmask;
         if (type == ut_cast(log_element_type::String)) {
@@ -110,4 +110,4 @@ namespace fstlog {
     inline constexpr std::size_t tuple_counter_overhead(std::index_sequence<Ints...>) noexcept {
         return (std::size_t{ 0 } + ... + log_element_counter_overhead<std::tuple_element_t<Ints, rm_cvref_t<Tuple>>>());
     }
-}
+} // namespace fstlog::detail

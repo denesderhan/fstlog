@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <chrono>
@@ -51,7 +51,7 @@ namespace fstlog {
 
         void sink_msg(byte_span_const message) noexcept {
             FSTLOG_ASSERT(message.data_bytes() != nullptr);
-            FSTLOG_ASSERT(message.size_bytes() >= internal_msg_header::padded_data_size);
+            FSTLOG_ASSERT(message.size_bytes() >= detail::internal_msg_header::padded_data_size);
             FSTLOG_ASSERT(message.size_bytes() <= (std::numeric_limits<std::uint32_t>::max)());
             
             const auto msg_size = message.size_bytes();
@@ -59,8 +59,8 @@ namespace fstlog {
             stamp_type timestamp;
             std::memcpy(
                 &timestamp,
-                msg_ptr + offsetof(internal_msg_header, timestamp),
-                sizeof(internal_msg_header::timestamp));
+                msg_ptr + offsetof(detail::internal_msg_header, timestamp),
+                sizeof(detail::internal_msg_header::timestamp));
 
             const std::size_t msg_pos{ message_buffer_.size() };
             // if msg_pos would overflow we cant add message to buffer (this can not happen in practice)
@@ -337,7 +337,7 @@ namespace fstlog {
             "Container constructor must be noexcept!");
         static_assert(std::is_trivially_copyable_v<message_locator>,
             "message_locator must be trivially copyable for memcpy/memmove/qsort usage!");
-        static_assert(std::is_standard_layout_v<internal_msg_header> && std::is_standard_layout_v<stamp_type>,
+        static_assert(std::is_standard_layout_v<detail::internal_msg_header> && std::is_standard_layout_v<stamp_type>,
             "types must be standard layout for offsetof()!");
     };
-}
+} // namespace fstlog

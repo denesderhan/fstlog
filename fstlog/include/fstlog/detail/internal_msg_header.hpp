@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
@@ -11,7 +11,7 @@
 #include <fstlog/detail/constants.hpp>
 #endif
 
-namespace fstlog {
+namespace fstlog::detail {
     enum class log_msg_type : unsigned char {
         Invalid = 0,
         Internal = 1,
@@ -61,4 +61,4 @@ namespace fstlog {
     static_assert(internal_msg_header::padded_data_size% constants::internal_msg_data_alignment == 0,
         "Header size not multipla of msg_data alignment!");
 #endif
-}
+} // namespace fstlog::detail

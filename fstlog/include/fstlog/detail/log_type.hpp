@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <fstlog/detail/log_element_type.hpp>
@@ -14,7 +14,7 @@
 #include <fstlog/detail/small_string.hpp>
 #include <fstlog/detail/is_pow2.hpp>
 
-namespace fstlog {
+namespace fstlog::detail {
     template <typename T, typename = void>
     struct log_type {
         static constexpr log_element_type value{ 
@@ -112,4 +112,4 @@ namespace fstlog {
 
     template <typename T>
     constexpr log_element_type log_type_v = log_type<T>::value;
-}
+}  // namespace fstlog::detail

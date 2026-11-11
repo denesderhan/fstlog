@@ -1,4 +1,4 @@
-//Copyright © Dénes Derhán 2022.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <catch2/catch_all.hpp>
 
@@ -42,7 +42,7 @@ TEST_CASE("padded_size") {
 
         CAPTURE(num, expected);
         CHECK(padded_size_naive<std::uint64_t, 32>(num) == expected);
-        CHECK(fstlog::padded_size<32>(num) == expected);
+        CHECK(fstlog::detail::padded_size<32>(num) == expected);
 
     };
 
@@ -74,7 +74,7 @@ TEST_CASE("padded_size") {
 
         CAPTURE(num, expected);
         CHECK(padded_size_naive<std::uint64_t, 4>(num) == expected);
-        CHECK(fstlog::padded_size<4>(num) == expected);
+        CHECK(fstlog::detail::padded_size<4>(num) == expected);
     };
 
     SECTION("padded_size_8") {
@@ -99,6 +99,6 @@ TEST_CASE("padded_size") {
 
         CAPTURE(num, expected);
         CHECK(padded_size_naive<std::uint64_t, 8>(num) == expected);
-        CHECK(fstlog::padded_size<8>(num) == expected);
+        CHECK(fstlog::detail::padded_size<8>(num) == expected);
     };
 }

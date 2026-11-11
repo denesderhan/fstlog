@@ -1,12 +1,11 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
-#include <type_traits>
 
 #include <fstlog/detail/type_signature.hpp> 
 
-namespace fstlog {
+namespace fstlog::detail {
     template<typename T>
     struct is_nested_type {
         static constexpr bool value = [] {
@@ -27,4 +26,4 @@ namespace fstlog {
             return false;
         }();
     };
-}
+} // namespace fstlog::detail

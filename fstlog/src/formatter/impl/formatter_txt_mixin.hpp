@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
@@ -39,14 +39,14 @@ namespace fstlog {
             byte_span output(formatting_buffer_);
             bool has_message_field = false;
             while (true) {
-                auto error = parse_fmt_text(format_string, output);
+                auto error = detail::parse_fmt_text(format_string, output);
                 if (error != error_code::none) return error;
                 if (format_string.empty()) break;
                 byte_span_const field_name;
                 byte_span_const format_spec;
-                error = parse_fmt_repl_field(format_string, field_name, format_spec);
+                error = detail::parse_fmt_repl_field(format_string, field_name, format_spec);
                 if (error != error_code::none) return error;
-                const auto field_id = get_repl_field_id(field_name);
+                const auto field_id = detail::get_repl_field_id(field_name);
                 if (field_id == logfield::Invalid) return error_code::fmt_bad;
                 else if (field_id == logfield::Message) has_message_field = true;
                 if (output.empty()) return error_code::buff_full;
@@ -57,7 +57,7 @@ namespace fstlog {
                     if (error != error_code::none) return error;
                 }
                 else {
-                    if (!valid_format_spec(format_spec)) return error_code::fmt_bad;
+                    if (!detail::valid_format_spec(format_spec)) return error_code::fmt_bad;
                     this->set_format(field_id, format_spec);
                 }
             }
@@ -67,7 +67,7 @@ namespace fstlog {
             log_fmt_str_len_ =
                 static_cast<std::uint32_t>(formatting_buffer_.size() - output.size());
             msg_fmt_str_start_ =
-                padded_size<constants::cache_ls_nosharing>(log_fmt_str_len_);
+                detail::padded_size<constants::cache_ls_nosharing>(log_fmt_str_len_);
             msg_fmt_str_cap_ =
                 static_cast<std::uint32_t>(formatting_buffer_.size() - msg_fmt_str_start_);
             if (msg_fmt_str_cap_ < formatting_buffer_.size() / 4) return error_code::str_long;
@@ -149,7 +149,7 @@ namespace fstlog {
                         L::process_element(type_signature, this->get_format(field_id));
                 }
                 else {
-                    this->encode(get_repl_field_name(field_id),
+                    this->encode(detail::get_repl_field_name(field_id),
                         this->get_format_align_width(this->get_format(field_id)));
                 }
             }
@@ -192,7 +192,7 @@ namespace fstlog {
             while (!message_fmt_string_.empty()) {
                 byte_span_const field_name;
                 byte_span_const format_spec;
-                auto error = parse_fmt_repl_field(message_fmt_string_, field_name, format_spec);
+                auto error = detail::parse_fmt_repl_field(message_fmt_string_, field_name, format_spec);
                 
                 if (error != error_code::none) {
                     this->set_error(__FILE__, __LINE__, error);
@@ -214,7 +214,7 @@ namespace fstlog {
             byte_span output(
                 this->output_ptr(), 
                 static_cast<std::size_t>(this->output_end() - this->output_ptr()));
-            auto error = parse_fmt_text(input, output);
+            auto error = detail::parse_fmt_text(input, output);
             this->set_output_ptr_unchecked(output.data_bytes());
             if (error != error_code::none) {
                 this->set_error(__FILE__, __LINE__, error);
@@ -248,9 +248,9 @@ namespace fstlog {
             FSTLOG_ASSERT(!type_signature.empty());
                         
             auto data_type = *type_signature.data_bytes();
-            const unsigned char msg_type = data_type & log_element_type_bitmask;
-            const unsigned char msg_meta = data_type & log_type_metadata_bitmask;
-            if ( msg_type == ut_cast(log_element_type::String)
+            const unsigned char msg_type = data_type & detail::log_element_type_bitmask;
+            const unsigned char msg_meta = data_type & detail::log_type_metadata_bitmask;
+            if ( msg_type == ut_cast(detail::log_element_type::String)
                 && (msg_meta == ut_cast(char_type::Char) || msg_meta == ut_cast(char_type::Char8)))
             {
                 // char, char8_t is reinterpreted to unsigned char
@@ -284,4 +284,4 @@ namespace fstlog {
         std::uint32_t msg_fmt_str_cap_{ 0 };
         byte_span_const message_fmt_string_;
     };
-}
+} // namespace fstlog

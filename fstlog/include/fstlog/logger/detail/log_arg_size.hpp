@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstdint>
@@ -7,7 +7,7 @@
 #include <fstlog/logger/detail/log_element_counter_overhead.hpp>
 #include <fstlog/logger/detail/log_element_payload_size.hpp>
 
-namespace fstlog {
+namespace fstlog::detail {
     template<typename T>
     inline constexpr std::uintmax_t log_arg_size(T const& arg) noexcept {
         return std::uintmax_t{ internal_arg_header<T>::data_size }
@@ -21,4 +21,4 @@ namespace fstlog {
             + log_element_counter_overhead<T>()
             + log_element_payload_size<T>();
     }
-}
+} // namespace fstlog::detail

@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
@@ -43,7 +43,7 @@ namespace fstlog {
             if (form_spec.empty()) return out;
             // fill align
             auto align_pos = form_spec.data_bytes();
-            form_spec = skip_fill_align(form_spec);
+            form_spec = detail::skip_fill_align(form_spec);
             const auto* align_end = form_spec.data_bytes();
             // sign
             if (form_spec.empty()) return out;
@@ -67,7 +67,7 @@ namespace fstlog {
                 if (form_spec.empty()) return out;
             }
             // get width
-            out.width = get_width(form_spec);
+            out.width = detail::get_width(form_spec);
             // set fill align
             if (out.width != 0 && align_pos < align_end) {
                 out.align = *--align_end;
@@ -78,7 +78,7 @@ namespace fstlog {
             if (form_spec.empty()) return out;
             
             // precision
-            out.precision = get_precision(form_spec);
+            out.precision = detail::get_precision(form_spec);
             if (form_spec.empty()) return out;
             
             // type
@@ -100,4 +100,4 @@ namespace fstlog {
     private:
         std::array<format_type, ut_cast(logfield_last)> field_formattings_;
     };
-}
+}// namespace fstlog

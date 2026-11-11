@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstdint>
@@ -7,7 +7,7 @@
 
 #include <fstlog/detail/is_pow2.hpp>
 
-namespace fstlog {
+namespace fstlog::detail {
     // returns the number that is in the range [num, num + padd_to)
     // and is divisible by padd_to (returns 0 on num == 0)
     template <std::uintmax_t padd_to, typename T>
@@ -18,7 +18,7 @@ namespace fstlog {
         }
         else {
             static_assert(is_pow2(padd_to), "padd_to must be power of two!");
-            static_assert(padd_to != 0 
+            static_assert(padd_to != 0
                 && padd_to <= (std::numeric_limits<T>::max)(), "padd_to must be in range 1 - maxT");
             constexpr T round = static_cast<T>(padd_to);
             // compute temp = (num / round) * round
@@ -32,4 +32,4 @@ namespace fstlog {
             }
         }
     }
-}
+} // namespace fstlog::detail

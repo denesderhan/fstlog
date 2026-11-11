@@ -1,4 +1,4 @@
-//Copyright © 2023, Dénes Derhán.
+//Copyright © 2023-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
@@ -12,13 +12,13 @@
 #include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/array_copy.hpp>
 
-namespace fstlog {
+namespace fstlog::detail {
     template <typename T>
     struct alignas(constants::internal_msg_data_alignment) internal_arg_header {
-        static constexpr std::size_t data_size = 
+        static constexpr std::size_t data_size =
             padded_size<constants::internal_msg_data_alignment>(
                 sizeof(msg_counter)
-                + 1 
+                + 1
                 + type_signature<T>::value.size());
     private:
         static constexpr std::uintmax_t array_length = data_size - sizeof(msg_counter) - 1;
@@ -26,9 +26,9 @@ namespace fstlog {
             std::array<unsigned char, array_length> out{ 0 };
             array_copy(out, type_signature<T>::value, 0);
             return out;
-        }();
-    public:    
-        msg_counter arg_size{0};
+            }();
+    public:
+        msg_counter arg_size{ 0 };
         const unsigned char signature_length = static_cast<unsigned char>(type_signature<T>::value.size());
         const std::array<log_element_ut, array_length> signature = padded_sign;
         static_assert(type_signature<T>::value.size() <= (std::numeric_limits<unsigned char>::max)(),
@@ -42,4 +42,4 @@ namespace fstlog {
 #ifdef FSTLOG_DEBUG
     static_assert(sizeof(internal_arg_header<int>) == internal_arg_header<int>::data_size);
 #endif
-}
+} // namespace fstlog::detail

@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
@@ -73,16 +73,16 @@ namespace fstlog {
             byte_span output(out.data() + 2, out.size() - 3); // 21 bytes
             // copy fill-align
             auto temp = input;
-            input = skip_fill_align(input);
+            input = detail::skip_fill_align(input);
             const auto align_len = temp.size() - input.size();
             FSTLOG_ASSERT(align_len <= 5);
             std::memcpy(output.data_bytes(), temp.data_bytes(), align_len);
             output.drop_front(align_len); // max 5 byte
             // skip
-            input = skip_sign_alt_0(input);
+            input = detail::skip_sign_alt_0(input);
             // copy width
             temp = input;
-            input = skip_valid_fmt_number(input);
+            input = detail::skip_valid_fmt_number(input);
             const auto width_len = static_cast<std::size_t>(temp.size() - input.size());
             std::memcpy(output.data_bytes(), temp.data_bytes(), width_len);
             output.drop_front(width_len); // max 4 bytes
@@ -99,4 +99,4 @@ namespace fstlog {
     private:
         std::array<format_type, ut_cast(logfield_last)> field_formattings_;
     };
-}
+} // namespace fstlog

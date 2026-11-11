@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstdint>
@@ -50,18 +50,18 @@ namespace fstlog {
             && noexcept(std::declval<L&>().set_arg_num(0)))
         {
             constexpr bool compt_size =
-                (bool{ true } && ... && log_arg_size_compile_time<Args>::value);
+                (bool{ true } && ... && detail::log_arg_size_compile_time<Args>::value);
             if constexpr (compt_size) {
                 constexpr std::uintmax_t compt_msg_size =
-                    (internal_msg_header::padded_data_size + ... + log_arg_size<Args>());
-                if (padded_size<constants::internal_msg_alignment, std::uintmax_t>(compt_msg_size) <= L::buffer().max_message_size()) {
+                    (detail::internal_msg_header::padded_data_size + ... + detail::log_arg_size<Args>());
+                if (detail::padded_size<constants::internal_msg_alignment, std::uintmax_t>(compt_msg_size) <= L::buffer().max_message_size()) {
                     L::set_msg_size(static_cast<typename L::msg_size_type>(compt_msg_size));
                     L::set_arg_num(static_cast<typename L::arg_num_type>(sizeof...(Args)));
                     return;
                 }
             }
             
-            auto msg_size = static_cast<typename L::msg_size_type>(internal_msg_header::padded_data_size);
+            auto msg_size = static_cast<typename L::msg_size_type>(detail::internal_msg_header::padded_data_size);
             typename L::arg_num_type arg_num{ 0 };
             (add_arg_size(msg_size, arg_num, args) && ...);
             L::set_msg_size(msg_size);
@@ -76,9 +76,9 @@ namespace fstlog {
                 noexcept(std::declval<L&>().buffer().max_message_size()))
         {
             const std::uintmax_t msg_s{ msg_size };
-            const std::uintmax_t new_size = msg_s + log_arg_size(arg);
+            const std::uintmax_t new_size = msg_s + detail::log_arg_size(arg);
             if (new_size > msg_s //checking for overflow
-                && padded_size<constants::internal_msg_alignment, std::uintmax_t>(new_size) <= L::buffer().max_message_size())
+                && detail::padded_size<constants::internal_msg_alignment, std::uintmax_t>(new_size) <= L::buffer().max_message_size())
             {
                 msg_size = static_cast<typename L::msg_size_type>(new_size);
                 arg_num++;
@@ -89,4 +89,4 @@ namespace fstlog {
             }
         }
     };
-}
+} // namespace fstlog

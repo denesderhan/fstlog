@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
@@ -14,14 +14,12 @@
 #include <fstlog/detail/rm_cvref_t.hpp>
 #include <fstlog/logger/detail/log_arg_size_compile_time.hpp>
 
-namespace fstlog {
-    namespace {
-        template<class Tuple, std::size_t... Ints>
-        constexpr std::uintmax_t tuple_payload_size(Tuple const& tuple, std::index_sequence<Ints...>) noexcept;
+namespace fstlog::detail {
+    template<class Tuple, std::size_t... Ints>
+    constexpr std::uintmax_t tuple_payload_size(Tuple const& tuple, std::index_sequence<Ints...>) noexcept;
 
-        template<class Tuple, std::size_t... Ints>
-        constexpr std::uintmax_t tuple_payload_size(std::index_sequence<Ints...>) noexcept;
-    }
+    template<class Tuple, std::size_t... Ints>
+    constexpr std::uintmax_t tuple_payload_size(std::index_sequence<Ints...>) noexcept;
 
     template<typename T, typename std::enable_if_t<
         log_type_v<T> != log_element_type::Aggregate
@@ -105,15 +103,13 @@ namespace fstlog {
         }
     }
 
-    namespace {
-        template<class Tuple, std::size_t... Ints>
-        constexpr std::uintmax_t tuple_payload_size(Tuple const& tuple, std::index_sequence<Ints...>) noexcept {
-            return (std::uintmax_t{ 0 } + ... + log_element_payload_size(std::get<Ints>(tuple)));
-        }
-
-        template<class Tuple, std::size_t... Ints>
-        constexpr std::uintmax_t tuple_payload_size(std::index_sequence<Ints...>) noexcept {
-            return (std::uintmax_t{ 0 } + ... + log_element_payload_size<typename std::tuple_element<Ints, Tuple>::type>());
-        }
+    template<class Tuple, std::size_t... Ints>
+    constexpr std::uintmax_t tuple_payload_size(Tuple const& tuple, std::index_sequence<Ints...>) noexcept {
+        return (std::uintmax_t{ 0 } + ... + log_element_payload_size(std::get<Ints>(tuple)));
     }
-}
+
+    template<class Tuple, std::size_t... Ints>
+    constexpr std::uintmax_t tuple_payload_size(std::index_sequence<Ints...>) noexcept {
+        return (std::uintmax_t{ 0 } + ... + log_element_payload_size<typename std::tuple_element<Ints, Tuple>::type>());
+    }
+} // namespace fstlog::detail

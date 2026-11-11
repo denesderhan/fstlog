@@ -1,4 +1,4 @@
-//Copyright © Dénes Derhán 2022.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <catch2/catch_all.hpp>
  
@@ -28,7 +28,7 @@ TEST_CASE("small_string") {
     
     SECTION("construct") {
         
-        CHECK(fstlog::log_type_v<fstlog::small_string<16>> == fstlog::log_element_type::Smallstring);
+        CHECK(fstlog::detail::log_type_v<fstlog::small_string<16>> == fstlog::detail::log_element_type::Smallstring);
 
         CHECK(sizeof(fstlog::small_string<16>) == 16);
         fstlog::small_string<16> sstr0 = "Hello World!";

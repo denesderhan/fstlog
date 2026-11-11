@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstring>
@@ -14,7 +14,7 @@
 #include <fstlog/logger/detail/is_nested_type.hpp>
 #endif
 
-namespace fstlog {
+namespace fstlog::detail {
     template<typename T>
     void write_arg(unsigned char*& buff_ind, T const& arg) noexcept {
         static_assert(can_log_type_v<T>, "Log argument not loggable!");
@@ -42,4 +42,4 @@ namespace fstlog {
             std::memcpy(begin_ptr, &arg_header, internal_arg_header<T>::data_size);
         }
     }
-}
+}// namespace fstlog::detail

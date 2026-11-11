@@ -1,4 +1,4 @@
-//Copyright © Dénes Derhán 2022.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <catch2/catch_all.hpp>
 
@@ -33,7 +33,7 @@ TEST_CASE("uint_fromchars_4digit") {
     CAPTURE(str);
     fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
     auto temp = input;
-    auto number = fstlog::uint_fromchars_4digit<1000>(input);
+    auto number = fstlog::detail::uint_fromchars_4digit<1000>(input);
     CHECK(number == std::get<1>(test_dat));
     CHECK(temp.size() - input.size() == std::get<2>(test_dat));
 }
@@ -57,7 +57,7 @@ TEST_CASE("parse_fmt_text") {
             std::get<0>(test_dat).size());
         fstlog::byte_span output(out_buff.data(), out_buff.size());
         
-        auto error = fstlog::parse_fmt_text(input, output);
+        auto error = fstlog::detail::parse_fmt_text(input, output);
         CHECK(error == fstlog::error_code::fmt_bad);
         std::string_view repl_out{ 
             reinterpret_cast<const char*>(out_buff.data()),
@@ -81,7 +81,7 @@ TEST_CASE("parse_fmt_text") {
             std::get<0>(test_dat).size());
         fstlog::byte_span output(out_buff.data(), std::get<3>(test_dat));
             
-        auto error = fstlog::parse_fmt_text(input, output);
+        auto error = fstlog::detail::parse_fmt_text(input, output);
         CHECK(error == fstlog::error_code::buff_full);
         std::string_view repl_out{
             reinterpret_cast<const char*>(out_buff.data()),
@@ -114,7 +114,7 @@ TEST_CASE("parse_fmt_text") {
             std::get<0>(test_dat).size());
         fstlog::byte_span output(out_buff.data(), out_buff.size());
         
-        auto error = fstlog::parse_fmt_text(input, output);
+        auto error = fstlog::detail::parse_fmt_text(input, output);
         CHECK(error == fstlog::error_code::none);
         std::string_view repl_out{ 
             reinterpret_cast<const char*>(out_buff.data()),
@@ -141,7 +141,7 @@ TEST_CASE("parse_fmt_repl_field") {
             
         fstlog::byte_span_const field_name;
         fstlog::byte_span_const format_spec;
-        auto error = fstlog::parse_fmt_repl_field(input, field_name, format_spec);
+        auto error = fstlog::detail::parse_fmt_repl_field(input, field_name, format_spec);
         std::string_view name{
             reinterpret_cast<const char*>(field_name.data_bytes()),
             static_cast<std::size_t>(field_name.size_bytes()) };
@@ -172,7 +172,7 @@ TEST_CASE("parse_fmt_repl_field") {
             
         fstlog::byte_span_const field_name;
         fstlog::byte_span_const format_spec;
-        auto error = fstlog::parse_fmt_repl_field(input, field_name, format_spec);
+        auto error = fstlog::detail::parse_fmt_repl_field(input, field_name, format_spec);
         std::string_view name{
             reinterpret_cast<const char*>(field_name.data_bytes()),
             static_cast<std::size_t>(field_name.size_bytes()) };
@@ -222,7 +222,7 @@ TEST_CASE("skip_fill_align") {
     auto str = std::get<0>(test_dat);
     CAPTURE(str);
     fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
-    auto res = fstlog::skip_fill_align(input);
+    auto res = fstlog::detail::skip_fill_align(input);
     CHECK(input.size() - res.size() == std::get<1>(test_dat));
 }
 
@@ -281,7 +281,7 @@ TEST_CASE("skip_sign_alt_0") {
     auto str = std::get<0>(test_dat);
     CAPTURE(str);
     fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
-    auto res = fstlog::skip_sign_alt_0(input);
+    auto res = fstlog::detail::skip_sign_alt_0(input);
     CHECK(input.size() - res.size() == std::get<1>(test_dat));
 }
 
@@ -305,7 +305,7 @@ TEST_CASE("get_zone") {
     fstlog::byte_span_const input{
         reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data()),
         std::get<0>(test_dat).size()};
-    auto zone = fstlog::get_zone(input);
+    auto zone = fstlog::detail::get_zone(input);
     CHECK(zone == std::get<1>(test_dat));
     CHECK(std::get<0>(test_dat).size() - input.size() == std::get<2>(test_dat));
 }
@@ -333,7 +333,7 @@ TEST_CASE("get_width") {
     CAPTURE(str);
     fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
     auto temp = input;
-    auto width = fstlog::get_width(input);
+    auto width = fstlog::detail::get_width(input);
     CHECK(width == std::get<1>(test_dat));
     CHECK(temp.size() - input.size() == std::get<2>(test_dat));
 }
@@ -363,7 +363,7 @@ TEST_CASE("get_precision") {
     CAPTURE(str);
     fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
     auto temp = input;
-    auto precision = fstlog::get_precision(input);
+    auto precision = fstlog::detail::get_precision(input);
     CHECK(precision == std::get<1>(test_dat));
     CHECK(temp.size() - input.size() == std::get<2>(test_dat));
 }
@@ -384,7 +384,7 @@ TEST_CASE("time_format") {
     INFO("The string was: " << test_str);
     fstlog::byte_span_const format_spec(reinterpret_cast<const unsigned char*>(test_str.data()), test_str.length());
     fstlog::byte_span_const time_format;
-    auto error = fstlog::time_format(format_spec, time_format);
+    auto error = fstlog::detail::time_format(format_spec, time_format);
     
     std::string_view strv_format_spec(reinterpret_cast<const char*>(format_spec.data_bytes()), format_spec.size_bytes());
     std::string_view strv_time_format(reinterpret_cast<const char*>(time_format.data_bytes()), time_format.size_bytes());
@@ -398,12 +398,12 @@ TEST_CASE("time_format") {
 TEST_CASE("get_repl_field_[id/name]") {
     for (int ind = 0; ind < fstlog::ut_cast(fstlog::logfield_last); ind++) {
         fstlog::logfield field = fstlog::logfield(ind);
-        auto name = fstlog::get_repl_field_name(field);
+        auto name = fstlog::detail::get_repl_field_name(field);
         fstlog::byte_span_const temp(reinterpret_cast<const unsigned char*>(name.data()), name.length());
-        CHECK(field == fstlog::get_repl_field_id(temp));
+        CHECK(field == fstlog::detail::get_repl_field_id(temp));
     }
     CHECK(fstlog::logfield_last == fstlog::logfield::Args);
-    CHECK(fstlog::get_repl_field_name(fstlog::logfield::Args) == "invalid");
+    CHECK(fstlog::detail::get_repl_field_name(fstlog::logfield::Args) == "invalid");
 }
 
 TEST_CASE("valid_format_spec") {
@@ -451,7 +451,7 @@ TEST_CASE("valid_format_spec") {
     fstlog::byte_span_const fmt_spec(
         reinterpret_cast<const unsigned char*>(std::get<0>(test_dat).data()),
         std::get<0>(test_dat).size());
-    auto is_valid = fstlog::valid_format_spec(fmt_spec);
+    auto is_valid = fstlog::detail::valid_format_spec(fmt_spec);
     CHECK(is_valid == std::get<1>(test_dat));
 }
 
@@ -463,10 +463,10 @@ TEST_CASE("valid_fmt_type_spec") {
         case 'a': case 'A': case 'b': case 'B': case 'c': case 'd':
         case 'e': case 'E': case 'f': case 'F': case 'g': case 'G':
         case 'o': case 'p': case 's': case 'x': case 'X':
-            CHECK(fstlog::valid_fmt_type_spec(type_spec) == true);
+            CHECK(fstlog::detail::valid_fmt_type_spec(type_spec) == true);
             break;
         default:
-            CHECK(fstlog::valid_fmt_type_spec(type_spec) == false);
+            CHECK(fstlog::detail::valid_fmt_type_spec(type_spec) == false);
             break;
         }
     }
@@ -495,6 +495,6 @@ TEST_CASE("skip_valid_fmt_number") {
     auto str = std::get<0>(test_dat);
     CAPTURE(str);
     fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
-    auto res = fstlog::skip_valid_fmt_number(input);
+    auto res = fstlog::detail::skip_valid_fmt_number(input);
     CHECK(input.size() - res.size() == std::get<1>(test_dat));
 }

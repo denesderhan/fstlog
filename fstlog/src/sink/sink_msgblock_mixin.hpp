@@ -1,4 +1,4 @@
-//Copyright © 2023, Dénes Derhán.
+//Copyright © 2023-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstring>
@@ -22,24 +22,24 @@ namespace fstlog {
             error_code errc{ error_code::none };
             bool has_sinked{ false };
             while(true) {
-                //first byte of message is log_msg_type (it has to be log_msg_type::Internal)
-                static_assert(offsetof(internal_msg_header, msg_type) == 0);
-                static_assert(sizeof(internal_msg_header::msg_type) == 1);
-                if (remaining_data == 0 || *dat_ptr != ut_cast(log_msg_type::Internal)) break;
-                if (remaining_data < internal_msg_header::padded_data_size) {
+                //first byte of message is detail::log_msg_type (it has to be detail::log_msg_type::Internal)
+                static_assert(offsetof(detail::internal_msg_header, msg_type) == 0);
+                static_assert(sizeof(detail::internal_msg_header::msg_type) == 1);
+                if (remaining_data == 0 || *dat_ptr != ut_cast(detail::log_msg_type::Internal)) break;
+                if (remaining_data < detail::internal_msg_header::padded_data_size) {
                     errc = error_code::input_bad;
                     break;
                 }
                 msg_counter msg_size;
                 std::memcpy(
                     &msg_size,
-                    dat_ptr + offsetof(internal_msg_header, msg_size),
+                    dat_ptr + offsetof(detail::internal_msg_header, msg_size),
                     sizeof(msg_counter));
-                const auto padded_msg_size = padded_size<constants::internal_msg_alignment, std::uint32_t>(msg_size);
-                if (msg_size >= internal_msg_header::padded_data_size && padded_msg_size <= remaining_data) {
+                const auto padded_msg_size = detail::padded_size<constants::internal_msg_alignment, std::uint32_t>(msg_size);
+                if (msg_size >= detail::internal_msg_header::padded_data_size && padded_msg_size <= remaining_data) {
                     static_assert(sizeof(level) == 1 && sizeof(channel_type) == 1);
-                    const level level{ *(dat_ptr + offsetof(internal_msg_header, severity)) };
-                    const channel_type channel{ *(dat_ptr + offsetof(internal_msg_header, channel)) };
+                    const level level{ *(dat_ptr + offsetof(detail::internal_msg_header, severity)) };
+                    const channel_type channel{ *(dat_ptr + offsetof(detail::internal_msg_header, channel)) };
                     if (L::filter_msg(level, channel)) {
                         L::sink_msg(byte_span_const{ dat_ptr, msg_size });
                         has_sinked = true;
@@ -57,4 +57,4 @@ namespace fstlog {
             return errc;
         }
     };
-}
+} // namespace fstlog

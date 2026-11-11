@@ -1,9 +1,9 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <fstlog/detail/types.hpp>
 
-namespace fstlog {
+namespace fstlog::detail {
     //used bits 7-4
     enum class log_element_type : log_element_ut {
         Unloggable = 0,
@@ -19,4 +19,4 @@ namespace fstlog {
         Smallstring = 10 << 4
     };
     inline constexpr log_element_ut log_element_type_bitmask = 0xf0;
-}
+} // namespace  fstlog::detail
