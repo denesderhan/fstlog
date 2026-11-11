@@ -3,6 +3,7 @@
 #include <catch2/catch_all.hpp>
 
 #include <cstdint>
+#include <functional>
 #include <vector>
 #include <thread>
 #include <type_traits>
@@ -62,17 +63,29 @@ TEST_CASE("core") {
     // for memory leak testing to work, the build has to use memory_resource == std::pmr!
     // compile with: -DFSTLOG_RESOURCE=./memory_resource/std_pmr
     SECTION("concurrency_and_memory_leak") {
-        auto test_thread = [](std::vector<fstlog::core>& cores) {
-                for (auto& c : cores) {
-                    if (c.good()) {
-                        c.detail_tls_buffer() = c.detail_get_buffer(0); // get default buffer size
-                        CHECK(c.detail_tls_buffer().good());
-                        if (c.detail_tls_buffer().good()) {
-                            CHECK(c.detail_tls_buffer().size() != 0);
-                        }
-                    }
+        struct alignas(64) fail_padded {
+            std::uint64_t fail{ 0 };
+        };
+        auto test_thread = [](
+            std::size_t thr_ind,
+            std::vector<fstlog::core> &cores,
+            std::vector<fail_padded> &fails)
+        {
+            for (auto& c : cores) {
+                if (!c.good()) {
+                    fails[thr_ind].fail++;
+                    continue;
                 }
-            };
+                c.detail_tls_buffer() = c.detail_get_buffer(0); // get buffer with default size
+                if (!c.detail_tls_buffer().good()) {
+                    fails[thr_ind].fail++;
+                    continue;
+                }
+                if (c.detail_tls_buffer().size() == 0) {
+                    fails[thr_ind].fail++;
+                }               
+            }
+        };
         
         fstlog::memory_resource* res_ptr = fstlog::get_default_resource();
         // for memory leak testing to work, memory_resource has to be std::pmr!
@@ -125,7 +138,7 @@ TEST_CASE("core") {
             CHECK(cores[2].name() == "core_4");
             CHECK(cores[3].name() == "core_4");
 
-            // we shold be able to create one more "good" core
+            // we should be able to create one more "good" core
             // move made empty slots
             cores.push_back(fstlog::core("core_new_2", res_ptr));
             for (auto& c : cores) {
@@ -133,12 +146,16 @@ TEST_CASE("core") {
             }
         }
 
+        [[maybe_unused]] std::intmax_t min_allocations = cores.size() * 3 + 10 * cores.size();
+
         // concurrency
         {
             CHECK(!cores.empty());
+            std::size_t thread_num{ 10 };
             std::vector<std::thread> threads;
-            for (int i = 0; i < 10; i++) {
-                threads.push_back(std::thread(test_thread, std::ref(cores)));
+            std::vector<fail_padded> fails(thread_num);
+            for (std::size_t i = 0; i < thread_num; i++) {
+                threads.push_back(std::thread(test_thread,i, std::ref(cores), std::ref(fails)));
             }
 
             // joining a thread releases the TLS log_buffers
@@ -147,13 +164,17 @@ TEST_CASE("core") {
             // destroy all cores
             // all allocations must be deallocated
             cores.clear();
+
+            for (auto& f : fails) {
+                INFO("Fails in thread:");
+                CHECK(f.fail == 0);
+            }
         }
 
         // memory_leak
         {
             CHECK(cores.empty());
             if constexpr (std::is_same_v<fstlog::memory_resource, std::pmr::memory_resource>) {
-                std::intmax_t min_allocations = cores.size() * 3 + 10 * cores.size();
                 CHECK(test_res.sum_allocations() >= min_allocations);
                 CHECK(test_res.all_clear());
             }
