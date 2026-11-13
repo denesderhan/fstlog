@@ -1,13 +1,10 @@
-//Copyright © Dénes Derhán 2025.
+//Copyright © 2025-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <memory_resource>
 #include <mutex>
-#include <vector>
-#include <stdexcept>
 #include <unordered_map>
 
 class test_mem_resource : public std::pmr::memory_resource {
@@ -110,18 +107,16 @@ public:
 
 protected:
     void* do_allocate(std::size_t bytes, std::size_t alignment) override {
-        void* pointer{ nullptr };
-        pointer = upstream_resource_->allocate(bytes, alignment);
-        
+        std::lock_guard<std::mutex> lock(mutex_);
+        void* pointer = upstream_resource_->allocate(bytes, alignment);
+
         // if allocate() returns nullptr we assume no allocation occured
         if (pointer == nullptr) {
-            std::lock_guard<std::mutex> lock(mutex_);
             bad_allocations_++;
             return nullptr;
         }
         
         // we assume allocation occured
-        std::lock_guard<std::mutex> lock(mutex_);
         outstanding_allocations_++;
         outstanding_bytes_ += bytes;
         sum_allocated_bytes_ += bytes;
@@ -147,17 +142,16 @@ protected:
     }
 
     void do_deallocate(void* pointer, std::size_t bytes, std::size_t alignment) override {
+        std::lock_guard<std::mutex> lock(mutex_);
         upstream_resource_->deallocate(pointer, bytes, alignment);
         
         // if deallocate() accepted nullptr
         if (pointer == nullptr) {
-            std::lock_guard<std::mutex> lock(mutex_);
             bad_deallocations_++;
             return;
         }
 
         // we assume deallocation occured
-        std::lock_guard<std::mutex> lock(mutex_);
         outstanding_allocations_--;
         outstanding_bytes_ -= bytes;
                        
