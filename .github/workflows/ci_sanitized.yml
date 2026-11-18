@@ -19,9 +19,9 @@ env:
   CC: clang
   CXX: clang++
   # These environment variables are read by sanitizer runtimes when executing tests/examples
-  ASAN_OPTIONS: detect_leaks=1:allocator_may_return_null=1:log_exe_name=1:check_initialization_order=1:detect_stack_use_after_return=1:strict_init_order=1:strict_string_checks=1:detect_invalid_pointer_pairs=3
-  UBSAN_OPTIONS: halt_on_error=1:report_error_type=1:print_stacktrace=1:symbolize=1
-  TSAN_OPTIONS: detect_deadlocks=1
+  ASAN_OPTIONS: detect_leaks=1:allocator_may_return_null=1:log_exe_name=1:check_initialization_order=1:detect_stack_use_after_return=1:strict_init_order=1:strict_string_checks=1:detect_invalid_pointer_pairs=3:fast_unwind_on_malloc=0:abort_on_error=1:color=always::print_stats=1:probe_flag_asan=0:verbosity=1
+  UBSAN_OPTIONS: halt_on_error=1:report_error_type=1:print_stacktrace=1:symbolize=1:print_summary=1:probe_flag_ubsan=0:verbosity=1
+  TSAN_OPTIONS: detect_deadlocks=1:halt_on_error=1:history_size=7:second_deadlock_stack=1:probe_flag_tsan=0:verbosity=1
      
 jobs:
   build:
@@ -35,11 +35,11 @@ jobs:
         include:
           - label: pmr-asan
             resource_path: ''
-            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fsanitize=undefined'
+            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fsanitize=undefined,bounds,float-divide-by-zero'
             linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
           - label: malloc-asan
             resource_path: '-DFSTLOG_RESOURCE=./memory_resource/malloc'
-            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fsanitize=undefined'
+            compiler_flags: '-O1 -g -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fsanitize=undefined,bounds,float-divide-by-zero'
             linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
           - label: pmr-tsan
             resource_path: ''
@@ -47,7 +47,7 @@ jobs:
             linker_flags: '-pie -fsanitize=thread'
           - label: noexceptions
             resource_path: ''
-            compiler_flags: '-O1 -g -fno-exceptions -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fsanitize=undefined'
+            compiler_flags: '-O1 -g -fno-exceptions -fno-omit-frame-pointer -fPIE -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fsanitize=undefined,bounds,float-divide-by-zero'
             linker_flags: '-pie -fsanitize=address -fsanitize=undefined'
             
     steps:
