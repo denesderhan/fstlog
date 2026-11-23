@@ -1,24 +1,10 @@
-//Copyright © 2026, Dénes Derhán.
+//Copyright © 2026-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <climits>
 #include <cstddef>
 #include <cstring>
-#include <limits>
 #include <utility>
-
-#ifdef _WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h> // moving write_to_os() to out_file_win.cpp and declaring using handle_type = void*; avoids exposing <windows.h> in the header.
-#else
-#include <cerrno>
-#include <unistd.h>
-#endif
 
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -29,7 +15,7 @@ namespace fstlog {
     class out_file {
     public:
 #ifdef _WIN32
-        typedef HANDLE handle_type;
+        typedef void* handle_type;
 #else
         typedef int handle_type;
 #endif 
@@ -181,33 +167,7 @@ namespace fstlog {
 
         // writes data to the file (OS buffer), retries on EINTR or partial writes
         // returns true on success, false on any error
-        [[nodiscard]] bool write_to_os(const char* data, std::size_t byte_size) noexcept {
-            FSTLOG_ASSERT(handle_ != bad_handle_);
-            FSTLOG_ASSERT(byte_size == 0 || data != nullptr);
-            while (byte_size > 0) {
-#ifdef _WIN32
-                const DWORD bytes_to_write = byte_size > max_chunk_bytes_ ? 
-                    static_cast<DWORD>(max_chunk_bytes_) : static_cast<DWORD>(byte_size);
-                DWORD bytes_written = 0;
-                const auto success = WriteFile(handle_, data, bytes_to_write, &bytes_written, nullptr);
-                if (success == FALSE || bytes_written == 0) return false; // failure + no progress
-                byte_size -= bytes_written;
-                data += bytes_written;
-#else
-                const std::size_t bytes_to_write = byte_size > max_chunk_bytes_ ? max_chunk_bytes_ : byte_size;
-                const auto result = ::write(handle_, data, bytes_to_write);
-                if(result > 0){
-                    byte_size -= static_cast<std::size_t>(result);
-                    data += result;
-                }
-                // retry on EINTR, break on all else (0 bytes written)
-                else if (result != -1 || errno != EINTR) {
-                    return false;
-                }        
-#endif
-            }
-            return true;
-        }
+        [[nodiscard]] bool write_to_os(const char* data, std::size_t byte_size) noexcept;        
 
         // flushes it's own buffer to the OS
         // returns false on error
@@ -233,13 +193,9 @@ namespace fstlog {
 
 #ifdef _WIN32
         static constexpr handle_type bad_handle_{ nullptr };
-        static_assert(max_chunk_bytes_ <= (std::numeric_limits<DWORD>::max)(),"max_chunk_bytes too big!");
-
 #else
         static constexpr handle_type bad_handle_{ -1 };
-        static_assert(max_chunk_bytes_ <= (std::numeric_limits<ssize_t>::max)() &&
-            max_chunk_bytes_ <= INT_MAX, "max_chunk_bytes too big!");
 #endif
         static_assert(min_buffer_size_ <= max_buffer_size_, "Minimum buffer size must not exceed maximum buffer size");
     };
-}
+} // namespace fstlog

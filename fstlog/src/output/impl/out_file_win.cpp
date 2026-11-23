@@ -1,4 +1,4 @@
-//Copyright © 2026, Dénes Derhán.
+//Copyright © 2026-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #ifdef _WIN32
 #include <output/impl/out_file.hpp>
@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstring>
 #include <climits>
+#include <limits>
 #include <utility>
 
 #include <fstlog/detail/error_code.hpp>
@@ -194,5 +195,22 @@ namespace fstlog {
         }
         return { error_code::none, os_handle };
     }
-}
+
+    [[nodiscard]] bool out_file::write_to_os(const char* data, std::size_t byte_size) noexcept {
+        static_assert(max_chunk_bytes_ <= (std::numeric_limits<DWORD>::max)(), "max_chunk_bytes too big!");
+        FSTLOG_ASSERT(handle_ != bad_handle_);
+        FSTLOG_ASSERT(byte_size == 0 || data != nullptr);
+        while (byte_size > 0) {
+
+            const DWORD bytes_to_write = byte_size > max_chunk_bytes_ ?
+                static_cast<DWORD>(max_chunk_bytes_) : static_cast<DWORD>(byte_size);
+            DWORD bytes_written = 0;
+            const auto success = WriteFile(handle_, data, bytes_to_write, &bytes_written, nullptr);
+            if (success == FALSE || bytes_written == 0) return false; // failure + no progress
+            byte_size -= bytes_written;
+            data += bytes_written;
+        }
+        return true;
+    }
+} // namespace fstlog
 #endif

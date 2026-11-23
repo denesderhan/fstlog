@@ -1,4 +1,4 @@
-//Copyright © 2026, Dénes Derhán.
+//Copyright © 2026-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <output/impl/out_file.hpp>
 
@@ -150,4 +150,4 @@ namespace fstlog {
         // we do not reset the memory_resource_ of the other object 
         // to prevent errors using it after move (it is not a dangling pointer, but the user should not use it after move)
     }
-}
+} // namespace fstlog
