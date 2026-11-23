@@ -1,13 +1,13 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <fstlog/sink/sink_sort.hpp>
 
 #include <config_sink.hpp>
+#include <detail/deadline_helper.hpp>
 #include <detail/make_allocated.hpp>
 #include <detail/mixin/memory_resource_mixin.hpp>
 #include <detail/mixin/exclusive_use_mixin.hpp>
 #include <detail/mixin/reference_counter_mixin.hpp>
-#include <fstlog/detail/constants.hpp>
 #include <fstlog/filter/filter.hpp>
 #include <filter/filter_impl.hpp>
 #include <filter/filter_internal.hpp>
@@ -50,7 +50,7 @@ namespace fstlog {
         }
         pimpl->set_memory_resource(resource); 
         pimpl->set_filter(filter);
-        pimpl->set_flush_interval(flush_interval);
+        pimpl->set_flush_interval(detail::normalized_interval(flush_interval));
         auto error = pimpl->init_sink_sort(resource, max_buffer_bytes);
         if (error == error_code::none) error = pimpl->set_formatter(std::move(formatter));
         if (error == error_code::none) error = pimpl->set_output(std::move(output));
@@ -129,4 +129,4 @@ namespace fstlog {
             max_buffer_bytes,
             resource);
     }
-}
+} // namespace fstlog

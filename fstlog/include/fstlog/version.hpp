@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <fstlog/detail/api_def.hpp>
@@ -22,7 +22,7 @@
  * @see fstlog::compatible() in @ref compatible.hpp
  * @note For major version 0, all components must match exactly
  */
-#define FSTLOG_HEADER_VERSION_MINOR 62
+#define FSTLOG_HEADER_VERSION_MINOR 63
   
 /**
  * @brief Patch version number of the header files
@@ -30,7 +30,7 @@
  * @see fstlog::compatible() in @ref compatible.hpp
  * @note For major version 0, all components must match exactly
  */
-#define FSTLOG_HEADER_VERSION_PATCH 7
+#define FSTLOG_HEADER_VERSION_PATCH 0
 
 namespace fstlog {
     /**
@@ -68,6 +68,6 @@ namespace fstlog {
      * @note For major version 0, all components must match exactly
      */
     FSTLOG_API const char* version() noexcept;
-}
+} // namespace fstlog
 
 

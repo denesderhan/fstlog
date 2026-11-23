@@ -1,15 +1,16 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <cstdint>
 #include <chrono>
+#include <cstdint>
+#include <optional>
 
 #include <fstlog/detail/error_code.hpp>
 
 namespace fstlog {
     class sink_interface
     {
-        using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
+        using timer_point = std::chrono::steady_clock::time_point;
     
     public:
         sink_interface() noexcept = default;
@@ -21,8 +22,12 @@ namespace fstlog {
       
         virtual error_code sink_msg_block(const unsigned char* dat_ptr, std::uint32_t dat_size) noexcept = 0;
         virtual bool needs_immediate_flush() const noexcept = 0;
-        virtual steady_msec next_flush_time() const noexcept = 0;
-        virtual void flush(steady_msec current_time) noexcept = 0;
+        
+        virtual std::optional<std::chrono::milliseconds> flush_interval() const noexcept = 0;
+        virtual void set_flush_interval(std::optional<std::chrono::milliseconds> next_time) noexcept = 0;
+        virtual std::optional<timer_point> next_flush_time() const noexcept = 0;
+        virtual void set_next_flush_time(std::optional<timer_point> next_time) noexcept = 0;
+        virtual void flush() noexcept = 0;
         virtual bool use() noexcept = 0;
         virtual void release() noexcept = 0;
     
@@ -31,4 +36,4 @@ namespace fstlog {
         virtual void release_referred() noexcept = 0;
         friend class sink;
     };
-}
+} // namespace fstlog

@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include <detail/unaligned_span.hpp>
+#include <fstlog/detail/constants.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/internal_msg_header.hpp>

@@ -1,14 +1,12 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <chrono>
 
 #include <detail/unaligned_span.hpp>
 
 namespace fstlog {
     template<class L>
     class sink_unsort_mixin : public L {
-        using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
     public:
         sink_unsort_mixin() noexcept = default;
 
@@ -27,9 +25,8 @@ namespace fstlog {
             return false;
         }
 
-        void flush(steady_msec current_time) noexcept
+        void flush() noexcept
         {
-            this->update_flush_time(current_time);
             if (unflushed_data()) {
                 L::output_flush();
                 has_flushable_data_ = false;
@@ -47,4 +44,4 @@ namespace fstlog {
         //accessed only under locked sink_store_mutex_
         bool has_flushable_data_{ false };
     };
-}
+} // namespace fstlog

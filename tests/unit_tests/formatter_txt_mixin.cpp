@@ -19,6 +19,7 @@
 #include <fstlog/output/output_stream.hpp>
 
 #include <config_sink.hpp>
+#include <detail/deadline_helper.hpp>
 #include <detail/make_allocated.hpp>
 #include <detail/mixin/memory_resource_mixin.hpp>
 #include <detail/mixin/exclusive_use_mixin.hpp>
@@ -68,7 +69,7 @@ namespace fstlog {
             return error;
         }
         pimpl->set_filter(filter);
-        pimpl->set_flush_interval(flush_interval);
+        pimpl->set_flush_interval(detail::normalized_interval(flush_interval));
         return error_code::none;
     }
 }

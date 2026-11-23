@@ -1,7 +1,6 @@
 //Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -19,8 +18,8 @@
 namespace fstlog {
     template<class L>
     class sink_sort_mixin : public L {
+    
     private:
-        using steady_msec = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
         struct message_locator;
         
     public:
@@ -114,10 +113,10 @@ namespace fstlog {
                 || sorted_block_sizes_.size() >= 64;
         }
 
-        void flush(steady_msec current_time) noexcept
+        void flush() noexcept
         {
             flush_impl();
-            L::flush(current_time);
+            L::flush();
         }
         
     private:

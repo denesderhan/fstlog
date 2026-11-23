@@ -112,7 +112,7 @@ namespace fstlog {
         std::lock_guard<std::mutex> grd{ buffer_mutex_ };
         flush_requested_.store(false, std::memory_order_release);
         //This always tries to wake logging thread (even if it is not sleeping) bad perf.?
-        buff_cond_var_.notify_all();
+        buff_cond_var_.notify_one();
     }
 
     void log_buffer_impl::add_reference() noexcept {
