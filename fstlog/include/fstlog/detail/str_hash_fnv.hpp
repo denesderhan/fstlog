@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
@@ -42,7 +42,7 @@ namespace fstlog {
 #else
         constexpr
 #endif
-        str_hash_fnv operator"" _hs(const char* str, std::size_t n) noexcept
+        str_hash_fnv operator""_hs(const char* str, std::size_t n) noexcept
         {
             return { str, n };
         }
@@ -53,10 +53,10 @@ namespace fstlog {
 #else
         constexpr
 #endif
-        str_hash_fnv operator"" _hs(const char8_t* str, std::size_t n) noexcept
+        str_hash_fnv operator""_hs(const char8_t* str, std::size_t n) noexcept
         {
             return { str, n };
         }
 #endif
-    }
-}
+    } // namespace literals
+} // namespace fstlog
