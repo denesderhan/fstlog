@@ -29,8 +29,8 @@ namespace fstlog::detail {
             }();
     public:
         msg_counter arg_size{ 0 };
-        const unsigned char signature_length = static_cast<unsigned char>(type_signature<T>::value.size());
-        const std::array<log_element_ut, array_length> signature = padded_sign;
+        unsigned char signature_length = static_cast<unsigned char>(type_signature<T>::value.size());
+        std::array<log_element_ut, array_length> signature = padded_sign;
         static_assert(type_signature<T>::value.size() <= (std::numeric_limits<unsigned char>::max)(),
             "Error, log argument signature too long!");
 #ifdef FSTLOG_DEBUG
@@ -41,5 +41,7 @@ namespace fstlog::detail {
     };
 #ifdef FSTLOG_DEBUG
     static_assert(sizeof(internal_arg_header<int>) == internal_arg_header<int>::data_size);
+    static_assert(std::is_trivially_copyable_v<internal_arg_header<int>>);
+    static_assert(std::is_trivially_copy_assignable_v<internal_arg_header<int>>);
 #endif
 } // namespace fstlog::detail
