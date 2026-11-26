@@ -1,6 +1,8 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <utility>
+
 #include <fstlog/detail/small_string.hpp>
 
 namespace fstlog {
@@ -44,4 +46,4 @@ namespace fstlog {
 
         small_string<32> thr_name_{ "Unnamed"};
     };
-}
+} // namespace fstlog

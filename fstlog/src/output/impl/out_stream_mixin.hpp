@@ -1,7 +1,8 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <ostream>
+#include <utility>
 
 #include <detail/unaligned_span.hpp>
 #include <detail/safe_reinterpret_cast.hpp>
@@ -59,4 +60,4 @@ namespace fstlog {
     private:
         std::shared_ptr<std::ostream> stream_;
     };
-}
+} // namespace fstlog

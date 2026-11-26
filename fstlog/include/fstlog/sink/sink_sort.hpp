@@ -4,6 +4,7 @@
 #include <fstlog/sink/sink.hpp>
 
 #include <chrono>
+#include <utility>
 
 #include <fstlog/compatible.hpp>
 #include <fstlog/detail/error_handling.hpp>

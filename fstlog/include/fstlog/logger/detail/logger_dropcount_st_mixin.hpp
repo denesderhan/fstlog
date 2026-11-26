@@ -2,6 +2,7 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstdint>
+#include <utility>
 
 namespace fstlog {
     template<class L>

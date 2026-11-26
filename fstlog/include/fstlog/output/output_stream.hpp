@@ -1,10 +1,11 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <fstlog/output/output.hpp>
 
 #include <memory>
 #include <iostream>
+#include <utility>
 
 #include <fstlog/compatible.hpp>
 #include <fstlog/detail/error_handling.hpp>
@@ -31,4 +32,4 @@ namespace fstlog {
         handle_error(error);
         return out;
     }
-}
+} // namespace fstlog

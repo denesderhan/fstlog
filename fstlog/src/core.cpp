@@ -1,9 +1,10 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <fstlog/core.hpp>
 
 #include <cassert>
 #include <limits>
+#include <utility>
 
 #include <config_core.hpp>
 #include <core_impl.hpp>
@@ -219,4 +220,4 @@ namespace fstlog {
     core_impl* core::pimpl() const noexcept {
         return pimpl_;
     }
-}
+} // namespace fstlog

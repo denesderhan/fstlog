@@ -1,8 +1,9 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <memory>
 #include <mutex>
+#include <utility>
 
 #include <fstlog/detail/fstlog_assert.hpp>
 
@@ -34,4 +35,4 @@ namespace fstlog {
     private:
         std::shared_ptr<std::mutex> sync_mutex_;
     };
-}
+} // namespace fstlog

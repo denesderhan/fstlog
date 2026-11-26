@@ -1,8 +1,9 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <array>
 #include <cstddef>
+#include <utility>
 
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
@@ -43,4 +44,4 @@ namespace fstlog {
         formatter formatter_;
         std::array<unsigned char, fmt_buff_size> format_buffer_{0};
     };
-}
+} // namespace fstlog

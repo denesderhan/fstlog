@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #include <cstddef> // __cpp_lib_format is defined here in windows
 #if !defined(__cpp_lib_format) && (defined(__cplusplus) && __cplusplus >= 202000L)
@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string_view>
 #include <vector>
+#include <utility>
 
 #include <fstlog/version.hpp>
 #include <fstlog/core.hpp>

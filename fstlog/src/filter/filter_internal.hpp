@@ -1,8 +1,10 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <cstdint>
 #include <array>
 #include <limits>
+#include <utility>
 
 #include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/level.hpp>
@@ -86,7 +88,7 @@ namespace fstlog {
         std::array<std::uint32_t, 8> channel_data_{ 0, 0, 0, 0, 0, 0, 0, 0 };
 
         static_assert(sizeof(level_data_) * 8 > ut_cast(fstlog::level::All));
-        static_assert((std::numeric_limits<channel_type>::max)() <= 255);
+        static_assert((std::numeric_limits<channel_type>::max)() < sizeof(channel_data_[0]) * 8 * std::tuple_size<decltype(channel_data_)>::value);
         static_assert((std::numeric_limits<channel_type>::min)() == 0);
     };
-}
+} // namespace fstlog

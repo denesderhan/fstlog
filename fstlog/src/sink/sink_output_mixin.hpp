@@ -1,6 +1,8 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
+#include <utility>
+
 #include <detail/unaligned_span.hpp>
 #include <fstlog/detail/error_code.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -45,4 +47,4 @@ namespace fstlog {
     private:
         output output_;
     };
-}
+} // namespace fstlog

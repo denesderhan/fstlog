@@ -1,8 +1,8 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <limits>
 #include <cstdint>
+#include <utility>
 
 #include <fstlog/core.hpp>
 #include <fstlog/detail/fstlog_assert.hpp>
@@ -65,4 +65,4 @@ namespace fstlog {
             buffer() = std::move(new_buffer);
         }
     };
-}
+} // namespace fstlog

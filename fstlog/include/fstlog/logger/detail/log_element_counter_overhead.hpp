@@ -2,16 +2,19 @@
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
-#include <limits>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 
 #ifdef FSTLOG_DEBUG
 #include <fstlog/detail/is_stdarray.hpp>
 #endif
+#include <fstlog/detail/fstlog_assert.hpp>
 #include <fstlog/detail/log_element_type.hpp>
 #include <fstlog/detail/log_type.hpp>
 #include <fstlog/detail/log_type_metadata.hpp>
 #include <fstlog/detail/padded_size.hpp>
+#include <fstlog/detail/rm_cvref_t.hpp>
 #include <fstlog/detail/type_signature.hpp>
 
 namespace fstlog::detail {

@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 
 #ifdef _WIN32
@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <limits>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>

@@ -1,7 +1,8 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
-#include <atomic> 
+#include <atomic>
+#include <utility>
 
 #include <fstlog/detail/level.hpp>
 
@@ -43,4 +44,4 @@ namespace fstlog {
 
         std::atomic<fstlog::level> level_{ fstlog::level::All};
     };
-}
+} // namespace fstlog

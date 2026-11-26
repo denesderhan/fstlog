@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <type_traits>
+#include <utility>
 
 #include <detail/deadline_helper.hpp>
 #include <detail/log_buffer_impl.hpp>
