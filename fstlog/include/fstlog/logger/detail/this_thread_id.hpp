@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #if defined(_WIN32)
@@ -18,7 +18,6 @@
 #else
     #include <cstdint>
     #include <cstring>
-    #include <functional>
     #include <thread>
     #include <type_traits>
 
@@ -62,12 +61,12 @@ namespace fstlog::this_thread {
                 return id;
             }
             else {
-                return std::hash<std::thread::id>{}(std::this_thread::get_id());
+                return std::hash<std::thread::id>{}(data);
             }
         }
         else {
-            return std::hash<std::thread::id>{}(std::this_thread::get_id());
+            return std::hash<std::thread::id>{}(data);
         }
 #endif
     }
-}
+} // namespace fstlog::this_thread

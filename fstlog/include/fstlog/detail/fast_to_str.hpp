@@ -1,4 +1,4 @@
-//Copyright © 2022, Dénes Derhán.
+//Copyright © 2022-present, Dénes Derhán.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
 #pragma once
 #include <cstddef>
@@ -7,7 +7,7 @@
 
 #include <fstlog/detail/small_string.hpp>
 
-namespace fstlog {
+namespace fstlog::detail {
     template<typename T>
     constexpr fstlog::small_string<32> to_hex(T num) noexcept {
         static_assert(
@@ -61,4 +61,4 @@ namespace fstlog {
         }
         return { c_ptr, static_cast<std::size_t>(buff_end - c_ptr) };
     }
-}
+} // fstlog::detail
