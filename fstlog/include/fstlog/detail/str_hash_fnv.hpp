@@ -22,7 +22,7 @@ namespace fstlog {
             : hash_(fnv_1a_32(data, size)) {}
 
         template<typename T, std::size_t N>
-        constexpr str_hash_fnv(const T(&str)[N]) noexcept {
+        constexpr str_hash_fnv([[maybe_unused]] const T(&str)[N]) noexcept {
             static_assert(sizeof(T) == 0, "Constructing str_hash_fnv from char arrays is forbidden, for string literals use the _hs operator!");
         }
 

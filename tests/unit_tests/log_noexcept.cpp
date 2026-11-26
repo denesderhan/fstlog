@@ -31,19 +31,19 @@ namespace {
     class fake_policy_noexcept : public L {
     public:
         template<fstlog::level level, fstlog::log_call_flag flags, typename... Args>
-        void log(Args const&... args) noexcept {}
+        void log([[maybe_unused]] Args const&... args) noexcept {}
 
         template<fstlog::log_call_flag flags, typename... Args>
-        void log(fstlog::level level, Args const&... args) noexcept {}
+        void log([[maybe_unused]] fstlog::level level, [[maybe_unused]] Args const&... args) noexcept {}
     };
     template<class L>
     class fake_policy_except : public L {
     public:
         template<fstlog::level level, fstlog::log_call_flag flags, typename... Args>
-        void log(Args const&... args) {}
+        void log([[maybe_unused]] Args const&... args) {}
 
         template<fstlog::log_call_flag flags, typename... Args>
-        void log(fstlog::level level, Args const&... args) {}
+        void log([[maybe_unused]] fstlog::level level, [[maybe_unused]] Args const&... args) {}
     };
 }
 
