@@ -1,13 +1,14 @@
 //Copyright © Dénes Derhán 2022.
 //Distributed under the AGPLv3 license (https://opensource.org/license/agpl-v3).
+#ifdef _WIN32
 #pragma execution_character_set("utf-8")
+#endif
 #include <cstring>
+#include <cstdint>
 #include <limits>
 #include <string_view>
-#include <type_traits>
 #include <array>
 #include <vector>
-#include <iostream>
 
 #include <catch2/catch_all.hpp>
 
@@ -169,7 +170,7 @@ TEST_CASE("safe_utf_code_point") {
 }
 
 TEST_CASE("encode_escaped") {
-    std::array<unsigned char, 16> buffer;
+    std::array<unsigned char, 16> buffer{};
     
     SECTION("regular") {
         auto data = GENERATE(
@@ -482,7 +483,7 @@ TEST_CASE("utfX_to_utfY") {
 
     SECTION("utf32_to_utf8_no_space_in_buffer") {
         std::basic_string_view str{U"UTF 编码者"};
-        std::array<unsigned char, 13> buffer;
+        std::array<unsigned char, 13> buffer{};
         buffer.fill('!');
         fstlog::byte_span output(buffer);
         fstlog::unaligned_span input(str.data(), str.size());
@@ -497,7 +498,7 @@ TEST_CASE("utfX_to_utfY") {
 
     SECTION("utf16_to_utf8_no_space_in_buffer") {
         std::basic_string_view str{ u"UTF 编码者" };
-        std::array<unsigned char, 13> buffer;
+        std::array<unsigned char, 13> buffer{};
         buffer.fill('!');
         fstlog::byte_span output(buffer);
         fstlog::unaligned_span input(str.data(), str.size());
@@ -512,7 +513,7 @@ TEST_CASE("utfX_to_utfY") {
 
     SECTION("utf8_to_utf8_no_space_in_buffer") {
         std::string_view str{ "UTF 编码者" };
-        std::array<unsigned char, 13> buffer;
+        std::array<unsigned char, 13> buffer{};
         buffer.fill('!');
         fstlog::byte_span output(buffer);
         fstlog::byte_span_const input(reinterpret_cast<const unsigned char*>(str.data()), str.size());
@@ -581,7 +582,7 @@ TEST_CASE("decode_utf8_char") {
 
     SECTION("two_byte") {
         // 0b110x'xxxx, 0b10yy'yyyy
-        auto test = GENERATE(
+        std::tuple<std::array<unsigned char, 2>, std::size_t, std::size_t, std::uint32_t>  test = GENERATE(
             // valid encoded
             std::make_tuple(std::array<unsigned char, 2>{ 0b1100'0010, 0b1000'0000}, 2, 0, 0x80U),
             std::make_tuple(std::array<unsigned char, 2>{ 0b1101'0000, 0b1010'0000}, 2, 0, 0x420U),
@@ -615,7 +616,7 @@ TEST_CASE("decode_utf8_char") {
 
     SECTION("three_byte") {
         // 0b1110'xxxx, 0b10yy'yyyy, 0b10zz'zzzz
-        auto test = GENERATE(
+        std::tuple<std::array<unsigned char, 3>, std::size_t, std::size_t, std::uint32_t> test = GENERATE(
             // valid encoded
             std::make_tuple(std::array<unsigned char, 3>{ 0b1110'0000, 0b1010'0000, 0b1000'0000}, 3, 0, 0x800U),
             std::make_tuple(std::array<unsigned char, 3>{ 0b1110'0000, 0b1010'0000, 0b1010'0000}, 3, 0, 0x820U),
@@ -660,7 +661,7 @@ TEST_CASE("decode_utf8_char") {
     
     SECTION("four_byte") {
         // 0b1110'xxxx, 0b10yy'yyyy, 0b10zz'zzzz, 0b10aa'aaaa
-        auto test = GENERATE(
+        std::tuple<std::array<unsigned char, 4>, std::size_t, std::size_t, std::uint32_t>  test = GENERATE(
             // valid encoded
             std::make_tuple(std::array<unsigned char, 4>{ 0b1111'0000, 0b1001'0000, 0b1000'0000, 0b1000'0000}, 4, 0, 0x10000U),
             std::make_tuple(std::array<unsigned char, 4>{ 0b1111'0000, 0b1011'1111, 0b1011'1111, 0b1011'1111}, 4, 0, 0x3FFFFU),
@@ -706,7 +707,7 @@ TEST_CASE("decode_utf8_char") {
 };
 
 TEST_CASE("safe_utf8_to_utf16") {
-    std::array<char16_t, 128> buffer;
+    std::array<char16_t, 128> buffer{};
     char16_t* const buffer_begin = buffer.data();
     
     SECTION("not_enough_space") {
@@ -800,7 +801,7 @@ TEST_CASE("safe_code_point_benchmark", "[.][benchmark]") {
 TEST_CASE("utf8_str_trim") {
 
     SECTION("good_data") {
-        auto data = GENERATE(
+        std::tuple<std::string_view, std::size_t, std::size_t, std::size_t>  data = GENERATE(
             // good data
             std::make_tuple(std::string_view(""), 0, 0, 0),
             std::make_tuple(std::string_view(""), 10, 0, 0),
@@ -833,7 +834,7 @@ TEST_CASE("utf8_str_trim") {
     }
 
     SECTION("corrupt_data") {
-        auto data = GENERATE(                                //u8"UTF 😀 码 者"
+        std::tuple<std::array<unsigned char, 16>, std::size_t, std::size_t, std::size_t>  data = GENERATE(                                //u8"UTF 😀 码 者"
             std::make_tuple(std::array<unsigned char, 16>{'U', 'T', 'F', ' ', 0x01, 0x9f, 0x98, 0x80, ' ', 0xe7, 0xa0, 0x81, ' ', 0xe8, 0x80, 0x85}, 5, 5, 5),
             std::make_tuple(std::array<unsigned char, 16>{'U', 'T', 'F', ' ', 0x01, 0x9f, 0x98, 0x80, ' ', 0xe7, 0xa0, 0x81, ' ', 0xe8, 0x80, 0x85}, 7, 7, 7),
             std::make_tuple(std::array<unsigned char, 16>{'U', 'T', 'F', ' ', 0x01, 0x9f, 0x98, 0x80, ' ', 0xe7, 0xa0, 0x81, ' ', 0xe8, 0x80, 0x85}, 100, 12, 16),

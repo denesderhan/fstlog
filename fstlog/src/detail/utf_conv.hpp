@@ -82,7 +82,7 @@ namespace fstlog::detail::utf {
             if (utf_char < 0) return false;
         }
         if constexpr ((std::numeric_limits<T>::max)() > max_val) {
-            if (utf_char > max_val) return false;
+            if (static_cast<std::uint64_t>(utf_char) > max_val) return false;
         }
         return true;
     }

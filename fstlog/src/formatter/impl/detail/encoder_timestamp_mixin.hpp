@@ -343,20 +343,22 @@ namespace fstlog {
         * - Replaces %z with "+0000" if the timezone is UTC.
         * - Copies other characters as-is.
         * - Updates the internal time_format_ string.
-        * - Returns error_code::str_long if there is not enough space in the output buffer.
+        * - Returns error_code on error.
         *
         * @return error_code
         *     - error_code::none on success.
         *     - error_code::str_long if output buffer is too small.
+        *     - error_code::fmt_bad if time_format_ is empty.
         *
         * @note
         * This function is noexcept and modifies internal state.
         */
         error_code preformat_time_format() noexcept {
+            if (time_format_.empty()) return error_code::fmt_bad;
+                        
             decltype(time_format_) pref_time_format;
-            FSTLOG_ASSERT(time_format_.size() > 0);
-            const int last_ind = static_cast<int>(time_format_.size() - 1);
-            int ind = 0;
+            const std::size_t last_ind = time_format_.size() - 1;
+            std::size_t ind = 0;
             while (ind < last_ind) {
                 // replace %S conversion specifier
                 if (time_format_[ind] == '%'
@@ -366,7 +368,7 @@ namespace fstlog {
                     if (pref_time_format.free_size() < second_charnum) {
                         return error_code::str_long; // not enough space
                     }
-                    for (int i = 0; i < second_charnum; i++) pref_time_format.push_back(1);
+                    for (std::size_t i = 0; i < second_charnum; i++) pref_time_format.push_back(1);
                     ind += 2;
                 }
                 // replace %z conversion specifier only if tzone_ is UTC
