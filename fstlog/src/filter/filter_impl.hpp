@@ -10,8 +10,9 @@ namespace fstlog {
         filter_impl() noexcept = default;
 
         filter_impl(const filter_impl& other) noexcept
-            : resource_{ other.resource_ },
-            message_filter_{ other.message_filter_ } {
+            : message_filter_{ other.message_filter_ }, 
+                resource_{ other.resource_ }
+            {
         }
         
         bool operator==(const filter_impl& other) const noexcept {
