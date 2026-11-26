@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <type_traits>
 
 #include <detail/dyn_array.hpp>
 #include <detail/unaligned_span.hpp>
@@ -37,10 +38,10 @@ namespace fstlog {
         error_code init_sink_sort(memory_resource* resource, std::uint32_t max_data_bytes) noexcept {
             if (max_data_bytes < 512) max_data_bytes = 512;
             max_data_size_ = max_data_bytes;
-            message_buffer_ = std::move(dyn_array<unsigned char>{resource});
-            message_locators_ = std::move(dyn_array<message_locator>{resource});
-            merge_buffer_ = std::move(dyn_array<message_locator>{resource});
-            sorted_block_sizes_ = std::move(dyn_array<std::size_t>{resource});
+            message_buffer_ = dyn_array<unsigned char>{resource};
+            message_locators_ = dyn_array<message_locator>{resource};
+            merge_buffer_ = dyn_array<message_locator>{resource};
+            sorted_block_sizes_ = dyn_array<std::size_t>{resource};
             if (!message_buffer_.grow(max_data_size_)) return error_code::alloc_fail;
             if (!message_locators_.grow(max_data_size_ / 64)) return error_code::alloc_fail;
             if (!merge_buffer_.grow(max_data_size_ / 64)) return error_code::alloc_fail;

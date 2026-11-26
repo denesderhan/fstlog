@@ -31,7 +31,7 @@ namespace fstlog {
             bool truncate,
             std::uint32_t buffer_size) noexcept
         {
-            file_ = std::move(out_file{ resource });
+            file_ = out_file{ resource };
             return file_.open(file_path, truncate, buffer_size);
         }
 
